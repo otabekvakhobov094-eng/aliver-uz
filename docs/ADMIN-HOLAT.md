@@ -235,5 +235,15 @@ Ommaviy amallar 11 holatli ochiluvchi ro'yxat o'rniga to'rtta kundalik
 o'tishga qisqartirildi (tasdiqlash, yig'ishga, jo'natildi, yetkazildi).
 Qolgan o'tishlar buyurtma sahifasida yakka tartibda bajariladi.
 
-Qolgan ro'yxatlar (Ombor, Qaytarishlar, To'lovlar va boshqalar) keyingi
-navbatda, har biri alohida tekshirilib.
+**To'lovlar** va **Qaytarishlar** ham o'tkazildi — jami beshta ro'yxat
+platformada.
+
+**Audit log ataylab o'tkazilmadi.** U ro'yxat emas, **ro'yxat + yonma-yon
+farq paneli**: chapda yozuvlar, o'ngda «oldin/keyin» taqqoslash. Uni
+umumiy komponentga majburan solish aynan shu maketni yo'qotardi, maket
+esa sahifaning butun qiymati. TZ-2 4.2 ning o'zi ham «ro'yxat →
+tafsilot → panel» naqshini alohida tavsiya qiladi.
+
+Qolganlari: Ombor va Fiskal cheklar (ikkalasida qator ichida amallar
+bor), hamda yaqinda yozilgan Kolleksiyalar, Chegirmalar, Adminlar —
+ular kichik va hozircha o'z jadvalida ishlaydi.

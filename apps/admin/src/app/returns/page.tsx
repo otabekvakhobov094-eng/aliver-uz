@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, Input, formatTiyin } from '@aliver/ui';
+import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { DataList, type DataColumn } from '@/components/DataList';
 import { adminApi, type AdminReturnRow } from '@/lib/api';
 import {
   RETURN_REASON_LABEL,
@@ -13,25 +14,89 @@ import {
   label,
 } from '@/lib/order-labels';
 
+/** Qaytarishlar — TZ 52, TZ-2 4.3. */
+
 const STATUSES = [
-  { value: '', label: 'Hammasi' },
+  { value: '', label: 'Barcha holatlar' },
   ...Object.entries(RETURN_STATUS_LABEL).map(([value, l]) => ({ value, label: l })),
 ];
+
+const COLUMNS: Array<DataColumn<AdminReturnRow>> = [
+  {
+    key: 'number',
+    label: 'Raqam',
+    locked: true,
+    render: (r) => (
+      <>
+        <Link href={`/returns/${r.id}`} style={{ fontWeight: 700, color: 'var(--alv-brand)' }}>
+          {r.number}
+        </Link>
+        <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{r.itemsCount} pozitsiya</div>
+      </>
+    ),
+  },
+  {
+    key: 'order',
+    label: 'Buyurtma',
+    render: (r) => r.orderNumber ?? <span style={{ color: 'var(--alv-muted)' }}>—</span>,
+  },
+  {
+    key: 'phone',
+    label: 'Telefon',
+    render: (r) => r.contactPhone ?? <span style={{ color: 'var(--alv-muted)' }}>—</span>,
+  },
+  {
+    key: 'reason',
+    label: 'Sabab',
+    render: (r) => label(RETURN_REASON_LABEL, r.reasonCode),
+  },
+  {
+    key: 'status',
+    label: 'Holat',
+    render: (r) => (
+      <Badge tone={RETURN_STATUS_TONE[r.status] ?? 'neutral'}>
+        {label(RETURN_STATUS_LABEL, r.status)}
+      </Badge>
+    ),
+  },
+  {
+    key: 'refund',
+    label: 'Qaytariladigan',
+    align: 'right',
+    render: (r) => (
+      <strong style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {formatTiyin(r.refundAmount)}
+      </strong>
+    ),
+  },
+  {
+    key: 'created',
+    label: 'So‘ralgan',
+    render: (r) => <span style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(r.createdAt)}</span>,
+  },
+];
+
+const EMPTY = { q: '', status: '' };
 
 export default function ReturnsPage() {
   const [items, setItems] = useState<AdminReturnRow[]>([]);
   const [total, setTotal] = useState(0);
-  const [status, setStatus] = useState('');
-  const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const f = filters as Record<string, string>;
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await adminApi.returns({ status: status || undefined, q: q || undefined, page });
+      const res = await adminApi.returns({
+        q: f.q || undefined,
+        status: f.status || undefined,
+        page,
+      });
       setItems(res.items);
       setTotal(res.total);
     } catch (e) {
@@ -39,162 +104,107 @@ export default function ReturnsPage() {
     } finally {
       setLoading(false);
     }
-  }, [status, q, page]);
+  }, [f.q, f.status, page]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), 250);
     return () => clearTimeout(t);
   }, [load]);
 
+  function changeFilters(next: Record<string, unknown>) {
+    setFilters(next);
+    setPage(1);
+  }
+
+  const pages = Math.max(1, Math.ceil(total / 20));
+  const input: React.CSSProperties = {
+    padding: '9px 12px',
+    borderRadius: 10,
+    border: '1px solid var(--alv-line)',
+    fontSize: 14,
+    background: 'var(--alv-surface)',
+    color: 'var(--alv-ink)',
+    minWidth: 0,
+  };
+
   return (
     <AdminShell title="Qaytarishlar">
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'flex-end',
-          flexWrap: 'wrap',
-          marginBottom: 18,
-        }}
-      >
-        <div style={{ minWidth: 240 }}>
-          <Input
-            name="q"
-            label="Qidiruv"
-            placeholder="Qaytarish yoki buyurtma raqami"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-        <label style={{ display: 'grid', gap: 6 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>Holat</span>
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-            style={input}
-          >
-            {STATUSES.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--alv-muted)' }}>
-          Jami: {total}
-        </span>
-      </div>
-
       {error ? (
-        <p role="alert" style={{ color: 'var(--alv-danger)', fontWeight: 600 }}>
+        <div
+          role="alert"
+          className="alv-card"
+          style={{ padding: 14, marginBottom: 14, borderLeft: '3px solid var(--alv-danger)' }}
+        >
           {error}
-        </p>
+        </div>
       ) : null}
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 820 }}>
-          <thead>
-            <tr style={{ fontSize: 12.5, color: 'var(--alv-muted)', textAlign: 'left' }}>
-              <th style={th}>Raqam</th>
-              <th style={th}>Buyurtma</th>
-              <th style={th}>Sabab</th>
-              <th style={th}>Holat</th>
-              <th style={{ ...th, textAlign: 'right' }}>Summa</th>
-              <th style={th}>Sana</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((r) => (
-              <tr key={r.id} style={{ borderTop: '1px solid var(--alv-line)' }}>
-                <td style={td}>
-                  <Link
-                    href={`/returns/${r.id}`}
-                    style={{ fontWeight: 700, color: 'var(--alv-brand)' }}
-                  >
-                    {r.number}
-                  </Link>
-                  <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
-                    {r.itemsCount} pozitsiya
-                  </div>
-                </td>
-                <td style={td}>
-                  <div style={{ fontWeight: 600 }}>{r.orderNumber ?? '—'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
-                    {r.contactPhone ?? '—'}
-                  </div>
-                </td>
-                <td style={{ ...td, fontSize: 13 }}>{label(RETURN_REASON_LABEL, r.reasonCode)}</td>
-                <td style={td}>
-                  <Badge tone={RETURN_STATUS_TONE[r.status] ?? 'neutral'}>
-                    {label(RETURN_STATUS_LABEL, r.status)}
-                  </Badge>
-                </td>
-                <td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>
-                  {formatTiyin(r.refundAmount)}
-                </td>
-                <td style={{ ...td, fontSize: 12.5 }}>{fmtDateTime(r.createdAt)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
+        Jami {total} ta so‘rov
+      </p>
 
-      {loading ? <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p> : null}
-      {!loading && items.length === 0 ? (
-        <p style={{ color: 'var(--alv-muted)' }}>Qaytarish topilmadi.</p>
-      ) : null}
-
-      <div style={{ display: 'flex', gap: 8, marginTop: 16, alignItems: 'center' }}>
-        <button
-          type="button"
-          disabled={page <= 1}
-          onClick={() => setPage((p) => p - 1)}
-          style={pager(page <= 1)}
-        >
-          ← Oldingi
-        </button>
-        <span style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{page}-sahifa</span>
-        <button
-          type="button"
-          disabled={items.length < 30}
-          onClick={() => setPage((p) => p + 1)}
-          style={pager(items.length < 30)}
-        >
-          Keyingi →
-        </button>
-      </div>
+      <DataList<AdminReturnRow>
+        storageKey="returns"
+        columns={COLUMNS}
+        rows={items}
+        rowKey={(r) => r.id}
+        filters={filters}
+        onFiltersChange={changeFilters}
+        loading={loading}
+        onClearFilters={() => changeFilters(EMPTY)}
+        emptyTitle="Qaytarish so‘rovi yo‘q"
+        emptyHint="Mijoz qaytarish so‘rasa, u shu yerda paydo bo‘ladi."
+        noResultsTitle="Bu shartlarga mos so‘rov topilmadi"
+        filterBar={
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <input
+              type="search"
+              value={f.q ?? ''}
+              onChange={(e) => changeFilters({ ...filters, q: e.target.value })}
+              placeholder="Qaytarish yoki buyurtma raqami, telefon"
+              aria-label="Qaytarish qidirish"
+              style={{ ...input, flex: '1 1 260px' }}
+            />
+            <select
+              value={f.status ?? ''}
+              onChange={(e) => changeFilters({ ...filters, status: e.target.value })}
+              aria-label="Holat bo‘yicha filtr"
+              style={input}
+            >
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        }
+        footer={
+          pages > 1 ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                style={{ ...input, cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}
+              >
+                Oldingi
+              </button>
+              <span style={{ fontSize: 14, color: 'var(--alv-muted)' }}>
+                {page} / {pages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                disabled={page === pages}
+                style={{ ...input, cursor: 'pointer', opacity: page === pages ? 0.5 : 1 }}
+              >
+                Keyingi
+              </button>
+            </div>
+          ) : null
+        }
+      />
     </AdminShell>
   );
-}
-
-const th: React.CSSProperties = { padding: '10px 12px', fontWeight: 700 };
-const td: React.CSSProperties = { padding: 12, fontSize: 13.5, verticalAlign: 'top' };
-const input: React.CSSProperties = {
-  minHeight: 44,
-  padding: '10px 12px',
-  borderRadius: 12,
-  border: 0,
-  boxShadow: 'inset 0 0 0 1.5px var(--alv-line-2)',
-  font: 'inherit',
-  background: 'var(--alv-surface)',
-};
-
-function pager(disabled: boolean): React.CSSProperties {
-  return {
-    minHeight: 44,
-    padding: '0 16px',
-    borderRadius: 999,
-    border: 0,
-    background: 'var(--alv-surface)',
-    boxShadow: 'inset 0 0 0 1.5px var(--alv-line-2)',
-    fontWeight: 600,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1,
-  };
 }
