@@ -2,11 +2,11 @@ import Link from 'next/link';
 import type { Locale } from '@/i18n/messages';
 
 const LINKS: Array<[string, string, string]> = [
-  ['/sahifa/yetkazib-berish', 'Yetkazib berish', 'Доставка'],
-  ['/sahifa/tolov', 'To‘lov', 'Оплата'],
-  ['/sahifa/qaytarish', 'Qaytarish shartlari', 'Условия возврата'],
-  ['/sahifa/oferta', 'Ommaviy oferta', 'Публичная оферта'],
-  ['/sahifa/maxfiylik', 'Maxfiylik siyosati', 'Политика конфиденциальности'],
+  ['/sahifa/delivery', 'Yetkazib berish', 'Доставка'],
+  ['/sahifa/payment', 'To‘lov', 'Оплата'],
+  ['/sahifa/return-policy', 'Qaytarish shartlari', 'Условия возврата'],
+  ['/sahifa/public-offer', 'Ommaviy oferta', 'Публичная оферта'],
+  ['/sahifa/privacy-policy', 'Maxfiylik siyosati', 'Политика конфиденциальности'],
   ['/savollar', 'Ko‘p so‘raladigan savollar', 'Частые вопросы'],
   ['/blog', 'Blog', 'Блог'],
   ['/hamkorlik', 'Hamkorlik', 'Партнёрство'],
@@ -46,7 +46,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
 
         <div style={{ height: 1, background: '#3A2C42', margin: '0 0 16px' }} />
         <div style={{ color: '#8E8296', fontSize: 12 }}>
-          © 2026 ALIVER Uzbekistan • MCHJ «ALIVER UZ» • STIR [SIZNING STIR]
+          © 2026 ALIVER.UZ • {locale === 'ru' ? 'Официальный магазин в Узбекистане' : 'O‘zbekistondagi rasmiy do‘kon'}
         </div>
       </div>
     </footer>

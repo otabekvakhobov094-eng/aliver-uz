@@ -10,7 +10,7 @@ export const revalidate = 300;
 export default async function CategoriesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
-  const tree = await catalogApi.categories();
+  const tree = await catalogApi.categories().catch(() => []);
   const ru = locale === 'ru';
 
   return (
@@ -25,7 +25,7 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
             : 'Bo‘limlar va ichki bo‘limlar. Maksimal uch daraja — shunda URL, navigatsiya va SEO tushunarli qoladi.'}
         </p>
 
-        <div className="alv-grid alv-grid--3" style={{ marginTop: 26 }}>
+        {tree.length === 0 ? <div className="alv-empty alv-card" style={{ marginTop: 26 }}><p>{ru ? 'Категории появятся после обновления каталога.' : 'Kategoriyalar katalog yangilangach ko‘rinadi.'}</p></div> : <div className="alv-grid alv-grid--3" style={{ marginTop: 26 }}>
           {tree.map((c) => (
             <div key={c.id} className="alv-card" style={{ padding: 22 }}>
               <Link
@@ -65,7 +65,7 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
               </div>
             </div>
           ))}
-        </div>
+        </div>}
       </main>
 
       <SiteFooter locale={locale} />
