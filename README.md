@@ -383,6 +383,9 @@ oladi, pozitsiyalar va summalarsiz.
 
 ## Bosqichlar
 
+> **Joriy holat va keyingi qadamlar: [`docs/HOLAT.md`](docs/HOLAT.md).**
+> U yerda nima tayyor, nima to'sib turibdi va kimdan nima kutilayotgani yozilgan.
+
 | Etap | Mazmun | Holat |
 |---|---|---|
 | 0 | TZ v2, yurist xulosasi, OFD provayderi, Click/Payme hujjatlari, kontent rejasi | buyurtmachi tomonida |
