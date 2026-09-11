@@ -1,6 +1,6 @@
 import type { Tiyin, Uuid } from '@aliver/types';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+import { apiBase } from './api-base';
 
 /* ---------- Server javob tiplari ---------- */
 
@@ -122,7 +122,7 @@ export interface Suggestion {
  * arxitektura tavsiyasi: hamma sahifada to'liq SSR shart emas.
  */
 async function get<T>(path: string, revalidate = 120): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { next: { revalidate } });
+  const res = await fetch(`${apiBase()}${path}`, { next: { revalidate } });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ?? `API xatosi: ${res.status}`);
@@ -147,7 +147,7 @@ export const catalogApi = {
 
   /** Avtoto‘ldirish — brauzerdan chaqiriladi, keshlanmaydi. */
   async suggest(q: string, signal?: AbortSignal): Promise<Suggestion[]> {
-    const res = await fetch(`${BASE}/catalog/search/suggest?q=${encodeURIComponent(q)}`, {
+    const res = await fetch(`${apiBase()}/catalog/search/suggest?q=${encodeURIComponent(q)}`, {
       signal,
     });
     if (!res.ok) return [];

@@ -37,17 +37,43 @@ export class TokensService {
     return createHash('sha256').update(token).digest('hex');
   }
 
+  /**
+   * Autentifikatsiya cookie sining parametrlari.
+   *
+   * Bu yerda ikkita xato admin panelini butunlay ochilmaydigan qilib
+   * qo'ygan edi — ikkalasi ham JIMGINA ishlaydi: brauzer cookie ni rad
+   * etadi, lekin hech qanday xato ko'rsatmaydi.
+   *
+   *  1. `domain: 'localhost'` STANDART QIYMAT sifatida turardi.
+   *     `aliver-uz-api-stage.onrender.com` dan kelgan javobda
+   *     `Domain=localhost` bo'lsa, brauzer cookie ni butunlay tashlaydi:
+   *     domen javob bergan xostga mos kelmaydi.
+   *
+   *     Endi domen FAQAT aniq ko'rsatilganda qo'yiladi. Ko'rsatilmasa
+   *     host-only cookie bo'ladi — bu aksariyat holat uchun to'g'ri
+   *     xatti-harakat.
+   *
+   *  2. `sameSite: 'lax'` qat'iy yozilgan edi. Admin va API turli
+   *     domenlarda bo'lganda bu ham cookie ni rad etadi.
+   *
+   *     Endi u sozlanadi, lekin ASOSIY yechim boshqa: admin va web
+   *     API ga o'z domenidagi `/api` proxy orqali murojaat qiladi
+   *     (`apps/admin/src/lib/api-base.ts`), ya'ni so'rov umuman
+   *     cross-site bo'lmaydi va `lax` yetarli.
+   */
   cookieOptions(maxAgeSeconds: number): CookieOptions {
     const secure = this.config.get<boolean>('COOKIE_SECURE', false);
-    const configuredDomain = this.config.get<string>('COOKIE_DOMAIN')?.trim();
+    const sameSite = this.config.get<'lax' | 'strict' | 'none'>('COOKIE_SAMESITE', 'lax');
+    const domain = this.config.get<string>('COOKIE_DOMAIN', '').trim();
 
     return {
       httpOnly: true,
-      sameSite: secure ? 'none' : 'lax',
+      sameSite,
       secure,
-      // Domain berilmasa host-only cookie ishlaydi. `localhost` domeni Render'da
-      // brauzer tomonidan rad qilinib, adminni yana login sahifasiga qaytarardi.
-      ...(configuredDomain ? { domain: configuredDomain } : {}),
+      // "localhost" qiymati ataylab e'tiborsiz qoldiriladi: u faqat
+      // lokal mashinada to'g'ri va boshqa hamma joyda cookie ni yo'q
+      // qiladi. Lokalda esa domensiz cookie baribir ishlaydi.
+      ...(domain && domain !== 'localhost' ? { domain } : {}),
       path: '/',
       maxAge: maxAgeSeconds * 1000,
     };

@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+import { apiBase } from './api-base';
 
 export interface ContentPage {
   slug: string;
@@ -43,7 +43,7 @@ export interface Banner {
 export interface Faq { id: string; category: string | null; questionUz: string; questionRu: string; answerUz: string; answerRu: string; }
 
 async function get<T>(path: string, revalidate = 120): Promise<T> {
-  const response = await fetch(`${BASE}${path}`, { next: { revalidate } });
+  const response = await fetch(`${apiBase()}${path}`, { next: { revalidate } });
   if (!response.ok) throw new Error(`Content API: ${response.status}`);
   return response.json() as Promise<T>;
 }

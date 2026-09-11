@@ -1,6 +1,6 @@
 import type { ApiError, RequestOtpResponse } from '@aliver/types';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+import { apiBase } from './api-base';
 
 export class ApiRequestError extends Error {
   constructor(
@@ -15,7 +15,7 @@ export class ApiRequestError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${apiBase()}${path}`, {
     ...init,
     credentials: 'include', // cookie'dagi tokenlar uchun majburiy
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },

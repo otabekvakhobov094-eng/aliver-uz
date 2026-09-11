@@ -46,6 +46,18 @@ services:
         value: https://aliver-uz-admin-stage.onrender.com
       - key: COOKIE_SECURE
         value: "true"
+      # Admin va web API ga O'Z DOMENIDAGI /api proxy orqali murojaat
+      # qiladi, ya'ni so'rov cross-site emas va `lax` yetarli.
+      - key: COOKIE_SAMESITE
+        value: lax
+      # Domen ATAYLAB bo'sh: host-only cookie. `.onrender.com` Public
+      # Suffix List da — u bilan umumiy cookie qo'yib bo'lmaydi.
+      - key: COOKIE_DOMAIN
+        value: ""
+      # Render reverse proxy orqasida ishlaydi. Bunsiz `req.ip` hamma
+      # uchun bir xil bo'lib, chastota cheklovlari butun saytni bloklaydi.
+      - key: TRUST_PROXY
+        value: "1"
       - key: PAYMENTS_MODE
         value: mock
       - key: OFD_PROVIDER
@@ -74,8 +86,11 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://aliver-uz-api-stage.onrender.com/api
+      # Brauzer API ga to'g'ridan-to'g'ri bormaydi — u o'z domenidagi
+      # /api ga so'rov yuboradi, Next.js esa uni serverda uzatadi.
+      # Shu sababli `NEXT_PUBLIC_` EMAS: qiymat brauzerga tushmasligi kerak.
+      - key: API_ORIGIN
+        value: https://aliver-uz-api-stage.onrender.com
 
   - type: web
     name: aliver-uz-admin-stage
@@ -88,8 +103,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://aliver-uz-api-stage.onrender.com/api
+      # Login cookie'si aynan shu tufayli ishlaydi: so'rov admin
+      # domenida qoladi va cookie birinchi tomon cookie si bo'ladi.
+      - key: API_ORIGIN
+        value: https://aliver-uz-api-stage.onrender.com
 
 databases:
   - name: aliver-uz-db-stage

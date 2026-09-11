@@ -7,6 +7,23 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  /**
+   * Same-origin API proxy.
+   *
+   * Brauzer `/api/...` ga so'rov yuboradi, Next.js uni serverda API ga
+   * uzatadi. Shu sababli API qaytargan cookie BRAUZER UCHUN shu domenniki
+   * bo'ladi — ya'ni birinchi tomon cookie si, uni Safari ham, uchinchi
+   * tomon cookie'lari o'chirilgan Chrome ham bloklamaydi.
+   *
+   * `API_ORIGIN` — SERVER o'zgaruvchisi (`NEXT_PUBLIC_` emas): u brauzer
+   * paketiga tushmasligi kerak, aks holda kimdir so'rovlarni yana tashqi
+   * domenga yo'naltirib, cookie muammosini qaytarib keltirardi.
+   */
+  async rewrites() {
+    const origin = (process.env.API_ORIGIN ?? 'http://localhost:4000').replace(/\/+$/, '');
+    return [{ source: '/api/:path*', destination: `${origin}/api/:path*` }];
+  },
+
   async headers() {
     return [
       {

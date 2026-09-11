@@ -31,8 +31,24 @@ export const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET juda qisqa'),
   JWT_ACCESS_TTL: int(900),
   JWT_REFRESH_TTL: int(2592000),
-  COOKIE_DOMAIN: z.string().default('localhost'),
+  /**
+   * Cookie domeni. BO'SH QOLDIRING, agar aniq bilmasangiz.
+   *
+   * Noto'g'ri domen cookie ni jimgina yo'q qiladi: brauzer uni rad
+   * etadi, server esa buni bilmaydi. Ilgari bu yerda standart qiymat
+   * `localhost` edi va u productionda adminni ochilmaydigan qilgan.
+   * Endi standart — bo'sh (host-only cookie).
+   */
+  COOKIE_DOMAIN: z.string().default(''),
   COOKIE_SECURE: bool(),
+  /**
+   * `lax` — bir domenli o'rnatish uchun (admin va web API ga o'z
+   * domenidagi proxy orqali murojaat qiladi). `none` faqat haqiqiy
+   * cross-site kerak bo'lganda va u `COOKIE_SECURE=true` ni talab qiladi.
+   */
+  COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+  /** Ishonchli reverse proxy'lar soni (Render'da 1, lokalda 0). */
+  TRUST_PROXY: int(0),
 
   OTP_LENGTH: int(5),
   OTP_TTL_SECONDS: int(300),
@@ -119,6 +135,12 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     const lines = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`);
     throw new Error(`Muhit o‘zgaruvchilari noto‘g‘ri:\n${lines.join('\n')}`);
   }
+  // `SameSite=None` cookie si `Secure` bo'lmasa, brauzer uni RAD ETADI.
+  // Bu jimgina sodir bo'ladi — login ishlamaydi, xato esa chiqmaydi.
+  if (parsed.data.COOKIE_SAMESITE === 'none' && !parsed.data.COOKIE_SECURE) {
+    throw new Error('COOKIE_SAMESITE=none uchun COOKIE_SECURE=true bo‘lishi shart');
+  }
+
   if (parsed.data.APP_ENV === 'production') {
     if (parsed.data.JWT_ACCESS_SECRET.includes('dev_')) {
       throw new Error('Productionda dev JWT kaliti ishlatilmaydi');

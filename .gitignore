@@ -8,3 +8,9 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+
+# Lokal ishlab chiqishda node_modules ni boshqa joydan ulash uchun symlink
+# qilinishi mumkin — u hech qachon commit qilinmaydi.
+
+# TypeScript qurilish keshi — har bir buildda o'zgaradi, commitga kerak emas.
+*.tsbuildinfo

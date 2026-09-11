@@ -1,6 +1,6 @@
 import type { Tiyin, Uuid } from '@aliver/types';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+import { apiBase } from './api-base';
 
 /* ----------------------------- Javob tiplari ----------------------------- */
 
@@ -160,7 +160,7 @@ export class ShopError extends Error {
 }
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${apiBase()}${path}`, {
     ...init,
     // Savat `cart_token` cookie'sida yashaydi — mehmon uchun ham ishlashi shart.
     credentials: 'include',

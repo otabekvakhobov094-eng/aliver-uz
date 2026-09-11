@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { serverApiBase } from './lib/api-base';
 import { DEFAULT_LOCALE, LOCALES } from './i18n/messages';
 
 /**
@@ -15,7 +16,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+  // Middleware serverda ishlaydi — proxy orqali emas, to'g'ridan-to'g'ri.
+  const apiUrl = serverApiBase();
   try {
     const response = await fetch(`${apiUrl}/content/redirect?path=${encodeURIComponent(pathname)}`, { signal: AbortSignal.timeout(350), next: { revalidate: 60 } });
     if (response.ok) {

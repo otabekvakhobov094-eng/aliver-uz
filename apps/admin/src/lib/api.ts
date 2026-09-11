@@ -1,5 +1,8 @@
-// Brauzer uchun same-origin endpoint. Next.js serveri uni haqiqiy API'ga proxy qiladi.
-const BASE = '/api';
+import { apiBase } from './api-base';
+
+// Manzil HAR SO'ROVDA hisoblanadi: brauzerda nisbiy `/api`, serverda
+// to'liq manzil. Modul yuklanganda bir marta hisoblansa, server uchun
+// qurilgan qiymat brauzerga ham tushib qolardi.
 
 export class AdminApiError extends Error {
   constructor(
@@ -40,7 +43,7 @@ export interface ReportOverview {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${apiBase()}${path}`, {
     ...init,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
@@ -514,7 +517,7 @@ export const adminApi = {
     const form = new FormData();
     form.append('file', file);
     form.append('mode', mode);
-    const res = await fetch(`${BASE}/admin/import/products`, {
+    const res = await fetch(`${apiBase()}/admin/import/products`, {
       method: 'POST',
       credentials: 'include',
       body: form,
@@ -866,5 +869,5 @@ export const adminApi = {
     return request<ReportOverview>(`/admin/reports/overview?${qs.toString()}`);
   },
 
-  templateUrl: () => `${BASE}/admin/import/products/template`,
+  templateUrl: () => `${apiBase()}/admin/import/products/template`,
 };

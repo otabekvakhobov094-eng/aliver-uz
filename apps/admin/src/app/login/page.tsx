@@ -20,19 +20,41 @@ export default function AdminLoginPage() {
     setError(null);
     try {
       await adminApi.login(email, password, totp || undefined);
-      // Panelga o'tishdan avval cookie/sessiya haqiqatan ishlashini tekshiramiz.
+
+      /*
+       * Sessiya HAQIQATAN ishlayotganini shu yerda tekshiramiz.
+       *
+       * Ilgari login 200 qaytarsa darhol panelga o'tilardi. Cookie
+       * saqlanmagan bo'lsa (bu jimgina sodir bo'ladi), panel birinchi
+       * so'rovda 401 olardi va yana shu sahifaga qaytarardi — natijada
+       * ekran "ochilib yopilardi", xato esa ko'rinmasdi.
+       *
+       * Endi cookie ishlamasa foydalanuvchi login sahifasida qoladi va
+       * sababini o'qiydi.
+       */
       await adminApi.permissions();
+
+      // `replace` — `push` emas: brauzerdagi "orqaga" tugmasi
+      // foydalanuvchini login sahifasiga qaytarmasligi kerak.
       router.replace('/');
       router.refresh();
     } catch (err) {
-      const msg =
-        err instanceof AdminApiError && err.status === 401
-          ? 'Email yoki parol noto‘g‘ri, yoxud login sessiyasi saqlanmadi.'
-          : err instanceof AdminApiError
-            ? err.message
-            : 'Server bilan bog‘lanishda xatolik yuz berdi. Qayta urinib ko‘ring.';
-      if (msg.includes('2FA')) setNeedsTotp(true);
-      setError(msg);
+      if (!(err instanceof AdminApiError)) {
+        setError('Server bilan bog‘lanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.');
+        return;
+      }
+      if (err.message.includes('2FA')) {
+        setNeedsTotp(true);
+        setError(err.message);
+        return;
+      }
+      setError(
+        err.status === 401
+          ? 'Email yoki parol noto‘g‘ri.'
+          : err.status === 403
+            ? 'Sessiya saqlanmadi. Brauzerda cookie’lar yoqilganini tekshiring.'
+            : err.message,
+      );
     } finally {
       setBusy(false);
     }

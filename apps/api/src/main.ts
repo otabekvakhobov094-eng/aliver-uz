@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
@@ -12,9 +13,26 @@ import { installBigIntSerializer } from './common/bigint-serializer';
 async function bootstrap(): Promise<void> {
   installBigIntSerializer();
 
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  /**
+   * Reverse proxy ga ishonish.
+   *
+   * Render, Cloudflare va Nginx orqasida `req.ip` HAR DOIM proxy ning
+   * IP si bo'ladi. Bu chastota cheklovlarini buzadi va eng yomon
+   * ko'rinishda: bitta mijoz formani 5 marta yuborsa, BUTUN SAYT uchun
+   * limit tugaydi — chunki hamma bir xil IP dan kelayotgandek ko'rinadi.
+   * OTP cheklovlari ham shunday ishlamay qoladi.
+   *
+   * `TRUST_PROXY` — ishonchli proxy'lar soni. Render'da 1. Nolda
+   * (lokal ishlab chiqish) o'zgartirilmaydi: ishonchni keraksiz
+   * yoqish esa mijozga `X-Forwarded-For` ni o'zi yozib, limitni
+   * chetlab o'tish imkonini berardi.
+   */
+  const trustProxy = config.get<number>('TRUST_PROXY', 0);
+  if (trustProxy > 0) app.set('trust proxy', trustProxy);
 
   app.use(helmet());
   app.use(cookieParser());
