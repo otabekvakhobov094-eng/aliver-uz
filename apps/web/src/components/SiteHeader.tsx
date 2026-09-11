@@ -1,3 +1,4 @@
+import { AliverLogo } from '@aliver/ui';
 import Link from 'next/link';
 import { t, type Locale } from '@/i18n/messages';
 import { CartBadge } from './CartBadge';
@@ -27,8 +28,13 @@ export function SiteHeader({ locale }: { locale: Locale }) {
 
       <div className={styles.bar}>
         <div className={`alv-page ${styles.inner}`}>
-          <Link href={`/${locale}`} className={styles.logo}>
-            ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span>
+          <Link href={`/${locale}`} className={styles.logo} aria-label="ALIVER.UZ">
+            {/*
+              Sarlavhadagi logo ANIMATSIYASIZ: u ekranda doim turadi va
+              doimiy harakat o'qishga xalaqit beradi. Animatsion variant
+              faqat bosh sahifaning hero qismida ishlatiladi.
+            */}
+            <AliverLogo height={24} animated={false} />
           </Link>
 
           <nav

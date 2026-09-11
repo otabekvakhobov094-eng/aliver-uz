@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import '@aliver/ui/tokens.css';
 import '@aliver/ui/components.css';
+import '@aliver/ui/motion.css';
 
 export const metadata: Metadata = {
   title: { default: 'ALIVER.UZ — Admin', template: '%s — ALIVER Admin' },

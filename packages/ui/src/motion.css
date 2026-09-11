@@ -1,0 +1,199 @@
+/* ============================================================
+   ALIVER.UZ — harakat tizimi.
+
+   Bitta qoida butun faylni belgilaydi: HARAKAT IXTIYORIY.
+   `prefers-reduced-motion` yoqilgan foydalanuvchi uchun hamma narsa
+   darhol, animatsiyasiz ko'rinadi. Bu injiqlik emas — vestibulyar
+   buzilishlarda harakat bosh aylanishi va ko'ngil aynishini keltirib
+   chiqaradi, shuning uchun brauzerda maxsus sozlama bor.
+
+   Shu sababli animatsiya HECH QACHON kontentni ko'rsatishning yagona
+   yo'li bo'lmasligi kerak: element avvaldan o'z joyida turadi, biz
+   faqat uning paydo bo'lishini bezaymiz.
+   ============================================================ */
+
+:root {
+  /* Bir xil his uchun: tezlik va egri chiziq bitta joyda. */
+  --alv-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --alv-ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --alv-dur-fast: 180ms;
+  --alv-dur: 420ms;
+  --alv-dur-slow: 720ms;
+}
+
+/* ------------------------------ Ochilish ------------------------------ */
+
+/*
+ * Skroll bilan ochilish.
+ *
+ * Boshlang'ich holat FAQAT `data-reveal` atributi JS tomonidan
+ * qo'yilganda ishlaydi. JS ishlamasa (yoki xato bersa) element oddiy
+ * holatda — ko'rinadigan bo'lib qoladi. Aks holda JS xatosi butun
+ * sahifani bo'sh qoldirardi.
+ */
+[data-reveal='hidden'] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+
+[data-reveal='shown'] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--alv-dur-slow) var(--alv-ease-out),
+    transform var(--alv-dur-slow) var(--alv-ease-out);
+}
+
+/* Ketma-ket ochilish: kartochkalar birin-ketin chiqadi. */
+[data-reveal-delay='1'] { transition-delay: 60ms; }
+[data-reveal-delay='2'] { transition-delay: 120ms; }
+[data-reveal-delay='3'] { transition-delay: 180ms; }
+[data-reveal-delay='4'] { transition-delay: 240ms; }
+[data-reveal-delay='5'] { transition-delay: 300ms; }
+
+/* ------------------------------ 3D qiyalik ------------------------------ */
+
+/*
+ * Kartochkaning kursorga qarab qiyalishi.
+ *
+ * Burchak ATAYLAB kichik (6 daraja): katta burchak matnni o'qishni
+ * qiyinlashtiradi va arzon ko'rinadi. Chuqurlik hissi asosan soyadan
+ * keladi, burchakdan emas.
+ */
+.alv-tilt {
+  transform-style: preserve-3d;
+  transition:
+    transform var(--alv-dur) var(--alv-ease-out),
+    box-shadow var(--alv-dur) var(--alv-ease-out);
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .alv-tilt:hover {
+    transform: perspective(900px) rotateX(var(--alv-tilt-x, 0deg))
+      rotateY(var(--alv-tilt-y, 0deg)) translateZ(6px);
+    box-shadow: 0 18px 48px rgba(27, 18, 32, 0.16);
+  }
+
+  /* Kartochka ichidagi rasm biroz oldinga chiqadi — qatlamlilik hissi. */
+  .alv-tilt:hover .alv-tilt__lift {
+    transform: translateZ(22px) scale(1.03);
+  }
+}
+
+.alv-tilt__lift {
+  transition: transform var(--alv-dur) var(--alv-ease-out);
+}
+
+/* ------------------------------ Yaltirash ------------------------------ */
+
+/*
+ * Sirt bo'ylab o'tuvchi yorug'lik.
+ *
+ * Kosmetika qadog'idagi yaltiroq plyonka effekti. `background-position`
+ * animatsiyasi kompozitor qatlamida ishlaydi va sahifani qayta
+ * hisoblashga majbur qilmaydi.
+ */
+.alv-shimmer {
+  background-image: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.55) 45%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.55) 55%,
+    transparent 75%
+  );
+  background-size: 250% 100%;
+  background-position: 180% 0;
+  animation: alv-shimmer-sweep 4.5s var(--alv-ease-soft) infinite;
+}
+
+@keyframes alv-shimmer-sweep {
+  /* Uzoq pauza: doimiy yaltirash bezovta qiladi, siyrak esa qimmat ko'rinadi. */
+  0%, 55% { background-position: 180% 0; }
+  100% { background-position: -80% 0; }
+}
+
+/* --------------------------- Suzuvchi elementlar --------------------------- */
+
+.alv-float {
+  animation: alv-float 7s var(--alv-ease-soft) infinite;
+}
+
+.alv-float--slow { animation-duration: 11s; }
+.alv-float--delayed { animation-delay: -3.5s; }
+
+@keyframes alv-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -14px, 0); }
+}
+
+/* ------------------------------ Hero fon ------------------------------ */
+
+/*
+ * WebGL ishlamaganda ko'rinadigan zaxira fon.
+ *
+ * Bu shunchaki "bo'sh joy to'ldirgich" emas: sekin internetda va eski
+ * telefonlarda AYNAN SHU ko'rinadi, shuning uchun u o'zi ham chiroyli
+ * bo'lishi kerak.
+ */
+.alv-hero-fallback {
+  background:
+    radial-gradient(60% 70% at 78% 28%, rgba(246, 204, 216, 0.95) 0%, transparent 62%),
+    radial-gradient(50% 60% at 18% 72%, rgba(255, 231, 214, 0.9) 0%, transparent 58%),
+    linear-gradient(125deg, #fffaf7 0%, #f8edf0 58%, #edd2da 100%);
+  background-size: 180% 180%, 180% 180%, 100% 100%;
+  animation: alv-hero-drift 22s var(--alv-ease-soft) infinite alternate;
+}
+
+@keyframes alv-hero-drift {
+  0% { background-position: 0% 0%, 100% 100%, 0 0; }
+  100% { background-position: 40% 30%, 60% 70%, 0 0; }
+}
+
+/* ------------------------------ Tugmalar ------------------------------ */
+
+.alv-lift {
+  transition:
+    transform var(--alv-dur-fast) var(--alv-ease-out),
+    box-shadow var(--alv-dur-fast) var(--alv-ease-out);
+}
+
+.alv-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(228, 23, 92, 0.24);
+}
+
+.alv-lift:active {
+  transform: translateY(0);
+  transition-duration: 60ms;
+}
+
+/* ============================================================
+   Harakatni kamaytirish.
+
+   Bu blok fayl OXIRIDA turadi va hamma narsani bekor qiladi.
+   `!important` bu yerda o'rinli: foydalanuvchining tizim sozlamasi
+   har qanday komponent uslubidan ustun bo'lishi kerak.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Element o'z joyida va ko'rinadigan holda qoladi. */
+  [data-reveal='hidden'] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .alv-tilt:hover,
+  .alv-tilt:hover .alv-tilt__lift {
+    transform: none !important;
+  }
+}

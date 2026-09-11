@@ -7,3 +7,5 @@ export * from './Rating';
 export * from './Input';
 export * from './OtpInput';
 export * from './Card';
+export * from './Reveal';
+export * from './AliverLogo';

@@ -5,6 +5,7 @@ import { CartProvider } from '@/components/CartProvider';
 import { CookieConsent } from '@/components/CookieConsent';
 import '@aliver/ui/tokens.css';
 import '@aliver/ui/components.css';
+import '@aliver/ui/motion.css';
 
 export const metadata: Metadata = {
   title: { default: 'ALIVER.UZ', template: '%s — ALIVER.UZ' },

@@ -1,0 +1,93 @@
+/*
+ * Hero surati.
+ *
+ * Asosiy g'oya: surat chap chetidan yo'qoladi va orqadagi jonli fon
+ * bilan qo'shilib ketadi. Chegara ko'rinmasligi kerak — aks holda u
+ * "sahifaga yopishtirilgan rasm" bo'lib qoladi.
+ */
+
+.wrap {
+  position: relative;
+  /* Grid ustuni ichida to'liq balandlikni egallaydi. */
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+  object-position: center right;
+
+  /*
+   * Chapdan va pastdan yumshoq yo'qolish.
+   *
+   * `mask-image` qo'llab-quvvatlanmaydigan brauzerda surat oddiy
+   * to'rtburchak bo'lib qoladi — bu ham yomon emas, shuning uchun
+   * `@supports` bilan o'rab o'tirilmadi.
+   */
+  -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.35) 12%,
+      #000 32%
+    ),
+    linear-gradient(to bottom, #000 78%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.35) 12%,
+      #000 32%
+    ),
+    linear-gradient(to bottom, #000 78%, transparent 100%);
+  mask-composite: intersect;
+
+  /* Juda sekin "nafas olish": harakat sezilmaydi, lekin sahifa tirik. */
+  animation: alv-hero-breathe 18s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  will-change: transform;
+}
+
+@keyframes alv-hero-breathe {
+  from { transform: scale(1) translate3d(0, 0, 0); }
+  to { transform: scale(1.035) translate3d(-6px, -8px, 0); }
+}
+
+/* ------------------------------- Mobil ------------------------------- */
+
+@media (max-width: 960px) {
+  .wrap {
+    justify-content: center;
+  }
+
+  .image {
+    max-height: 380px;
+    object-position: center;
+    /*
+     * Mobilda matn suratning USTIDA emas, TEPASIDA turadi, shuning uchun
+     * chap chetni yo'qotish shart emas — faqat pastki chet fonga
+     * qo'shiladi.
+     */
+    -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+  }
+}
+
+@media (max-width: 700px) {
+  .image {
+    max-height: 300px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    animation: none;
+  }
+}
