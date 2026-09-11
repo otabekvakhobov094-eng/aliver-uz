@@ -1,0 +1,440 @@
+<title>ALIVER banner tizimi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --paper:#F7F1F3;
+  --paper-2:#FFFFFF;
+  --ink:#1A1218;
+  --ink-2:#4A4048;
+  --muted:#6E6270;
+  --line:#E6DAE0;
+  --rose:#D6336C;
+  --rose-deep:#A8285A;
+  --plum:#2E1526;
+  --champagne:#9A7A3C;
+  --slot:#8A7F88;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#181016;
+    --paper-2:#221722;
+    --ink:#F3E9EE;
+    --ink-2:#C8B6C0;
+    --muted:#9B8B96;
+    --line:#3A2A35;
+    --rose:#F06A96;
+    --rose-deep:#D6336C;
+    --champagne:#D9B978;
+    --slot:#7E6F79;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#181016;
+  --paper-2:#221722;
+  --ink:#F3E9EE;
+  --ink-2:#C8B6C0;
+  --muted:#9B8B96;
+  --line:#3A2A35;
+  --rose:#F06A96;
+  --rose-deep:#D6336C;
+  --champagne:#D9B978;
+  --slot:#7E6F79;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Golos Text","Segoe UI",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1080px;
+  margin:0 auto;
+  padding-inline:20px;
+  padding-block:56px 96px;
+}
+h1,h2,h3{font-family:Prata,"Times New Roman",Georgia,serif;font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,6vw,54px);line-height:1.1;letter-spacing:-.01em}
+h2{font-size:clamp(24px,3.4vw,32px);line-height:1.2}
+h3{font-size:19px;line-height:1.3}
+p{margin:0}
+
+.eyebrow{
+  font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--champagne);
+}
+.lede{max-width:62ch;color:var(--ink-2);font-size:17px}
+
+header.top{display:flex;flex-direction:column;gap:14px;margin-bottom:18px}
+.meta{
+  display:flex;flex-wrap:wrap;gap:8px 22px;
+  padding-top:18px;margin-top:26px;border-top:1px solid var(--line);
+  font-size:13px;color:var(--muted);
+}
+.meta b{color:var(--ink);font-weight:600}
+
+.note{
+  background:var(--paper-2);
+  border-left:3px solid var(--rose);
+  padding:18px 20px;
+  margin-top:30px;
+  display:flex;flex-direction:column;gap:10px;
+  font-size:15px;color:var(--ink-2);
+}
+.note strong{color:var(--ink)}
+
+section.block{margin-top:64px;display:flex;flex-direction:column;gap:22px}
+.sechead{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- banner shell ---------- */
+.spec{display:flex;flex-direction:column;gap:14px}
+.spec-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.spec-head .ratio{
+  font-family:"Golos Text",sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:.08em;color:var(--champagne);
+  font-variant-numeric:tabular-nums;
+}
+.spec-use{font-size:14px;color:var(--muted);max-width:64ch}
+
+.frame{
+  position:relative;width:100%;overflow:hidden;
+  border:1px solid var(--line);
+  container-type:inline-size;
+}
+
+/* Banner artwork keeps fixed colours — it is printed artwork, not UI chrome */
+.art{
+  --a-ink:#FFF4F8;
+  --a-dim:#D7BCC8;
+  --a-rose:#E0457B;
+  --a-gold:#E4C489;
+  position:absolute;inset:0;
+  background:
+    radial-gradient(120% 95% at 12% 18%, #55203F 0%, transparent 58%),
+    radial-gradient(85% 80% at 88% 82%, #7A2148 0%, transparent 62%),
+    linear-gradient(148deg,#2E1526 0%,#1B0C17 62%,#2A1222 100%);
+  color:var(--a-ink);
+  font-family:"Golos Text",sans-serif;
+}
+.art.light{
+  --a-ink:#2B1420;
+  --a-dim:#6B5260;
+  --a-rose:#A8285A;
+  --a-gold:#8A6A2E;
+  background:
+    radial-gradient(100% 90% at 82% 14%, #FBDDE7 0%, transparent 60%),
+    radial-gradient(90% 80% at 8% 90%, #F6E7D6 0%, transparent 58%),
+    linear-gradient(160deg,#FDF4F7 0%,#F7EDF1 100%);
+}
+.art::after{ /* light bloom */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(42% 62% at 70% 6%, rgba(255,235,245,.20), transparent 70%);
+}
+
+.a-pad{position:absolute;inset:0;display:flex;padding:clamp(18px,4cqw,44px);gap:clamp(14px,3cqw,36px)}
+.a-copy{display:flex;flex-direction:column;justify-content:center;gap:clamp(7px,1.3cqw,13px);min-width:0;position:relative;z-index:2}
+.a-eyebrow{
+  font-size:clamp(9px,1.1cqw,12px);font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--a-gold);
+}
+.a-title{
+  font-family:Prata,Georgia,serif;font-weight:400;
+  font-size:clamp(20px,5.2cqw,58px);line-height:1.04;letter-spacing:-.015em;
+  text-wrap:balance;color:var(--a-ink);
+}
+.a-sub{font-size:clamp(11px,1.55cqw,17px);color:var(--a-dim);max-width:34ch;line-height:1.5}
+.a-cta{
+  align-self:flex-start;margin-top:clamp(4px,.8cqw,8px);
+  background:var(--a-rose);color:#fff;
+  font-size:clamp(10px,1.25cqw,14px);font-weight:600;letter-spacing:.02em;
+  padding:clamp(7px,1.1cqw,13px) clamp(14px,2.2cqw,26px);
+  border-radius:999px;
+}
+.art.light .a-cta{background:var(--a-rose);color:#fff}
+.a-price{
+  font-size:clamp(11px,1.5cqw,16px);color:var(--a-ink);font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+.a-price s{color:var(--a-dim);font-weight:400;margin-right:8px}
+
+/* photo slot */
+.slot{
+  position:relative;flex:none;
+  border:1.5px dashed rgba(228,196,137,.55);
+  border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;text-align:center;padding:8px;
+  background:rgba(255,255,255,.035);
+  min-width:0;
+}
+.art.light .slot{border-color:rgba(138,106,46,.45);background:rgba(255,255,255,.4)}
+.slot span{
+  font-size:clamp(8px,1cqw,11px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--a-gold);line-height:1.4;
+}
+.slot small{font-size:clamp(7px,.85cqw,10px);color:var(--a-dim);letter-spacing:.04em}
+
+/* ---------- individual layouts ---------- */
+.f-hero{aspect-ratio:16/6}
+.f-hero .a-pad{align-items:stretch}
+.f-hero .a-copy{flex:1 1 52%}
+.f-hero .slot{flex:1 1 42%}
+
+.f-mobile{aspect-ratio:4/5;max-width:330px}
+.f-mobile .a-pad{flex-direction:column}
+.f-mobile .slot{flex:1 1 auto;width:100%}
+.f-mobile .a-copy{flex:0 0 auto}
+
+.f-tile{aspect-ratio:1/1}
+.f-tile .a-pad{flex-direction:column;justify-content:flex-end}
+.f-tile .slot{position:absolute;inset:0;border:none;background:rgba(255,255,255,.03);border-radius:0}
+.f-tile .slot-in{position:absolute;inset:12px;border:1.5px dashed rgba(228,196,137,.45);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.f-tile .a-copy{z-index:3}
+
+.f-strip{aspect-ratio:12/1.6}
+.f-strip .a-pad{align-items:center;justify-content:space-between;flex-direction:row}
+.f-strip .a-copy{flex-direction:row;align-items:center;gap:clamp(10px,2cqw,22px);flex-wrap:wrap}
+.f-strip .a-title{font-size:clamp(13px,2.5cqw,26px)}
+
+.f-split{aspect-ratio:2/1}
+.f-split .a-pad{padding:0}
+.f-split .slot{flex:1 1 50%;border:none;border-right:1.5px dashed rgba(228,196,137,.4);border-radius:0}
+.f-split .a-copy{flex:1 1 50%;padding:clamp(18px,3.5cqw,40px)}
+
+.f-edit{aspect-ratio:3/2;max-width:430px}
+.f-edit .a-pad{flex-direction:column;padding:0}
+.f-edit .slot{flex:1 1 62%;border:none;border-bottom:1.5px dashed rgba(228,196,137,.4);border-radius:0}
+.f-edit .a-copy{flex:0 0 auto;padding:clamp(14px,3cqw,22px)}
+.f-edit .a-title{font-size:clamp(16px,4cqw,26px)}
+
+/* ---------- reference tables ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);background:var(--paper-2)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+td code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;color:var(--ink)}
+.sw{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px;margin-right:8px;border:1px solid rgba(128,128,128,.35)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.rule{background:var(--paper-2);padding:20px;display:flex;flex-direction:column;gap:7px}
+.rule h3{font-family:"Golos Text",sans-serif;font-size:15px;font-weight:600}
+.rule p{font-size:14px;color:var(--ink-2)}
+
+footer.end{margin-top:72px;padding-top:22px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);max-width:70ch}
+
+@media (max-width:620px){
+  .f-hero{aspect-ratio:4/3}
+  .f-hero .a-pad{flex-direction:column-reverse}
+  .f-split{aspect-ratio:3/4}
+  .f-split .a-pad{flex-direction:column}
+  .f-split .slot{border-right:none;border-bottom:1.5px dashed rgba(228,196,137,.4)}
+  .f-strip{aspect-ratio:5/2}
+  .f-strip .a-pad{flex-direction:column;align-items:flex-start;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">ALIVER.UZ · dizayn tizimi</p>
+  <h1>Banner shablonlari</h1>
+  <p class="lede">Oltita maket. Kompozitsiya, gradient va tipografika kodda — surat esa haqiqiy mahsulotniki bo'ladi va punktir bilan belgilangan uyaga qo'yiladi. Admin panelda matn, narx va surat almashtiriladi; maket tegilmaydi.</p>
+  <div class="meta">
+    <span><b>Display</b> Prata</span>
+    <span><b>Matn</b> Golos Text</span>
+    <span><b>Asosiy rang</b> #D6336C</span>
+    <span><b>Maketlar</b> 6</span>
+    <span><b>Tayyorlandi</b> 11.09.2026</span>
+  </div>
+</header>
+
+<div class="note">
+  <p><strong>Nega AI mahsulot rasmi emas.</strong> Bannerdagi mahsulot mijozga keladigan mahsulot bilan bir xil bo'lishi shart. AI qadoqni, yorliqni va rangni o'zgartiradi — bu ishonchni ham, huquqiy jihatni ham buzadi. Baymard tadqiqoti ham kosmetikada mijoz haqiqiy surat kutishini ko'rsatadi: surtilgan namuna, haqiqiy teri.</p>
+  <p>Shuning uchun bu yerda <strong>atmosfera va maket generatsiya qilinadi</strong>, mahsulot esa suratga olinadi. Bu arzonroq ham: bitta studiya sessiyasi butun katalogga yetadi.</p>
+</div>
+
+<!-- 1 -->
+<section class="block">
+  <div class="sechead">
+    <div class="spec-head"><h2>1. Bosh banner</h2><span class="ratio">16 : 6 · 1920×720</span></div>
+    <p class="spec-use">Bosh sahifaning yuqori qismi. Bitta xabar, bitta tugma — aylanadigan slayder emas: ikkinchi slayd deyarli hech qachon ko'rilmaydi.</p>
+  </div>
+  <div class="frame f-hero">
+    <div class="art">
+      <div class="a-pad">
+        <div class="a-copy">
+          <p class="a-eyebrow">Yangi kolleksiya</p>
+          <p class="a-title">Go'zallik g'amxo'rlikdan boshlanadi</p>
+          <p class="a-sub">Soch va teri uchun tabiiy moylar — original, sertifikatlangan, butun O'zbekiston bo'ylab yetkazib beriladi.</p>
+          <span class="a-cta">Kolleksiyani ko'rish</span>
+        </div>
+        <div class="slot"><span>Mahsulot surati</span><small>PNG, shaffof fon · 1100×720</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="block">
+  <div class="sechead">
+    <div class="spec-head"><h2>2. Bosh banner — mobil</h2><span class="ratio">4 : 5 · 1080×1350</span></div>
+    <p class="spec-use">Alohida maket, kesilgan variant emas. Trafikning katta qismi mobil bo'lgani uchun matn tepada, surat pastda: sarlavha darhol ko'rinadi.</p>
+  </div>
+  <div class="frame f-mobile">
+    <div class="art">
+      <div class="a-pad">
+        <div class="a-copy">
+          <p class="a-eyebrow">Yangi kolleksiya</p>
+          <p class="a-title">Go'zallik g'amxo'rlikdan boshlanadi</p>
+          <span class="a-cta">Ko'rish</span>
+        </div>
+        <div class="slot"><span>Mahsulot</span><small>1080×760</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="block">
+  <div class="sechead">
+    <div class="spec-head"><h2>3. Kategoriya plitkasi</h2><span class="ratio">1 : 1 · 800×800</span></div>
+    <p class="spec-use">Sakkizta kategoriya uchun. Mahsulotlar soni ham chiqadi — mijoz bo'sh kategoriyaga bormaydi.</p>
+  </div>
+  <div class="frame f-tile" style="max-width:330px">
+    <div class="art">
+      <div class="slot"><div class="slot-in"><span>Kategoriya surati</span><small>800×800</small></div></div>
+      <div class="a-pad">
+        <div class="a-copy">
+          <p class="a-title" style="font-size:clamp(20px,7cqw,30px)">Soch parvarishi</p>
+          <p class="a-sub" style="font-size:clamp(11px,3cqw,14px)">110 ta mahsulot</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="block">
+  <div class="sechead">
+    <div class="spec-head"><h2>4. Aksiya chizig'i</h2><span class="ratio">12 : 1.6 · 1920×256</span></div>
+    <p class="spec-use">Katalog va mahsulot sahifalari orasida. Bitta taklif, bitta shart — chalkashtirmaydi.</p>
+  </div>
+  <div class="frame f-strip">
+    <div class="art light">
+      <div class="a-pad">
+        <div class="a-copy">
+          <p class="a-title">3 ta oling — 20% chegirma</p>
+          <p class="a-price"><s>249 000 so'm</s>199 000 so'm</p>
+        </div>
+        <span class="a-cta">Savatga</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="block">
+  <div class="sechead">
+    <div class="spec-head"><h2>5. Kolleksiya bloki</h2><span class="ratio">2 : 1 · 1600×800</span></div>
+    <p class="spec-use">Bosh sahifa o'rtasida. Surat butun yarmini egallaydi — mahsulot teksturasi shu yerda ko'rinadi.</p>
+  </div>
+  <div class="frame f-split">
+    <div class="art">
+      <div class="a-pad">
+        <div class="slot"><span>Lifestyle surat</span><small>800×800 · surtilgan namuna</small></div>
+        <div class="a-copy">
+          <p class="a-eyebrow">Tirnoq</p>
+          <p class="a-title">Gel lak — 20 ta soya</p>
+          <p class="a-sub">Har bir soya mahalliy teri rangida suratga olingan. Rang ekranda emas, qo'lda qanday ko'rinishini ko'rasiz.</p>
+          <span class="a-cta">Soyalarni ko'rish</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="block">
+  <div class="sechead">
+    <div class="spec-head"><h2>6. Blog kartochkasi</h2><span class="ratio">3 : 2 · 1200×800</span></div>
+    <p class="spec-use">Blog ro'yxati va bosh sahifadagi uchta oxirgi maqola uchun.</p>
+  </div>
+  <div class="frame f-edit">
+    <div class="art light">
+      <div class="a-pad">
+        <div class="slot"><span>Muqova</span><small>1200×500</small></div>
+        <div class="a-copy">
+          <p class="a-eyebrow">11 sentyabr 2026</p>
+          <p class="a-title">Batana moyi nima uchun ishlaydi</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- tokens -->
+<section class="block">
+  <div class="sechead">
+    <h2>Banner ranglari</h2>
+    <p class="spec-use">Banner ichidagi ranglar qat'iy — ular bosma material kabi, interfeys emas. Sayt mavzusi o'zgarganda banner o'zgarmaydi.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Token</th><th>Qiymat</th><th>Vazifasi</th></tr></thead>
+      <tbody>
+        <tr><td><code>--a-ink</code></td><td><span class="sw" style="background:#FFF4F8"></span><code>#FFF4F8</code></td><td>Sarlavha, asosiy matn</td></tr>
+        <tr><td><code>--a-dim</code></td><td><span class="sw" style="background:#D7BCC8"></span><code>#D7BCC8</code></td><td>Izoh matni</td></tr>
+        <tr><td><code>--a-rose</code></td><td><span class="sw" style="background:#E0457B"></span><code>#E0457B</code></td><td>Tugma foni — oq matn bilan</td></tr>
+        <tr><td><code>--a-gold</code></td><td><span class="sw" style="background:#E4C489"></span><code>#E4C489</code></td><td>Eyebrow, chiziq, ramka</td></tr>
+        <tr><td>Fon (to'q)</td><td><span class="sw" style="background:#2E1526"></span><code>#2E1526 → #1B0C17</code></td><td>Asosiy gradient</td></tr>
+        <tr><td>Fon (och)</td><td><span class="sw" style="background:#FDF4F7"></span><code>#FDF4F7 → #F7EDF1</code></td><td>Aksiya va blog uchun</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- rules -->
+<section class="block">
+  <div class="sechead">
+    <h2>Qoidalar</h2>
+    <p class="spec-use">Bularsiz bannerlar bir-biriga o'xshamay qoladi va tizim buziladi.</p>
+  </div>
+  <div class="rules">
+    <div class="rule">
+      <h3>Bitta bannerda bitta xabar</h3>
+      <p>Ikkita taklif qo'shilsa, mijoz ikkalasini ham o'qimaydi. Ikkinchisi kerak bo'lsa — ikkinchi banner.</p>
+    </div>
+    <div class="rule">
+      <h3>Matn suratning ustiga tushmaydi</h3>
+      <p>Surat o'z uyasida qoladi. Ustiga yozilsa, mahsulot rasmi o'zgarganda matn o'qilmay qoladi — bu eng ko'p uchraydigan nuqson.</p>
+    </div>
+    <div class="rule">
+      <h3>Sarlavha 45 belgidan oshmaydi</h3>
+      <p>Ruscha variant o'zbekchadan ~15% uzun chiqadi. Maket ikkalasini ham ko'tarishi kerak, shuning uchun chegara o'zbekcha bo'yicha emas, ruscha bo'yicha belgilanadi.</p>
+    </div>
+    <div class="rule">
+      <h3>Mahsulot surati — shaffof fon</h3>
+      <p>PNG, fon olib tashlangan. Oq fonli surat gradient ustida to'rtburchak bo'lib turadi.</p>
+    </div>
+    <div class="rule">
+      <h3>Mobil uchun alohida maket</h3>
+      <p>Keng bannerni kesib ishlatmaydi. 4:5 versiyasi alohida yig'iladi — aks holda sarlavha yoki mahsulot qirqiladi.</p>
+    </div>
+    <div class="rule">
+      <h3>Tugma matni harakatni aytadi</h3>
+      <p>«Batafsil» emas — «Kolleksiyani ko'rish», «Savatga». Mijoz bosgandan keyin nima bo'lishini oldindan bilsin.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="end">
+  Maketlar TZ-2 dagi palitra va tipografika asosida qurilgan. Shriftlar: Prata (sarlavha) va Golos Text (matn) — ikkalasi ham kirill va lotin alifbosini to'liq qoplaydi, ya'ni o'zbekcha va ruscha versiyalar bir xil ko'rinadi. Punktir bilan belgilangan joylar — surat uyalari; ularning o'lchami har bir maket sarlavhasida ko'rsatilgan.
+</footer>
+
+</div>

@@ -191,8 +191,8 @@ o'lchamdagi matn yozilmaydi.** Ular chiziq, fon va katta sarlavha uchun.
 
 | Rol | Shrift | Sabab |
 |---|---|---|
-| Display (sarlavha) | **Playfair Display** | Yuqori kontrastli serif; go'zallik va parfyumeriya sohasining tili. Kirill va lotin qamrovi bor — uz/ru uchun shart |
-| Matn | **Inter** | Kichik o'lchamda ham aniq o'qiladi, kirill to'liq, raqamlar tabular — narx jadvallari uchun muhim |
+| Display (sarlavha) | **Prata** | Yuqori kontrastli didone serif — go'zallik va parfyumeriya sohasining tili. Kirill va lotin to'liq. Playfair Display o'rniga tanlandi: u juda keng tarqalgan va saytni tanib bo'lmas qiladi |
+| Matn | **Golos Text** | Kirill uchun maxsus loyihalangan (Paratype) — ruscha matn ritmi Inter'dan sezilarli yaxshi. Lotin ham to'liq, raqamlar tabular: narx jadvallari uchun muhim |
 
 O'lchamlar (`clamp` bilan, mobil → desktop):
 
