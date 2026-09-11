@@ -2,13 +2,21 @@ import Link from 'next/link';
 import type { Locale } from '@/i18n/messages';
 import styles from './SiteFooter.module.css';
 
+/**
+ * Footer havolalari. `/sahifa/delivery` va `/sahifa/payment` o'rniga
+ * bitta `/yetkazish` sahifasi qo'yildi: mijoz "qachon keladi va qanday
+ * to'layman" degan savolni doim birga so'raydi, ikkita sahifa esa uni
+ * ikki marta qidirishga majbur qilardi.
+ */
 const LINKS: Array<[string, string, string]> = [
-  ['/sahifa/delivery', 'Yetkazib berish', 'Доставка'],
-  ['/sahifa/payment', 'To‘lov', 'Оплата'],
+  ['/biz-haqimizda', 'Biz haqimizda', 'О нас'],
+  ['/yetkazish', 'Yetkazish va to‘lov', 'Доставка и оплата'],
+  ['/aloqa', 'Aloqa', 'Контакты'],
+  ['/kategoriyalar', 'Kategoriyalar', 'Категории'],
+  ['/savollar', 'Ko‘p so‘raladigan savollar', 'Частые вопросы'],
   ['/sahifa/return-policy', 'Qaytarish shartlari', 'Условия возврата'],
   ['/sahifa/public-offer', 'Ommaviy oferta', 'Публичная оферта'],
   ['/sahifa/privacy-policy', 'Maxfiylik siyosati', 'Политика конфиденциальности'],
-  ['/savollar', 'Ko‘p so‘raladigan savollar', 'Частые вопросы'],
   ['/blog', 'Blog', 'Блог'],
   ['/hamkorlik', 'Hamkorlik', 'Партнёрство'],
 ];
