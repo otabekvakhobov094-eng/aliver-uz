@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+// Brauzer uchun same-origin endpoint. Next.js serveri uni haqiqiy API'ga proxy qiladi.
+const BASE = '/api';
 
 export class AdminApiError extends Error {
   constructor(

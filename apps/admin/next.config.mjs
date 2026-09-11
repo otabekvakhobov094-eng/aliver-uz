@@ -1,3 +1,5 @@
+const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api').replace(/\/$/, '');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -6,6 +8,16 @@ const nextConfig = {
   transpilePackages: ['@aliver/ui', '@aliver/types'],
   images: {
     formats: ['image/avif', 'image/webp'],
+  },
+  // Admin API so'rovlarini same-origin proxy orqali yuboradi. Shu bilan
+  // autentifikatsiya cookie'si brauzerda third-party sifatida bloklanmaydi.
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${apiBase}/:path*`,
+      },
+    ];
   },
   async headers() {
     return [
