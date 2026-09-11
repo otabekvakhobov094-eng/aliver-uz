@@ -31,6 +31,7 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { ContentModule } from './modules/content/content.module';
 import { B2bModule } from './modules/b2b/b2b.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
@@ -69,6 +70,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     ContentModule,
     B2bModule,
     ReportsModule,
+    SettingsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

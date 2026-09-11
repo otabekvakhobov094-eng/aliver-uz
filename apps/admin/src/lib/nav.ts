@@ -44,7 +44,7 @@ export const NAV: NavItem[] = [
   { href: '/audit', label: 'Audit log', permission: 'audit.view', stage: 5, ready: true },
   { href: '/delivery', label: 'Yetkazish', permission: 'settings.view', stage: 5, ready: true },
   { href: '/notifications', label: 'Bildirishnomalar', permission: 'settings.view', stage: 5, ready: true },
-  { href: '/settings', label: 'Sozlamalar', permission: 'settings.view', stage: 1, ready: false },
+  { href: '/settings', label: 'Sozlamalar', permission: 'settings.view', stage: 1, ready: true },
 ];
 
 export function visibleNav(permissions: string[], roleCode?: string): NavItem[] {

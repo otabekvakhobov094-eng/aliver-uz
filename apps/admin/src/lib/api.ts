@@ -8,6 +8,12 @@ export class AdminApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /**
+     * Maydon bo'yicha xatolar, API bergan bo'lsa. Umumiy xabar bilan
+     * cheklanib qolsak, foydalanuvchi 20 ta maydonli formada qaysi biri
+     * noto'g'ri ekanini topa olmaydi.
+     */
+    readonly fieldErrors?: Record<string, string>,
   ) {
     super(message);
   }
@@ -31,6 +37,28 @@ export interface B2bLead {
   id: string; company: string; contactPerson: string; phone: string; telegram: string | null;
   city: string | null; businessType: string | null; monthlyVolume: string | null;
   comment: string | null; status: string; createdAt: string;
+}
+
+export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'stringList';
+
+export interface SettingItem {
+  key: string;
+  group: string;
+  label: string;
+  help?: string;
+  type: SettingType;
+  options?: Array<{ value: string; label: string }>;
+  min?: number;
+  max?: number;
+  unit?: string;
+  sensitive?: boolean;
+  value: unknown;
+  missing: boolean;
+}
+
+export interface SettingsPayload {
+  groups: Array<{ key: string; label: string; help?: string }>;
+  settings: SettingItem[];
 }
 
 export interface DashboardData {
@@ -63,8 +91,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   });
   if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new AdminApiError(res.status, body?.message ?? res.statusText);
+    const body = (await res.json().catch(() => null)) as
+      | { message?: string; errors?: Record<string, string> }
+      | null;
+    throw new AdminApiError(res.status, body?.message ?? res.statusText, body?.errors);
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
@@ -889,6 +919,15 @@ export const adminApi = {
     if (to) qs.set('to', to);
     return request<DashboardData>(`/admin/reports/dashboard?${qs.toString()}`);
   },
+
+  settings: () => request<SettingsPayload>('/admin/settings'),
+
+  saveSettings: (changes: Record<string, unknown>) =>
+    request<{ saved: number; values: Record<string, unknown> }>('/admin/settings', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ changes }),
+    }),
 
   templateUrl: () => `${apiBase()}/admin/import/products/template`,
 };

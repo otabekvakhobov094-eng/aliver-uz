@@ -75,7 +75,7 @@ uning haqiqiy holati.
 | Roles (73, 74) | qisman | **yo'q** | huquqlar kodda, UI yo'q |
 | Notifications (71) | bor | bor | ishlaydi |
 | Audit Logs (75) | bor | bor | ishlaydi |
-| Settings (76) | **yo'q** | **yo'q** | qiymatlar bazada, o'zgartirib bo'lmaydi |
+| Settings (76) | bor | bor | 23 ta sozlama, turi va tekshiruvi bilan |
 
 TZda ko'rsatilmagan, lekin qo'shimcha qurilganlar: Import, To'lovlar,
 Moslashtirish, Fiskal cheklar, Yetkazish, Qaytarishlar.
@@ -170,3 +170,29 @@ build paytida ham o'zgaruvchilarni beradi.
 Admin paneli **mobil ekranga moslashmagan** — 400 px kenglikda
 gorizontal skroll paydo bo'ladi, chunki sidebar 240 px qat'iy. Bu
 avvaldan mavjud nuqson; tuzatish uchun yig'iladigan sidebar kerak.
+
+## 8. Sozlamalar — 11.09.2026
+
+`Setting` jadvali kalit/qiymat, ya'ni o'zi hech narsa tushuntirmaydi.
+Uni xom holda ko'rsatish JSON muharriri bo'lardi: xodim
+`returns.refundShipping` ga nima yozish mumkinligini bilmaydi va bir
+kun `"true"` yozib qaytarish hisobini buzadi.
+
+Shuning uchun har bir kalit serverda **ta'riflangan**: turi, guruhi,
+o'zbekcha nomi, izohi, chegaralari va ruxsat etilgan qiymatlari. UI shu
+ta'rifdan to'g'ri boshqaruv elementini chizadi, API esa shu ta'rif
+bo'yicha tekshiradi. Ro'yxatda yo'q kalitni yozib bo'lmaydi — aks holda
+panel orqali ixtiyoriy kalit yaratilib, kod uni hech qachon o'qimaydi.
+
+23 ta sozlama, 9 guruh. Ulardan **7 tasi nozik** deb belgilangan
+(STIR, IKPU kodi, QQS, maksimal chegirma, chegirmalarni birlashtirish,
+ochilgan mahsulotni qabul qilish, valyuta) — ularni faqat `SUPER_ADMIN`
+o'zgartira oladi.
+
+Saqlash **bitta tranzaksiyada**: bitta maydon xato bo'lsa hech narsa
+saqlanmaydi. Yarmi saqlanib yarmi qolishi sozlamalarni bir-biriga zid
+holatga olib keladi — masalan `quietFrom` yangilanib `quietTo` eski
+qolsa, tinch vaqt oralig'i teskari bo'ladi.
+
+Ta'riflar seed bilan solishtirib tekshirildi: 23 = 23, ortiqchasi ham,
+yetishmagani ham yo'q.
