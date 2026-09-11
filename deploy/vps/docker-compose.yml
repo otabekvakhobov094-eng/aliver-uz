@@ -1,0 +1,164 @@
+# ALIVER.UZ — VPS uchun to'liq to'plam.
+#
+# `infra/docker-compose.prod.yml` dan FARQI: u boshqariladigan
+# PostgreSQL va Redis mavjud deb hisoblaydi (Render kabi). VPS da esa
+# ular yo'q, shuning uchun bu yerda hamma narsa bitta serverda turadi:
+# baza, kesh, uch ilova, nginx va TLS sertifikati.
+#
+# Ishga tushirish: `docs/VPS.md` ga qarang.
+
+name: aliver
+
+services:
+  # ------------------------------ Ma'lumotlar bazasi ------------------------------
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      # Ma'lumotlar to'g'ri saralanishi uchun (o'zbek va rus harflari).
+      LANG: C.UTF-8
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Zaxira nusxalar HOST da, konteynerdan tashqarida saqlanadi:
+      # konteyner o'chsa ham ular qoladi.
+      - ../../backups:/backups
+    # Port TASHQARIGA CHIQARILMAYDI. Bazaga faqat ichki tarmoqdan
+    # murojaat qilinadi; ochiq 5432 — eng ko'p buziladigan port.
+    expose: ['5432']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    shm_size: 256mb
+    logging: &logging
+      driver: json-file
+      # Loglar diskni to'ldirib serverni to'xtatib qo'ymasligi kerak.
+      options: { max-size: '20m', max-file: '5' }
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # `appendonly` — rezerv va chastota cheklovlari qayta ishga
+    # tushirishdan keyin ham saqlanib qolsin.
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory-policy', 'allkeys-lru']
+    volumes: ['redisdata:/data']
+    expose: ['6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *logging
+
+  # ---------------------------------- Ilovalar ----------------------------------
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    image: aliver-api:${TAG:-latest}
+    restart: unless-stopped
+    env_file: [../../.env.production]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://redis:6379
+      API_PORT: 4000
+      # Nginx orqasida ishlaydi — bunsiz `req.ip` hamma uchun bir xil
+      # bo'lib, chastota cheklovlari butun saytni bloklaydi.
+      TRUST_PROXY: '1'
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    expose: ['4000']
+    # SIGTERM dan keyin joriy so'rovlarni tugatishga vaqt beramiz.
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    logging: *logging
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+      args:
+        # `NEXT_PUBLIC_*` QURILISH paytida paketga kiradi — keyin
+        # o'zgartirib bo'lmaydi, tasvirni qayta yig'ish kerak.
+        NEXT_PUBLIC_WEB_URL: https://${DOMAIN}
+    image: aliver-web:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      # Brauzer API ga TO'G'RIDAN-TO'G'RI bormaydi: u o'z domenidagi
+      # /api ga so'rov yuboradi va nginx uni API ga uzatadi. Bu qiymat
+      # faqat server tomonidagi (SSR) so'rovlar uchun.
+      API_ORIGIN: http://api:4000
+    depends_on:
+      api: { condition: service_healthy }
+    expose: ['3000']
+    stop_grace_period: 20s
+    logging: *logging
+
+  admin:
+    build:
+      context: ../..
+      dockerfile: apps/admin/Dockerfile
+    image: aliver-admin:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOSTNAME: 0.0.0.0
+      API_ORIGIN: http://api:4000
+    depends_on:
+      api: { condition: service_healthy }
+    expose: ['3001']
+    stop_grace_period: 20s
+    logging: *logging
+
+  # ----------------------------------- Nginx -----------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on: [web, admin, api]
+    # Sertifikat yangilangach nginx uni qayta o'qishi kerak: har 12
+    # soatda yumshoq qayta yuklash (ulanishlar uzilmaydi).
+    command: >-
+      /bin/sh -c "while :; do sleep 12h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
+    logging: *logging
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    # Har 12 soatda yangilanishni tekshiradi. Let's Encrypt sertifikati
+    # 90 kun amal qiladi va 30 kun qolganda yangilanadi.
+    entrypoint: >-
+      /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    logging: *logging
+
+volumes:
+  pgdata:
+  redisdata:
+  certbot-conf:
+  certbot-www:

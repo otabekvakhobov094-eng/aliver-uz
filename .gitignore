@@ -6,7 +6,10 @@ coverage/
 *.log
 .env
 .env.*
+# Namuna fayllarda sir yo'q — ular repozitoriyda bo'lishi SHART,
+# chunki o'rnatish yo'riqnomasi aynan ulardan nusxa olishni aytadi.
 !.env.example
+!.env.*.example
 .DS_Store
 
 # Lokal ishlab chiqishda node_modules ni boshqa joydan ulash uchun symlink

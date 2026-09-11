@@ -1,6 +1,13 @@
 FROM node:20.18-alpine AS builder
 WORKDIR /app
 COPY . .
+
+# `NEXT_PUBLIC_*` QURILISH paytida paketga kiradi — ishga tushirishda
+# o'zgartirib bo'lmaydi. Canonical va hreflang havolalari shu qiymatdan
+# yasaladi, shuning uchun u build argumenti sifatida beriladi.
+ARG NEXT_PUBLIC_WEB_URL=https://aliver.uz
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
+
 RUN npm ci && npm run -w @aliver/web build
 
 FROM node:20.18-alpine AS runtime
