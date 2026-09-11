@@ -1,0 +1,31 @@
+{
+  "name": "aliver-uz",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ALIVER.UZ — mustaqil e-commerce platforma (monorepo)",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=20.11" },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "npm run typecheck",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "node scripts/e2e-smoke.mjs",
+    "test:load": "node scripts/load-test.mjs",
+    "migrate:legacy": "node scripts/migrate-legacy.mjs",
+    "migrate:aliver-catalog": "node scripts/import-aliver-shopify.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "db:generate": "npm run -w @aliver/api prisma:generate",
+    "db:migrate": "npm run -w @aliver/api prisma:migrate",
+    "db:seed": "npm run -w @aliver/api prisma:seed",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.6.3",
+    "prettier": "^3.3.3"
+  },
+  "packageManager": "npm@10.9.0"
+}

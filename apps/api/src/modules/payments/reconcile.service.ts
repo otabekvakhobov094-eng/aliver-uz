@@ -1,0 +1,170 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../prisma/prisma.service';
+import {
+  reconcile,
+  type LocalPayment,
+  type ProviderRecord,
+  type ReconcileResult,
+} from './reconcile.util';
+
+/**
+ * To'lovlarni moslashtirish.
+ *
+ * Provayder vypiskasi ikki manbadan kelishi mumkin:
+ *  - `PAYMENTS_MODE=mock` — vypiska bizning webhook loglaridan quriladi.
+ *    Bu haqiqiy moslashtirish emas, lekin hisobot va admin ekrani
+ *    kalitlar kelishidan oldin ham ishlab turadi.
+ *  - jangovar rejim — provayder API si (Payme `GetStatement`, Click
+ *    hisobot endpointi). Kalitlar kelganda `fetchStatement` to'ldiriladi.
+ */
+@Injectable()
+export class ReconcileService {
+  private readonly logger = new Logger(ReconcileService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
+
+  private get mode(): 'mock' | 'sandbox' | 'live' {
+    return this.config.get<'mock' | 'sandbox' | 'live'>('PAYMENTS_MODE') ?? 'mock';
+  }
+
+  async run(params: {
+    from: Date;
+    to: Date;
+    provider?: string;
+  }): Promise<
+    ReconcileResult & { mode: string; provider: string; from: Date; to: Date; source: string }
+  > {
+    const provider = params.provider ?? 'PAYME';
+
+    const rows = await this.prisma.payment.findMany({
+      where: {
+        provider: provider as never,
+        createdAt: { gte: params.from, lte: params.to },
+      },
+      include: { order: { select: { number: true } } },
+      orderBy: { createdAt: 'asc' },
+      take: 5000,
+    });
+
+    const local: LocalPayment[] = rows.map((p) => ({
+      paymentId: p.id,
+      orderNumber: p.order?.number ?? '',
+      provider: p.provider,
+      providerTxnId: p.providerTxnId,
+      paid: p.status === 'PAID' || p.status === 'PARTIALLY_REFUNDED',
+      amount: p.amount as bigint,
+      refundedAmount: p.refundedAmount as bigint,
+      paidAt: p.paidAt,
+    }));
+
+    const { records, source } = await this.statement(provider, params.from, params.to);
+    const result = reconcile(local, records);
+
+    if (result.mismatches.length > 0) {
+      this.logger.warn(
+        `Moslashtirish (${provider}): ${result.mismatches.length} ta farq topildi, ` +
+          `farq summasi ${result.totals.difference} tiyin`,
+      );
+    }
+
+    return { ...result, mode: this.mode, provider, from: params.from, to: params.to, source };
+  }
+
+  /**
+   * Provayder vypiskasi.
+   *
+   * Maket rejimida haqiqiy vypiska yo'q, shuning uchun u WEBHOOK
+   * LOGLARIDAN quriladi: bu bizning yozuvimizdan mustaqil manba emas,
+   * lekin webhook kelgan-kelmaganini ko'rsatadi va admin ekranini
+   * ishlatib turadi. Hisobotda `source` maydoni buni ochiq aytadi.
+   */
+  private async statement(
+    provider: string,
+    from: Date,
+    to: Date,
+  ): Promise<{ records: ProviderRecord[]; source: string }> {
+    if (this.mode !== 'mock') {
+      const live = await this.fetchStatement(provider, from, to);
+      if (live) return { records: live, source: `${provider} API` };
+    }
+
+    const events = await this.prisma.webhookEvent.findMany({
+      where: {
+        provider: provider.toLowerCase(),
+        createdAt: { gte: from, lte: to },
+        processedAt: { not: null },
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 5000,
+    });
+
+    const byTxn = new Map<string, ProviderRecord>();
+    for (const e of events) {
+      const payload = (e.payload ?? {}) as Record<string, unknown>;
+      const params = (payload.params ?? {}) as Record<string, unknown>;
+      const account = (params.account ?? {}) as Record<string, unknown>;
+
+      const orderNumber =
+        (typeof payload.merchant_trans_id === 'string' ? payload.merchant_trans_id : null) ??
+        (typeof account.order_id === 'string' ? account.order_id : null);
+
+      const amount = readAmount(payload, params);
+      const performed = e.method === 'complete' || e.method === 'PerformTransaction';
+      const cancelled = e.method === 'CancelTransaction';
+
+      const prev = byTxn.get(e.externalId);
+      byTxn.set(e.externalId, {
+        providerTxnId: e.externalId,
+        orderNumber: orderNumber ?? prev?.orderNumber ?? null,
+        amount: amount ?? prev?.amount ?? 0n,
+        performed: performed || (prev?.performed ?? false),
+        performedAt: performed ? e.processedAt : (prev?.performedAt ?? null),
+        cancelled: cancelled || prev?.cancelled,
+      });
+    }
+
+    return {
+      records: [...byTxn.values()],
+      source: 'webhook loglari (maket — mustaqil manba emas)',
+    };
+  }
+
+  /**
+   * Haqiqiy vypiska. Kalitlar kelganda to'ldiriladi:
+   *  - Payme: `GetStatement` metodi merchant API ga;
+   *  - Click: hisobot endpointi (merchant_user_id va imzo bilan).
+   *
+   * Hozircha `null` qaytaradi — chaqiruvchi webhook loglariga tushadi.
+   */
+  private async fetchStatement(
+    provider: string,
+    _from: Date,
+    _to: Date,
+  ): Promise<ProviderRecord[] | null> {
+    this.logger.warn(
+      `${provider}: vypiska API si hali ulanmagan — moslashtirish webhook loglari asosida bajarildi`,
+    );
+    return null;
+  }
+}
+
+/** Turli provayderlar summani turli maydonda yuboradi. */
+function readAmount(
+  payload: Record<string, unknown>,
+  params: Record<string, unknown>,
+): bigint | null {
+  // Payme: params.amount — tiyinda
+  if (typeof params.amount === 'number' && Number.isInteger(params.amount)) {
+    return BigInt(params.amount);
+  }
+  // Click: amount — so'mda, satr
+  if (typeof payload.amount === 'string' && /^\d+(\.\d{1,2})?$/.test(payload.amount)) {
+    const [whole, frac = ''] = payload.amount.split('.');
+    return BigInt(whole!) * 100n + BigInt(frac.padEnd(2, '0'));
+  }
+  return null;
+}

@@ -1,0 +1,796 @@
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { sumToTiyin } from '../../common/money';
+import {
+  AdminProductQueryDto,
+  ProductQueryDto,
+  SortOption,
+  UpsertProductDto,
+  UpsertVariantDto,
+} from './dto/catalog.dto';
+import { buildProductSearchText, normalizeSearch, searchTokens } from './search.util';
+import { archivedSlug, uniqueSlug } from './slug.util';
+import { effectivePrice, minVariantPrice, productBadges } from './pricing.util';
+import { CategoryService } from './category.service';
+import type { Prisma } from '@prisma/client';
+
+const DEFAULT_PER_PAGE = 24;
+
+/** Prisma tranzaksiya klienti: $transaction ichida mavjud bo'lgan metodlar. */
+type Tx = Prisma.TransactionClient;
+
+@Injectable()
+export class ProductService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly categories: CategoryService,
+  ) {}
+
+  /* ======================================================================
+     OMMAVIY KATALOG
+     ====================================================================== */
+
+  async publicList(query: ProductQueryDto) {
+    const page = query.page ?? 1;
+    const perPage = query.perPage ?? DEFAULT_PER_PAGE;
+
+    const where: Record<string, unknown> = { deletedAt: null, status: 'ACTIVE' };
+
+    if (query.category) {
+      const ids = await this.categories.descendantIds(query.category);
+      where.categories = { some: { categoryId: { in: ids } } };
+    }
+    if (query.collection) {
+      where.collections = { some: { collection: { slug: query.collection } } };
+    }
+    if (query.tags && query.tags.length > 0) {
+      where.tags = { some: { tag: { slug: { in: query.tags } } } };
+    }
+    if (query.minPrice !== undefined || query.maxPrice !== undefined) {
+      where.minPrice = {
+        ...(query.minPrice !== undefined ? { gte: sumToTiyin(query.minPrice) } : {}),
+        ...(query.maxPrice !== undefined ? { lte: sumToTiyin(query.maxPrice) } : {}),
+      };
+    }
+    if (query.inStock) where.inStock = true;
+    if (query.onSale) where.hasSale = true;
+    if (query.minRating !== undefined) where.ratingAvg = { gte: query.minRating };
+
+    if (query.volume && query.volume.length > 0) {
+      // Variant o'lchamlari JSON da: {"size": "60 ml"}
+      where.variants = {
+        some: {
+          isActive: true,
+          deletedAt: null,
+          OR: query.volume.map((v) => ({ options: { path: ['size'], equals: v } })),
+        },
+      };
+    }
+
+    if (query.q) {
+      const tokens = searchTokens(query.q);
+      if (tokens.length > 0) {
+        where.AND = tokens.map((t) => ({ searchText: { contains: t } }));
+      }
+    }
+
+    const [total, rows] = await this.prisma.$transaction([
+      this.prisma.product.count({ where: where as never }),
+      this.prisma.product.findMany({
+        where: where as never,
+        orderBy: this.orderBy(query.sort),
+        skip: (page - 1) * perPage,
+        take: perPage,
+        select: this.cardSelect(),
+      }),
+    ]);
+
+    // Aniq moslik topilmasa — imlo xatosi bo'lishi mumkin, trigram bilan urinamiz.
+    if (total === 0 && query.q && normalizeSearch(query.q).length >= 4) {
+      const fuzzy = await this.fuzzySearch(query.q, perPage);
+      if (fuzzy.length > 0) {
+        return {
+          items: fuzzy.map((p) => this.toCard(p)),
+          total: fuzzy.length,
+          page: 1,
+          perPage,
+          fuzzy: true,
+        };
+      }
+    }
+
+    return { items: rows.map((p) => this.toCard(p)), total, page, perPage, fuzzy: false };
+  }
+
+  /** Avtoto'ldirish (TZ 23). Nom, SKU, barcode va tarkib bo'yicha. */
+  async suggest(q: string, limit = 8) {
+    const tokens = searchTokens(q, 1);
+    if (tokens.length === 0) return { items: [] };
+
+    const rows = await this.prisma.product.findMany({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+        AND: tokens.map((t) => ({ searchText: { contains: t } })),
+      },
+      take: limit,
+      orderBy: [{ salesCount: 'desc' }, { ratingCount: 'desc' }],
+      select: {
+        id: true,
+        slug: true,
+        nameUz: true,
+        nameRu: true,
+        minPrice: true,
+        images: { where: { kind: 'MAIN' }, take: 1, select: { url: true, urlWebp: true } },
+        categories: {
+          take: 1,
+          select: { category: { select: { nameUz: true, nameRu: true, slug: true } } },
+        },
+      },
+    });
+
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        slug: r.slug,
+        nameUz: r.nameUz,
+        nameRu: r.nameRu,
+        price: r.minPrice.toString(),
+        imageUrl: r.images[0]?.urlWebp ?? r.images[0]?.url ?? null,
+        category: r.categories[0]?.category ?? null,
+      })),
+    };
+  }
+
+  async publicDetail(slug: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { slug, deletedAt: null, status: { in: ['ACTIVE', 'OUT_OF_STOCK'] } },
+      include: {
+        brand: true,
+        images: { orderBy: { sortOrder: 'asc' } },
+        variants: {
+          where: { deletedAt: null, isActive: true },
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            inventory: {
+              select: { totalStock: true, reservedStock: true, lowStockThreshold: true },
+            },
+          },
+        },
+        categories: {
+          include: {
+            category: { select: { id: true, slug: true, nameUz: true, nameRu: true, path: true } },
+          },
+        },
+        collections: {
+          include: { collection: { select: { slug: true, nameUz: true, nameRu: true } } },
+        },
+        tags: { include: { tag: { select: { slug: true, nameUz: true, nameRu: true } } } },
+        relatedFrom: {
+          include: { to: { select: this.cardSelect() } },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+    if (!product) throw new NotFoundException('Mahsulot topilmadi');
+
+    const primary = product.categories.find((c) => c.isPrimary) ?? product.categories[0];
+    const breadcrumb = primary ? await this.categories.breadcrumb(primary.categoryId) : [];
+
+    const now = new Date();
+    const variants = product.variants.map((v) => {
+      const inv = v.inventory[0];
+      const available = inv ? Math.max(inv.totalStock - inv.reservedStock, 0) : 0;
+      const price = effectivePrice(v, now);
+      return {
+        id: v.id,
+        sku: v.sku,
+        barcode: v.barcode,
+        options: v.options,
+        price: price.price.toString(),
+        oldPrice: price.oldPrice?.toString() ?? null,
+        discountPercent: price.discountPercent,
+        onSale: price.onSale,
+        weightGrams: v.weightGrams,
+        volumeMl: v.volumeMl,
+        availableStock: available,
+        lowStock: inv ? available > 0 && available <= inv.lowStockThreshold : false,
+      };
+    });
+
+    return {
+      id: product.id,
+      slug: product.slug,
+      nameUz: product.nameUz,
+      nameRu: product.nameRu,
+      brand: product.brand ? { name: product.brand.name, slug: product.brand.slug } : null,
+      shortDescUz: product.shortDescUz,
+      shortDescRu: product.shortDescRu,
+      descUz: product.descUz,
+      descRu: product.descRu,
+      benefitsUz: product.benefitsUz,
+      benefitsRu: product.benefitsRu,
+      ingredientsUz: product.ingredientsUz,
+      ingredientsRu: product.ingredientsRu,
+      howToUseUz: product.howToUseUz,
+      howToUseRu: product.howToUseRu,
+      warningsUz: product.warningsUz,
+      warningsRu: product.warningsRu,
+      countryOfOrigin: product.countryOfOrigin,
+      manufacturer: product.manufacturer,
+      shelfLifeMonths: product.shelfLifeMonths,
+      ratingAvg: product.ratingAvg,
+      ratingCount: product.ratingCount,
+      seo: {
+        titleUz: product.seoTitleUz,
+        titleRu: product.seoTitleRu,
+        descUz: product.seoDescUz,
+        descRu: product.seoDescRu,
+      },
+      images: product.images.map((i) => ({
+        id: i.id,
+        kind: i.kind,
+        url: i.urlWebp ?? i.url,
+        urlAvif: i.urlAvif,
+        altUz: i.altUz,
+        altRu: i.altRu,
+        variantId: i.variantId,
+      })),
+      variants,
+      categories: product.categories.map((c) => c.category),
+      collections: product.collections.map((c) => c.collection),
+      tags: product.tags.map((t) => t.tag),
+      breadcrumb,
+      related: product.relatedFrom.map((r) => this.toCard(r.to as never)),
+    };
+  }
+
+  /* ======================================================================
+     ADMIN
+     ====================================================================== */
+
+  async adminList(query: AdminProductQueryDto) {
+    const page = query.page ?? 1;
+    const perPage = query.perPage ?? 30;
+
+    const where: Record<string, unknown> = { deletedAt: null };
+    if (query.status) where.status = query.status;
+    if (query.categoryId) where.categories = { some: { categoryId: query.categoryId } };
+    if (query.q) {
+      const tokens = searchTokens(query.q, 1);
+      if (tokens.length > 0) where.AND = tokens.map((t) => ({ searchText: { contains: t } }));
+    }
+
+    const [total, rows] = await this.prisma.$transaction([
+      this.prisma.product.count({ where: where as never }),
+      this.prisma.product.findMany({
+        where: where as never,
+        orderBy: { updatedAt: 'desc' },
+        skip: (page - 1) * perPage,
+        take: perPage,
+        select: {
+          id: true,
+          slug: true,
+          nameUz: true,
+          nameRu: true,
+          status: true,
+          ikpuCode: true,
+          vatRate: true,
+          minPrice: true,
+          maxPrice: true,
+          hasSale: true,
+          inStock: true,
+          updatedAt: true,
+          images: { where: { kind: 'MAIN' }, take: 1, select: { url: true, urlWebp: true } },
+          _count: { select: { variants: true } },
+        },
+      }),
+    ]);
+
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        slug: r.slug,
+        nameUz: r.nameUz,
+        nameRu: r.nameRu,
+        status: r.status,
+        ikpuCode: r.ikpuCode,
+        vatRate: r.vatRate,
+        minPrice: r.minPrice.toString(),
+        maxPrice: r.maxPrice.toString(),
+        hasSale: r.hasSale,
+        inStock: r.inStock,
+        variantsCount: r._count.variants,
+        imageUrl: r.images[0]?.urlWebp ?? r.images[0]?.url ?? null,
+        updatedAt: r.updatedAt,
+      })),
+      total,
+      page,
+      perPage,
+    };
+  }
+
+  async adminGet(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        variants: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+        images: { orderBy: { sortOrder: 'asc' } },
+        categories: true,
+        collections: true,
+        tags: { include: { tag: true } },
+      },
+    });
+    if (!product) throw new NotFoundException('Mahsulot topilmadi');
+    return product;
+  }
+
+  async create(dto: UpsertProductDto) {
+    this.assertVariants(dto.variants);
+    await this.assertSkusFree(dto.variants.map((v) => v.sku));
+
+    const slug = await this.resolveSlug(dto.slug ?? dto.nameUz);
+    const warehouse = await this.defaultWarehouse();
+
+    const product = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
+        data: {
+          ...this.productData(dto),
+          slug,
+          searchText: '',
+        },
+      });
+
+      await this.syncRelations(tx, created.id, dto);
+
+      for (const [i, v] of dto.variants.entries()) {
+        const variant = await tx.productVariant.create({
+          data: { ...this.variantData(v), productId: created.id, sortOrder: v.sortOrder ?? i },
+        });
+        // Ombor yozuvi darrov yaratiladi: qoldiq 0, 3-etapda harakatlar bilan to'ladi.
+        await tx.inventory.create({
+          data: { variantId: variant.id, warehouseId: warehouse.id, totalStock: 0 },
+        });
+      }
+
+      return created;
+    });
+
+    await this.recomputeFacets(product.id);
+    return this.adminGet(product.id);
+  }
+
+  async update(id: string, dto: UpsertProductDto) {
+    const current = await this.prisma.product.findFirst({
+      where: { id, deletedAt: null },
+      include: { variants: { where: { deletedAt: null } } },
+    });
+    if (!current) throw new NotFoundException('Mahsulot topilmadi');
+
+    this.assertVariants(dto.variants);
+    const keptIds = dto.variants.map((v) => v.id).filter(Boolean) as string[];
+    await this.assertSkusFree(
+      dto.variants.map((v) => v.sku),
+      current.variants.map((v) => v.id),
+    );
+
+    const slug =
+      dto.slug && dto.slug !== current.slug ? await this.resolveSlug(dto.slug, id) : current.slug;
+    const warehouse = await this.defaultWarehouse();
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.product.update({ where: { id }, data: { ...this.productData(dto), slug } });
+      await this.syncRelations(tx, id, dto);
+
+      // Ro'yxatga kirmagan variantlar soft delete qilinadi — buyurtmalarda
+      // ular havola bo'lib qolgan bo'lishi mumkin, shuning uchun o'chirilmaydi.
+      const toArchive = current.variants.filter((v) => !keptIds.includes(v.id));
+      for (const v of toArchive) {
+        await tx.productVariant.update({
+          where: { id: v.id },
+          data: {
+            deletedAt: new Date(),
+            isActive: false,
+            sku: `${v.sku}--del-${Date.now().toString(36)}`,
+          },
+        });
+      }
+
+      for (const [i, v] of dto.variants.entries()) {
+        if (v.id) {
+          await tx.productVariant.update({
+            where: { id: v.id },
+            data: { ...this.variantData(v), sortOrder: v.sortOrder ?? i },
+          });
+        } else {
+          const variant = await tx.productVariant.create({
+            data: { ...this.variantData(v), productId: id, sortOrder: v.sortOrder ?? i },
+          });
+          await tx.inventory.create({
+            data: { variantId: variant.id, warehouseId: warehouse.id, totalStock: 0 },
+          });
+        }
+      }
+    });
+
+    await this.recomputeFacets(id);
+    return this.adminGet(id);
+  }
+
+  /** Soft delete: TZ 100 — mahsulot "Trash" ga tushadi, slug bo'shaydi. */
+  async remove(id: string) {
+    const product = await this.prisma.product.findFirst({ where: { id, deletedAt: null } });
+    if (!product) throw new NotFoundException('Mahsulot topilmadi');
+
+    return this.prisma.product.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        status: 'ARCHIVED',
+        slug: archivedSlug(product.slug),
+      },
+    });
+  }
+
+  async restore(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { id, deletedAt: { not: null } },
+    });
+    if (!product) throw new NotFoundException('O‘chirilgan mahsulot topilmadi');
+
+    const slug = await this.resolveSlug(product.slug.replace(/--deleted-.*$/, ''), id);
+    return this.prisma.product.update({
+      where: { id },
+      data: { deletedAt: null, status: 'DRAFT', slug },
+    });
+  }
+
+  /** TZ 99 — bir nechta mahsulot ustida guruh amallari. */
+  async bulkStatus(ids: string[], status: string) {
+    if (ids.length === 0) throw new BadRequestException('Mahsulot tanlanmagan');
+    const result = await this.prisma.product.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: {
+        status: status as never,
+        ...(status === 'ACTIVE' ? { publishedAt: new Date() } : {}),
+      },
+    });
+    return { updated: result.count };
+  }
+
+  /* ======================================================================
+     DENORMALLASHTIRILGAN MAYDONLAR
+     ====================================================================== */
+
+  /**
+   * Variantlardan minPrice/maxPrice/hasSale/inStock va searchText ni qayta hisoblaydi.
+   * Mahsulot yoki variant har o'zgarganda chaqiriladi.
+   */
+  async recomputeFacets(productId: string): Promise<void> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        brand: true,
+        tags: { include: { tag: true } },
+        variants: {
+          where: { deletedAt: null, isActive: true },
+          include: { inventory: { select: { totalStock: true, reservedStock: true } } },
+        },
+      },
+    });
+    if (!product) return;
+
+    const now = new Date();
+    const prices = product.variants.map((v) => effectivePrice(v, now));
+    const min = prices.length > 0 ? prices.reduce((a, b) => (b.price < a.price ? b : a)).price : 0n;
+    const max = prices.length > 0 ? prices.reduce((a, b) => (b.price > a.price ? b : a)).price : 0n;
+    const hasSale = prices.some((p) => p.onSale);
+    const inStock = product.variants.some((v) =>
+      v.inventory.some((i) => i.totalStock - i.reservedStock > 0),
+    );
+
+    const searchText = buildProductSearchText({
+      nameUz: product.nameUz,
+      nameRu: product.nameRu,
+      nameEn: product.nameEn,
+      brand: product.brand?.name ?? null,
+      skus: product.variants.map((v) => v.sku),
+      barcodes: product.variants.map((v) => v.barcode),
+      tags: product.tags.flatMap((t) => [t.tag.nameUz, t.tag.nameRu, t.tag.slug]),
+      ingredientsUz: product.ingredientsUz,
+      ingredientsRu: product.ingredientsRu,
+    });
+
+    await this.prisma.product.update({
+      where: { id: productId },
+      data: { minPrice: min, maxPrice: max, hasSale, inStock, searchText },
+    });
+  }
+
+  /* ======================================================================
+     yordamchi
+     ====================================================================== */
+
+  private orderBy(sort?: SortOption) {
+    switch (sort) {
+      case SortOption.NEWEST:
+        return [{ publishedAt: 'desc' as const }, { createdAt: 'desc' as const }];
+      case SortOption.PRICE_ASC:
+        return [{ minPrice: 'asc' as const }];
+      case SortOption.PRICE_DESC:
+        return [{ minPrice: 'desc' as const }];
+      case SortOption.RATING:
+        return [{ ratingAvg: 'desc' as const }, { ratingCount: 'desc' as const }];
+      case SortOption.BEST_SELLING:
+        return [{ salesCount: 'desc' as const }];
+      case SortOption.POPULAR:
+      default:
+        return [
+          { isFeatured: 'desc' as const },
+          { salesCount: 'desc' as const },
+          { ratingCount: 'desc' as const },
+        ];
+    }
+  }
+
+  private cardSelect() {
+    return {
+      id: true,
+      slug: true,
+      nameUz: true,
+      nameRu: true,
+      ratingAvg: true,
+      ratingCount: true,
+      minPrice: true,
+      hasSale: true,
+      inStock: true,
+      isFeatured: true,
+      publishedAt: true,
+      images: {
+        where: { kind: 'MAIN' as const },
+        take: 1,
+        select: { url: true, urlWebp: true, altUz: true, altRu: true },
+      },
+      variants: {
+        where: { deletedAt: null, isActive: true },
+        select: {
+          price: true,
+          oldPrice: true,
+          saleStartsAt: true,
+          saleEndsAt: true,
+          inventory: { select: { totalStock: true, reservedStock: true, lowStockThreshold: true } },
+        },
+      },
+    };
+  }
+
+  private toCard(p: {
+    id: string;
+    slug: string;
+    nameUz: string;
+    nameRu: string;
+    ratingAvg: number;
+    ratingCount: number;
+    minPrice: bigint;
+    isFeatured: boolean;
+    publishedAt: Date | null;
+    images: Array<{
+      url: string;
+      urlWebp: string | null;
+      altUz: string | null;
+      altRu: string | null;
+    }>;
+    variants: Array<{
+      price: bigint;
+      oldPrice: bigint | null;
+      saleStartsAt: Date | null;
+      saleEndsAt: Date | null;
+      inventory: Array<{ totalStock: number; reservedStock: number; lowStockThreshold: number }>;
+    }>;
+  }) {
+    const now = new Date();
+    const price = minVariantPrice(p.variants, now);
+    const available = p.variants.reduce(
+      (sum, v) =>
+        sum + v.inventory.reduce((s, i) => s + Math.max(i.totalStock - i.reservedStock, 0), 0),
+      0,
+    );
+    const threshold = p.variants[0]?.inventory[0]?.lowStockThreshold ?? 10;
+
+    return {
+      id: p.id,
+      slug: p.slug,
+      nameUz: p.nameUz,
+      nameRu: p.nameRu,
+      price: (price?.price ?? p.minPrice).toString(),
+      oldPrice: price?.oldPrice?.toString() ?? null,
+      discountPercent: price?.discountPercent ?? 0,
+      ratingAvg: p.ratingAvg,
+      ratingCount: p.ratingCount,
+      availableStock: available,
+      imageUrl: p.images[0]?.urlWebp ?? p.images[0]?.url ?? null,
+      imageAltUz: p.images[0]?.altUz ?? null,
+      imageAltRu: p.images[0]?.altRu ?? null,
+      badges: productBadges(
+        {
+          publishedAt: p.publishedAt,
+          isFeatured: p.isFeatured,
+          onSale: price?.onSale ?? false,
+          availableStock: available,
+          lowStockThreshold: threshold,
+        },
+        now,
+      ),
+    };
+  }
+
+  /**
+   * Imlo xatosiga chidamli qidiruv. pg_trgm kengaytmasi migratsiyada
+   * yoqiladi; indeks bo'lmasa ham ishlaydi, faqat sekinroq.
+   */
+  private async fuzzySearch(q: string, limit: number) {
+    const needle = normalizeSearch(q);
+    const ids = await this.prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT id FROM products
+      WHERE "deletedAt" IS NULL AND status = 'ACTIVE'
+        AND similarity("searchText", ${needle}) > 0.25
+      ORDER BY similarity("searchText", ${needle}) DESC
+      LIMIT ${limit}
+    `;
+    if (ids.length === 0) return [];
+    const rows = await this.prisma.product.findMany({
+      where: { id: { in: ids.map((r) => r.id) } },
+      select: this.cardSelect(),
+    });
+    // Tartib SQL da similarity bo'yicha chiqqan — Prisma uni saqlamaydi,
+    // shuning uchun natijani qo'lda qayta tartiblaymiz.
+    const order = new Map<string, number>(ids.map((r, i): [string, number] => [r.id, i]));
+    return rows.sort(
+      (a: { id: string }, b: { id: string }) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0),
+    );
+  }
+
+  private assertVariants(variants: UpsertVariantDto[]): void {
+    if (!variants || variants.length === 0) {
+      throw new BadRequestException('Mahsulotda kamida bitta variant bo‘lishi kerak');
+    }
+    const skus = variants.map((v) => v.sku.trim().toUpperCase());
+    if (new Set(skus).size !== skus.length) {
+      throw new BadRequestException('SKU lar takrorlanmasligi kerak');
+    }
+    for (const v of variants) {
+      if (v.oldPrice !== undefined && v.oldPrice > 0 && v.oldPrice <= v.price) {
+        throw new BadRequestException(`"${v.sku}": eski narx joriy narxdan yuqori bo‘lishi kerak`);
+      }
+      if (v.saleStartsAt && v.saleEndsAt && new Date(v.saleStartsAt) >= new Date(v.saleEndsAt)) {
+        throw new BadRequestException(
+          `"${v.sku}": aksiya boshlanish sanasi tugash sanasidan keyin`,
+        );
+      }
+    }
+  }
+
+  private async assertSkusFree(skus: string[], ownVariantIds: string[] = []): Promise<void> {
+    const clash = await this.prisma.productVariant.findFirst({
+      where: {
+        sku: { in: skus },
+        deletedAt: null,
+        ...(ownVariantIds.length > 0 ? { NOT: { id: { in: ownVariantIds } } } : {}),
+      },
+      select: { sku: true },
+    });
+    if (clash) throw new ConflictException(`SKU band: ${clash.sku}`);
+  }
+
+  private async resolveSlug(desired: string, excludeId?: string): Promise<string> {
+    const rows = await this.prisma.product.findMany({
+      where: { deletedAt: null, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+      select: { slug: true },
+    });
+    return uniqueSlug(desired, new Set(rows.map((r) => r.slug)));
+  }
+
+  private async defaultWarehouse() {
+    const wh = await this.prisma.warehouse.findFirst({
+      where: { isActive: true },
+      orderBy: { isDefault: 'desc' },
+    });
+    if (!wh) throw new BadRequestException('Ombor topilmadi. Avval seed ni ishga tushiring.');
+    return wh;
+  }
+
+  private productData(dto: UpsertProductDto) {
+    return {
+      nameUz: dto.nameUz.trim(),
+      nameRu: dto.nameRu.trim(),
+      nameEn: dto.nameEn ?? null,
+      brandId: dto.brandId ?? null,
+      shortDescUz: dto.shortDescUz ?? null,
+      shortDescRu: dto.shortDescRu ?? null,
+      descUz: dto.descUz ?? null,
+      descRu: dto.descRu ?? null,
+      benefitsUz: dto.benefitsUz ?? null,
+      benefitsRu: dto.benefitsRu ?? null,
+      ingredientsUz: dto.ingredientsUz,
+      ingredientsRu: dto.ingredientsRu,
+      howToUseUz: dto.howToUseUz ?? null,
+      howToUseRu: dto.howToUseRu ?? null,
+      warningsUz: dto.warningsUz,
+      warningsRu: dto.warningsRu,
+      countryOfOrigin: dto.countryOfOrigin ?? null,
+      manufacturer: dto.manufacturer ?? null,
+      shelfLifeMonths: dto.shelfLifeMonths ?? null,
+      ikpuCode: dto.ikpuCode,
+      vatRate: dto.vatRate ?? 12,
+      unitCode: dto.unitCode ?? '1',
+      status: (dto.status ?? 'DRAFT') as never,
+      isFeatured: dto.isFeatured ?? false,
+      publishedAt: dto.status === 'ACTIVE' ? new Date() : null,
+      seoTitleUz: dto.seoTitleUz ?? null,
+      seoTitleRu: dto.seoTitleRu ?? null,
+      seoDescUz: dto.seoDescUz ?? null,
+      seoDescRu: dto.seoDescRu ?? null,
+    };
+  }
+
+  private variantData(v: UpsertVariantDto) {
+    return {
+      sku: v.sku.trim().toUpperCase(),
+      barcode: v.barcode?.trim() ?? null,
+      options: (v.options ?? {}) as never,
+      price: sumToTiyin(v.price),
+      oldPrice: v.oldPrice ? sumToTiyin(v.oldPrice) : null,
+      costPrice: v.costPrice ? sumToTiyin(v.costPrice) : null,
+      saleStartsAt: v.saleStartsAt ? new Date(v.saleStartsAt) : null,
+      saleEndsAt: v.saleEndsAt ? new Date(v.saleEndsAt) : null,
+      weightGrams: v.weightGrams ?? null,
+      volumeMl: v.volumeMl ?? null,
+      isActive: v.isActive ?? true,
+    };
+  }
+
+  private async syncRelations(tx: Tx, productId: string, dto: UpsertProductDto): Promise<void> {
+    const client = tx;
+
+    await client.productCategory.deleteMany({ where: { productId } });
+    if (dto.categoryIds?.length) {
+      await client.productCategory.createMany({
+        data: dto.categoryIds.map((categoryId, i) => ({
+          productId,
+          categoryId,
+          isPrimary: i === 0,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    await client.collectionProduct.deleteMany({ where: { productId } });
+    if (dto.collectionIds?.length) {
+      await client.collectionProduct.createMany({
+        data: dto.collectionIds.map((collectionId, i) => ({
+          productId,
+          collectionId,
+          sortOrder: i,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    await client.productTag.deleteMany({ where: { productId } });
+    if (dto.tagSlugs?.length) {
+      for (const slug of dto.tagSlugs) {
+        const tag = await client.tag.upsert({
+          where: { slug },
+          update: {},
+          create: { slug, nameUz: slug, nameRu: slug },
+        });
+        await client.productTag.create({ data: { productId, tagId: tag.id } });
+      }
+    }
+  }
+}

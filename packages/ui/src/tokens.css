@@ -1,0 +1,83 @@
+/* ============================================================
+   ALIVER.UZ — dizayn tokenlari
+   Prototipdagi qiymatlar bilan bir xil (28 ta maket shu asosda chizilgan).
+   Yangi rang shu yerga qo'shiladi, komponent ichida hex yozilmaydi.
+   ============================================================ */
+:root {
+  /* Matn va fon */
+  --alv-ink: #1b1220;
+  --alv-ink-2: #463a4f;
+  --alv-muted: #8b7d94;
+  --alv-line: #f1e3eb;
+  --alv-line-2: #e3d2dd;
+  --alv-bg: #fff9fc;
+  --alv-surface: #ffffff;
+  --alv-surface-2: #fdeff5;
+  --alv-surface-3: #fff3e9;
+
+  /* Brend */
+  --alv-brand: #e4175c;
+  --alv-brand-deep: #b00e45;
+  --alv-brand-soft: #ffe3ee;
+
+  /* Yordamchi ranglar */
+  --alv-gold: #f0a007;
+  --alv-gold-soft: #fff0d6;
+  --alv-mint: #00a97f;
+  --alv-mint-soft: #ddf6ee;
+  --alv-violet: #7a3df5;
+  --alv-violet-soft: #eee6ff;
+  /* Xato va ogohlantirish holatlari (savat, checkout) */
+  --alv-danger: #c62134;
+  --alv-danger-soft: #ffe6e8;
+  --alv-warn: #9a6200;
+  --alv-warn-soft: #fff3d6;
+
+  /* Tipografika */
+  --alv-font-display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
+  --alv-font-body: 'Manrope', system-ui, -apple-system, sans-serif;
+
+  /* Radius */
+  --alv-radius-sm: 10px;
+  --alv-radius-md: 14px;
+  --alv-radius-lg: 20px;
+  --alv-radius-xl: 26px;
+  --alv-radius-pill: 999px;
+
+  /* Soya */
+  --alv-shadow-sm: 0 1px 2px rgba(27, 18, 32, 0.05), 0 4px 14px rgba(27, 18, 32, 0.06);
+  --alv-shadow-md: 0 1px 2px rgba(27, 18, 32, 0.05), 0 10px 30px rgba(27, 18, 32, 0.07);
+
+  /* Interaktiv element minimal o'lchami — mobil uchun majburiy */
+  --alv-tap-min: 44px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--alv-bg);
+  color: var(--alv-ink);
+  font-family: var(--alv-font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--alv-brand);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--alv-brand-deep);
+}
+
+/* Klaviatura bilan navigatsiya ko'rinadigan bo'lishi kerak (erishuvchanlik) */
+:focus-visible {
+  outline: 2px solid var(--alv-brand);
+  outline-offset: 2px;
+}

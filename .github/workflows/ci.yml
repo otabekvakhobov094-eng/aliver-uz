@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aliver
+          POSTGRES_PASSWORD: aliver_ci
+          POSTGRES_DB: aliver_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U aliver"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://aliver:aliver_ci@localhost:5432/aliver_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: ci_access_secret_ci_access_secret
+      JWT_REFRESH_SECRET: ci_refresh_secret_ci_refresh_secret
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - name: Migratsiyalarni qo'llash
+        run: npm run -w @aliver/api prisma:deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+      - name: Demo ma'lumotlarini tayyorlash
+        run: npm run db:seed
+      - name: Ilovalarni ishga tushirish
+        run: |
+          nohup npm run -w @aliver/api start > /tmp/aliver-api.log 2>&1 &
+          nohup npm run -w @aliver/web start > /tmp/aliver-web.log 2>&1 &
+          nohup npm run -w @aliver/admin start > /tmp/aliver-admin.log 2>&1 &
+      - name: Readiness kutish
+        run: |
+          for i in $(seq 1 40); do curl -fsS http://localhost:4000/api/health && curl -fsS http://localhost:3000/uz && curl -fsS http://localhost:3001/login && exit 0; sleep 2; done
+          cat /tmp/aliver-api.log /tmp/aliver-web.log /tmp/aliver-admin.log
+          exit 1
+      - name: E2E smoke
+        run: npm run test:e2e
+      - name: Qisqa yuklama testi
+        env:
+          LOAD_DURATION_SECONDS: 10
+          LOAD_CONCURRENCY: 10
+          LOAD_MIN_RPS: 10
+          LOAD_MAX_P95_MS: 800
+        run: npm run test:load
+
+  # Productionga to'g'ridan-to'g'ri deploy qilinmaydi (TZ 114):
+  # develop -> staging, main -> production, ikkalasi ham CI dan o'tgandan keyin.
+  deploy-staging:
+    name: Deploy -> staging
+    needs: quality
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - run: echo "Staging release artifact quality job orqali tasdiqlandi"
+
+  deploy-production:
+    name: Deploy -> production
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Production server sozlanganini tekshirish
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER"
+      - name: Production deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          install -m 600 /dev/null /tmp/aliver_deploy_key
+          printf '%s' "$DEPLOY_SSH_KEY" > /tmp/aliver_deploy_key
+          ssh -o StrictHostKeyChecking=yes -i /tmp/aliver_deploy_key "$DEPLOY_USER@$DEPLOY_HOST" 'cd /opt/aliver-uz && git pull --ff-only && ./scripts/deploy-production.sh'

@@ -1,0 +1,94 @@
+services:
+  - type: keyvalue
+    name: aliver-uz-redis-stage
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: aliver-uz-api-stage
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run db:generate && npm run -w @aliver/api build
+    startCommand: npm run -w @aliver/api prisma:deploy && npm run -w @aliver/api start
+    healthCheckPath: /api/health
+    initialDeployHook: npm run db:seed && npm run migrate:aliver-catalog -- --commit --usd-to-uzs=11783.47
+    envVars:
+      - key: NODE_ENV
+        value: development
+      - key: APP_ENV
+        value: development
+      - key: API_PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aliver-uz-db-stage
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: aliver-uz-redis-stage
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://aliver-uz-web-stage.onrender.com,https://aliver-uz-admin-stage.onrender.com
+      - key: WEB_URL
+        value: https://aliver-uz-web-stage.onrender.com
+      - key: ADMIN_URL
+        value: https://aliver-uz-admin-stage.onrender.com
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: PAYMENTS_MODE
+        value: mock
+      - key: OFD_PROVIDER
+        value: mock
+      - key: SMS_PROVIDER
+        value: console
+      - key: SEED_DEMO_CATALOG
+        value: "false"
+      - key: ALIVER_WAREHOUSE_CODE
+        value: MAIN
+      - key: SEED_SUPERADMIN_EMAIL
+        value: admin@aliver.uz
+      - key: SEED_SUPERADMIN_PASSWORD
+        sync: false
+
+  - type: web
+    name: aliver-uz-web-stage
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run -w @aliver/web build
+    startCommand: npm run -w @aliver/web start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://aliver-uz-api-stage.onrender.com/api
+
+  - type: web
+    name: aliver-uz-admin-stage
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run -w @aliver/admin build
+    startCommand: npm run -w @aliver/admin start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://aliver-uz-api-stage.onrender.com/api
+
+databases:
+  - name: aliver-uz-db-stage
+    plan: free
+    region: frankfurt
+    databaseName: aliver_stage
+    user: aliver_stage

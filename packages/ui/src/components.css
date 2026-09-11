@@ -1,0 +1,561 @@
+/* ============================================================
+   ALIVER.UZ — komponent uslublari (@aliver/ui)
+   Tokenlar tokens.css da. Bu yerda faqat komponentlar.
+   ============================================================ */
+
+/* --- Tugma --- */
+.alv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--alv-radius-pill);
+  font-family: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    opacity 0.15s;
+}
+.alv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.alv-btn--block {
+  width: 100%;
+}
+
+.alv-btn--sm {
+  height: var(--alv-tap-min);
+  padding: 0 18px;
+  font-size: 14px;
+}
+.alv-btn--md {
+  height: 52px;
+  padding: 0 26px;
+  font-size: 15px;
+}
+.alv-btn--lg {
+  height: 58px;
+  padding: 0 34px;
+  font-size: 16px;
+}
+
+.alv-btn--primary {
+  background: var(--alv-brand);
+  color: #fff;
+}
+.alv-btn--primary:hover:not(:disabled) {
+  background: var(--alv-brand-deep);
+}
+
+.alv-btn--dark {
+  background: var(--alv-ink);
+  color: #fff;
+}
+.alv-btn--dark:hover:not(:disabled) {
+  background: #332338;
+}
+
+.alv-btn--outline {
+  background: var(--alv-surface);
+  color: var(--alv-ink);
+  box-shadow: inset 0 0 0 1.5px var(--alv-line-2);
+}
+.alv-btn--outline:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1.5px var(--alv-ink);
+}
+
+.alv-btn--soft {
+  background: var(--alv-brand-soft);
+  color: var(--alv-brand-deep);
+}
+.alv-btn--ghost {
+  background: transparent;
+  color: var(--alv-ink);
+}
+
+/* --- Belgi --- */
+.alv-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--alv-radius-pill);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.alv-badge--sale {
+  background: var(--alv-brand);
+  color: #fff;
+}
+.alv-badge--new {
+  background: var(--alv-ink);
+  color: #fff;
+}
+.alv-badge--top {
+  background: var(--alv-gold);
+  color: #2a1b00;
+}
+.alv-badge--low {
+  background: #fff;
+  color: var(--alv-brand-deep);
+  box-shadow: inset 0 0 0 1.5px var(--alv-brand-soft);
+}
+.alv-badge--mint {
+  background: var(--alv-mint-soft);
+  color: #00694f;
+}
+.alv-badge--neutral {
+  background: var(--alv-line);
+  color: var(--alv-ink-2);
+}
+
+/* --- Narx --- */
+.alv-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.alv-price__value {
+  font-family: var(--alv-font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.alv-price--sm .alv-price__value {
+  font-size: 17px;
+}
+.alv-price--md .alv-price__value {
+  font-size: 20px;
+}
+.alv-price--lg .alv-price__value {
+  font-size: 32px;
+}
+.alv-price__unit {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--alv-muted);
+}
+.alv-price__old {
+  color: var(--alv-muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+.alv-price__pct {
+  background: var(--alv-brand-soft);
+  color: var(--alv-brand-deep);
+  border-radius: 8px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* --- Reyting --- */
+.alv-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--alv-gold);
+}
+.alv-rating__count {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--alv-muted);
+}
+
+/* --- Maydon --- */
+.alv-field {
+  display: flex;
+  flex-direction: column;
+}
+.alv-field__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--alv-ink-2);
+  margin-bottom: 7px;
+}
+.alv-field__hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--alv-muted);
+}
+.alv-field__error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--alv-brand-deep);
+}
+
+.alv-input {
+  height: 54px;
+  width: 100%;
+  border: 0;
+  border-radius: var(--alv-radius-md);
+  background: var(--alv-surface);
+  box-shadow: inset 0 0 0 1.5px var(--alv-line-2);
+  padding: 0 16px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--alv-ink);
+  outline: none;
+}
+.alv-input:focus {
+  box-shadow: inset 0 0 0 2px var(--alv-brand);
+}
+.alv-input--error {
+  box-shadow: inset 0 0 0 2px var(--alv-brand-deep);
+}
+
+/* --- OTP --- */
+.alv-otp {
+  display: flex;
+  gap: 10px;
+}
+.alv-otp__cell {
+  flex: 1;
+  min-width: 0;
+  height: 64px;
+  border: 0;
+  border-radius: var(--alv-radius-md);
+  background: var(--alv-surface);
+  box-shadow: inset 0 0 0 2px var(--alv-line-2);
+  text-align: center;
+  font-family: var(--alv-font-display);
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--alv-ink);
+  outline: none;
+}
+.alv-otp__cell:focus {
+  box-shadow: inset 0 0 0 2px var(--alv-brand);
+  background: var(--alv-brand-soft);
+}
+
+/* --- Karta --- */
+.alv-card {
+  background: var(--alv-surface);
+  border-radius: var(--alv-radius-lg);
+  box-shadow: var(--alv-shadow-sm);
+}
+
+@media (max-width: 480px) {
+  .alv-otp__cell {
+    height: 58px;
+    font-size: 24px;
+  }
+}
+
+/* ============================================================
+   Katalog komponentlari (2-etap)
+   ============================================================ */
+
+.alv-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.alv-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.alv-pcard {
+  display: flex;
+  flex-direction: column;
+  background: var(--alv-surface);
+  border-radius: var(--alv-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--alv-shadow-sm);
+  color: inherit;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+.alv-pcard:hover {
+  box-shadow: var(--alv-shadow-md);
+  transform: translateY(-2px);
+  color: inherit;
+}
+
+.alv-pcard__media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--alv-surface-2);
+}
+.alv-pcard__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.alv-pcard__badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.alv-pcard__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 14px 16px;
+  flex-grow: 1;
+}
+.alv-pcard__name {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.35;
+  min-height: 38px;
+}
+.alv-pcard__foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 56px 24px;
+}
+
+.alv-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.alv-filter-group {
+  background: var(--alv-surface);
+  border-radius: var(--alv-radius-lg);
+  box-shadow: var(--alv-shadow-sm);
+  padding: 18px;
+}
+.alv-filter-group__title {
+  font-weight: 700;
+  font-size: 14.5px;
+  margin-bottom: 10px;
+}
+.alv-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--alv-tap-min);
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.alv-check__box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--alv-surface);
+  box-shadow: inset 0 0 0 1.5px var(--alv-line-2);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+.alv-check--on .alv-check__box {
+  background: var(--alv-brand);
+  box-shadow: inset 0 0 0 1.5px var(--alv-brand);
+}
+.alv-check__count {
+  font-size: 12px;
+  color: var(--alv-muted);
+  margin-left: auto;
+}
+
+.alv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--alv-radius-pill);
+  background: var(--alv-surface);
+  box-shadow: inset 0 0 0 1.5px var(--alv-line-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--alv-ink);
+}
+.alv-chip--on {
+  background: var(--alv-ink);
+  color: #fff;
+  box-shadow: none;
+}
+
+.alv-breadcrumb {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--alv-muted);
+  flex-wrap: wrap;
+}
+.alv-breadcrumb a {
+  color: var(--alv-muted);
+}
+.alv-breadcrumb a:hover {
+  color: var(--alv-brand);
+}
+
+.alv-page {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.alv-h1 {
+  font-family: var(--alv-font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 40px;
+  margin: 0;
+  line-height: 1.05;
+}
+.alv-h2 {
+  font-family: var(--alv-font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-size: 30px;
+  margin: 0;
+  line-height: 1.1;
+}
+.alv-h3 {
+  font-family: var(--alv-font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 20px;
+  margin: 0;
+}
+.alv-muted {
+  color: var(--alv-muted);
+}
+
+.alv-tabs {
+  display: flex;
+  gap: 26px;
+  border-bottom: 1.5px solid var(--alv-line);
+  flex-wrap: wrap;
+}
+.alv-tab {
+  padding: 14px 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--alv-muted);
+  background: none;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  cursor: pointer;
+  min-height: var(--alv-tap-min);
+}
+.alv-tab--on {
+  color: var(--alv-ink);
+  border-bottom-color: var(--alv-brand);
+}
+
+@media (max-width: 1024px) {
+  .alv-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .alv-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .alv-page {
+    padding: 0 16px;
+  }
+  .alv-grid,
+  .alv-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .alv-h1 {
+    font-size: 30px;
+  }
+  .alv-h2 {
+    font-size: 23px;
+  }
+}
+
+/* Mobil / desktop ko'rinish */
+.alv-mobile-only {
+  display: none;
+}
+.alv-desktop-only {
+  display: block;
+}
+@media (max-width: 900px) {
+  .alv-mobile-only {
+    display: flex;
+  }
+  .alv-desktop-only {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Savat va checkout: chapda pozitsiyalar, o'ngda summalar paneli.    */
+/* Telefonda ustunlar birin-ketin joylashadi.                         */
+/* ------------------------------------------------------------------ */
+.alv-shop-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .alv-shop-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Ikki ustunli forma qatori (ism/familiya, viloyat/tuman) */
+.alv-field-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 560px) {
+  .alv-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Admin: buyurtma kartochkasi — chapda pozitsiyalar, o'ngda ma'lumot bloklari */
+.alv-admin-cols {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .alv-admin-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
