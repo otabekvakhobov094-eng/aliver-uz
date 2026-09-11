@@ -640,3 +640,83 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ============================================================
+   Admin panel qobig'i — mobil uchun yig'iladigan sidebar.
+
+   Ilgari sidebar 240 px qat'iy edi va telefonda sahifa gorizontal
+   skroll berardi: kontent 240 px dan siljigan holda boshlanardi va
+   jadvallar ekrandan chiqib ketardi. Endi 900 px dan past ekranda
+   sidebar chetga chiqadi va tugma bilan ochiladi.
+   ============================================================ */
+.alv-adm {
+  display: flex;
+  min-height: 100vh;
+}
+.alv-adm__bar {
+  display: none;
+}
+.alv-adm__side {
+  width: 240px;
+  flex: none;
+  background: var(--alv-surface);
+  border-right: 1px solid var(--alv-line);
+  padding: 16px;
+}
+.alv-adm__main {
+  flex-grow: 1;
+  padding: 32px;
+  min-width: 0;
+}
+.alv-adm__scrim {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .alv-adm {
+    flex-direction: column;
+  }
+  .alv-adm__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--alv-surface);
+    border-bottom: 1px solid var(--alv-line);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .alv-adm__side {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: 264px;
+    overflow-y: auto;
+    /* Yopiq holatda ekrandan tashqarida turadi — `display: none` emas,
+       shunda ochilish silliq bo'ladi va fokus tartibi buzilmaydi. */
+    transform: translateX(-100%);
+    transition: transform 220ms var(--alv-ease-out, ease);
+    box-shadow: var(--alv-shadow-md);
+  }
+  .alv-adm--open .alv-adm__side {
+    transform: none;
+  }
+  .alv-adm--open .alv-adm__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: rgba(27, 18, 32, 0.42);
+    border: 0;
+  }
+  .alv-adm__main {
+    padding: 20px 14px 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alv-adm__side {
+    transition: none;
+  }
+}
