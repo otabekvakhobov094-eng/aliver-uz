@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { PaymentService } from '../payment.service';
+import { OrderNotPayableError, PaymentService } from '../payment.service';
 import {
   CLICK_ACTION,
   CLICK_ERROR,
@@ -141,7 +141,31 @@ export class ClickGateway implements PaymentGateway {
       );
     }
 
-    const response = await this.process(action, req, fail);
+    /*
+     * `process` ISTISNO tashlashi mumkin (masalan bazadagi unikal
+     * indeks buzilishi). Ushlanmasa, `webhook_events` yozuvi
+     * `processedAt = null` holida qolib ketardi va Click ning HAR BIR
+     * keyingi urinishi "hozir qayta ishlanmoqda" javobini olardi —
+     * ya'ni bu buyurtmani umuman to'lab bo'lmay qolardi.
+     *
+     * Shuning uchun istisno xato javobiga aylantiriladi va da'vo
+     * BO'SHATILADI: sabab tuzalgach Click qayta urinib, haqiqiy
+     * natijani oladi.
+     */
+    let response: ClickResponse;
+    try {
+      response = await this.process(action, req, fail);
+    } catch (error) {
+      this.logger.error(
+        `Click webhook (${action}) xatosi: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+      if (claim.id) await this.payments.releaseWebhook(claim.id);
+      return fail(
+        CLICK_ERROR.ERROR_IN_REQUEST,
+        'So‘rovni qayta ishlashda xatolik, keyinroq urinib ko‘ring',
+      );
+    }
 
     if (response.error !== 0) {
       // Xato javob "yakuniy" deb saqlanmaydi: sabab tuzalgandan keyin
@@ -238,10 +262,18 @@ export class ClickGateway implements PaymentGateway {
       return fail(CLICK_ERROR.ALREADY_PAID);
     }
 
-    await this.payments.markPaid({
-      paymentId: payment.id,
-      providerTxnId: String(req.click_trans_id),
-    });
+    // Buyurtma bekor qilingan bo'lsa — Click ga xato, pul yechilmaydi.
+    try {
+      await this.payments.markPaid({
+        paymentId: payment.id,
+        providerTxnId: String(req.click_trans_id),
+      });
+    } catch (error) {
+      if (error instanceof OrderNotPayableError) {
+        return fail(CLICK_ERROR.TRANSACTION_CANCELLED);
+      }
+      throw error;
+    }
     await this.payments.upsertTransaction({
       paymentId: payment.id,
       state: 'PERFORMED',

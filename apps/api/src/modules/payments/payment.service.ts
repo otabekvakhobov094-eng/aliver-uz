@@ -43,6 +43,36 @@ function isUniqueViolation(e: unknown): boolean {
  * joydan o'zgartirilsa, ertami-kechmi ikki joyda ikki xil mantiq paydo
  * bo'ladi va "to'landi, lekin buyurtma yangi" holati yuzaga keladi.
  */
+/**
+ * Buyurtma to'lovni qabul qila olmaydigan holatda.
+ *
+ * Bu ODATIY holat, dastur xatosi emas: mijoz to'lov oynasini ochiq
+ * qoldirib, rezerv muddati tugagan bo'lishi mumkin. Provayderga aniq
+ * xato qaytarish kerak — shunda PUL UMUMAN YECHILMAYDI.
+ */
+export class OrderNotPayableError extends Error {
+  constructor(readonly orderStatus: string) {
+    super(`Buyurtma "${orderStatus}" holatida — to‘lov qabul qilinmaydi`);
+    this.name = 'OrderNotPayableError';
+  }
+}
+
+/**
+ * To'lovni qabul qilish mumkin bo'lgan buyurtma holatlari.
+ *
+ * `DELIVERED` ham bor: naqd to'lov aynan yetkazib berilganda yopiladi.
+ * Bekor qilingan, qaytarilgan va puli qaytarilgan buyurtmalar yo'q.
+ */
+const PAYABLE_ORDER_STATUSES = new Set([
+  'NEW',
+  'CONFIRMED',
+  'PROCESSING',
+  'PACKING',
+  'READY',
+  'SHIPPED',
+  'DELIVERED',
+]);
+
 @Injectable()
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
@@ -196,6 +226,36 @@ export class PaymentService {
       return { changed: false };
     }
 
+    /*
+     * BUYURTMA HOLATI shu yerda tekshiriladi.
+     *
+     * Ilgari faqat to'lov holati tekshirilardi. Natijada quyidagi
+     * ketma-ketlik pul yo'qotardi:
+     *
+     *   14:00  buyurtma yaratildi, rezerv 14:30 gacha
+     *   14:05  Payme tranzaksiyasi ochildi (uning muddati 12 SOAT)
+     *   14:31  cron rezervni bo'shatdi va buyurtmani BEKOR QILDI
+     *   14:33  mijoz SMS kodini tasdiqladi -> pul yechildi
+     *
+     * Natijada pul olingan, tovar boshqa mijozga sotilgan, bekor
+     * qilingan buyurtmaga esa fiskal chek berilgan. Moslashtirish
+     * hisoboti ham buni ko'rmasdi: ikkala tomonda ham "to'langan".
+     *
+     * Tekshiruv ATAYLAB shu yerda — provayder darajasida emas: har bir
+     * gateway uni unutishi mumkin, bu yer esa yagona o'tish nuqtasi.
+     */
+    const orderBefore = await this.prisma.order.findUnique({
+      where: { id: payment.orderId },
+      select: { status: true },
+    });
+    if (!orderBefore) throw new NotFoundException('Buyurtma topilmadi');
+    if (!PAYABLE_ORDER_STATUSES.has(orderBefore.status)) {
+      this.logger.warn(
+        `To‘lov ${payment.id}: buyurtma "${orderBefore.status}" holatida, to‘lov rad etildi`,
+      );
+      throw new OrderNotPayableError(orderBefore.status);
+    }
+
     const paidAt = params.paidAt ?? new Date();
     const ok = await this.transition({
       paymentId: payment.id,
@@ -322,10 +382,26 @@ export class PaymentService {
       // 9 xonali tasodifiy son: ketma-ket bermaymiz (kunlik buyurtmalar
       // sonini oshkor qilmaslik uchun, buyurtma raqamidagi kabi).
       const candidate = 100_000_000 + Math.floor(Math.random() * 899_999_999);
-      const res = await this.prisma.payment.updateMany({
-        where: { id: paymentId, prepareId: null },
-        data: { prepareId: candidate },
-      });
+      /*
+       * `prepareId` BUTUN JADVAL bo'yicha unikal. Tasodifiy son
+       * to'qnashganda Prisma P2002 TASHLAYDI — `count: 0` qaytarmaydi.
+       * Ushlanmasa, bu istisno webhookni yakunlamay uzib qo'yardi va
+       * Click ning har bir keyingi urinishi "in flight" ga tushardi:
+       * buyurtmani umuman to'lab bo'lmay qolardi.
+       *
+       * Endi to'qnashuv shunchaki keyingi urinishga o'tkazadi — sikl
+       * aynan shuning uchun yozilgan edi.
+       */
+      let res: { count: number };
+      try {
+        res = await this.prisma.payment.updateMany({
+          where: { id: paymentId, prepareId: null },
+          data: { prepareId: candidate },
+        });
+      } catch (error) {
+        if ((error as { code?: string }).code === 'P2002') continue;
+        throw error;
+      }
       if (res.count === 1) return candidate;
 
       const again = await this.prisma.payment.findUnique({

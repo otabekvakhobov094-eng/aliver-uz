@@ -275,3 +275,90 @@ describe('chegara qo‘llanganda hisobot', () => {
     expect(res.applied.reduce((a, b) => a + b.amount, 0n)).toBe(res.discountTotal);
   });
 });
+
+/**
+ * Quyidagi testlar ikkita HAQIQIY nosozlikni qo'riqlaydi. Ikkalasi ham
+ * jimgina ishlagan: savat jamisi to'g'ri chiqqani uchun ular faqat
+ * qaytarish paytida yoki kupon ishlamaganda sezilardi.
+ */
+describe('chegirma taqsimoti — regressiya', () => {
+  const line = (id: string, total: bigint, productId = id) => ({
+    variantId: id,
+    productId,
+    categoryIds: [] as string[],
+    collectionIds: [] as string[],
+    quantity: 1,
+    unitPrice: total,
+    lineTotal: total,
+    vatRate: 12,
+  });
+
+  const rule = (over: Record<string, unknown>) => ({
+    id: 'r1',
+    code: null,
+    type: 'PERCENT' as const,
+    scope: 'CART' as const,
+    value: 20,
+    minOrderAmount: null,
+    maxDiscountAmount: null,
+    minQuantity: null,
+    targetProductIds: [] as string[],
+    targetCategoryIds: [] as string[],
+    targetCollectionIds: [] as string[],
+    stackable: false,
+    priority: 0,
+    ...over,
+  });
+
+  it('chegirma FAQAT o‘ziga tegishli qatorga tushadi', () => {
+    // P = 50 000, Q = 1 000 000. 20% chegirma faqat P ga tegishli.
+    // Ilgari uning 10 000 tiyini butun savat bo'ylab tarqalib, 9 524 si
+    // Q ga tushib ketardi — va shu holda `order_items` ga muzlatilardi.
+    const lines = [line('P', 50_000n), line('Q', 1_000_000n)];
+    const res = applyDiscounts(lines, [
+      rule({ scope: 'PRODUCT', targetProductIds: ['P'] }) as never,
+    ]);
+
+    expect(res.discountTotal).toBe(10_000n);
+    expect(res.perLine).toEqual([10_000n, 0n]);
+  });
+
+  it('bepul yetkazish kuponni to‘sib qo‘ymaydi', () => {
+    // Birikish o'chirilgan. Avtomatik "bepul yetkazish" qoidasi
+    // ilgari yagona slotni egallab, mijozning kuponini nolga
+    // aylantirardi — xato ko'rsatmasdan.
+    const lines = [line('A', 1_500_000n)];
+    const res = applyDiscounts(
+      lines,
+      [
+        rule({ id: 'ship', type: 'FREE_SHIPPING', priority: 0 }) as never,
+        rule({ id: 'coupon', code: 'ALIVER20', value: 20, priority: 10 }) as never,
+      ],
+      { allowStacking: false },
+    );
+
+    expect(res.freeShipping).toBe(true);
+    expect(res.discountTotal).toBe(300_000n);
+    expect(res.perLine).toEqual([300_000n]);
+  });
+
+  it('umumiy chegara ishlaganda qator taqsimoti ham qisqaradi', () => {
+    const lines = [line('A', 100_000n), line('B', 100_000n)];
+    const res = applyDiscounts(lines, [rule({ value: 90 }) as never], {
+      maxTotalPercent: 40,
+    });
+
+    expect(res.cappedByLimit).toBe(true);
+    expect(res.discountTotal).toBe(80_000n);
+    // Qator bo'yicha yig'indi umumiy chegirmaga TENG bo'lishi shart.
+    expect(res.perLine.reduce((a, b) => a + b, 0n)).toBe(res.discountTotal);
+  });
+
+  it('har qanday holatda sum(perLine) === discountTotal', () => {
+    const lines = [line('A', 33_333n), line('B', 66_667n), line('C', 1n)];
+    for (const value of [5, 17, 33, 40]) {
+      const res = applyDiscounts(lines, [rule({ value }) as never]);
+      expect(res.perLine.reduce((a, b) => a + b, 0n)).toBe(res.discountTotal);
+    }
+  });
+});

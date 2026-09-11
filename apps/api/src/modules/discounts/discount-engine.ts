@@ -143,6 +143,22 @@ export function validateDiscount(
   return { ok: true };
 }
 
+/**
+ * Chegirma qaysi pozitsiya INDEKSLARIGA tegishli.
+ *
+ * `eligibleLines` obyektlarni qaytaradi, lekin summani taqsimlash uchun
+ * ularning savatdagi o'rni kerak — aks holda chegirma boshqa qatorga
+ * tushib qoladi.
+ */
+export function eligibleIndices(rule: DiscountRule, lines: CartLine[]): number[] {
+  const set = new Set(eligibleLines(rule, lines));
+  const out: number[] = [];
+  lines.forEach((line, i) => {
+    if (set.has(line)) out.push(i);
+  });
+  return out;
+}
+
 /** Chegirma qaysi pozitsiyalarga tegishli. */
 export function eligibleLines(rule: DiscountRule, lines: CartLine[]): CartLine[] {
   switch (rule.scope) {
@@ -200,24 +216,56 @@ export function applyDiscounts(
   const ordered = [...rules].sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id));
 
   const applied: AppliedDiscount[] = [];
+  // Har bir qatorga tushgan chegirma shu yerda YIG'ILADI: chegirma
+  // faqat o'ziga tegishli qatorlarga taqsimlanadi (pastdagi izohga qarang).
+  const perLine = lines.map(() => 0n);
   let total = 0n;
   let freeShipping = false;
 
+  /*
+   * "Slot" ni faqat QIYMATLI chegirma egallaydi.
+   *
+   * Ilgari bepul yetkazish ham `applied` ga qo'shilardi va birikish
+   * o'chirilganda yagona slotni egallab, keyingi HAMMA qoidani to'sib
+   * qo'yardi. Natijada mijozning kuponi "qabul qilindi" deb ko'rinardi,
+   * lekin chegirma nol bo'lardi — xato ham chiqmasdi.
+   */
+  let valueApplied = 0;
+
   for (const rule of ordered) {
-    if (applied.length > 0 && (!allowStacking || !rule.stackable)) break;
+    if (valueApplied > 0 && (!allowStacking || !rule.stackable)) break;
 
     if (rule.type === 'FREE_SHIPPING') {
+      if (freeShipping) continue;
       freeShipping = true;
       applied.push({ id: rule.id, code: rule.code, type: rule.type, amount: 0n });
-      if (!rule.stackable) break;
       continue;
     }
 
     const amount = computeAmount(rule, lines);
     if (amount <= 0n) continue;
 
+    /*
+     * Chegirma FAQAT o'ziga tegishli qatorlarga taqsimlanadi.
+     *
+     * Ilgari u butun savat bo'ylab tarqatilardi. Masalan 20% chegirma
+     * faqat P mahsulotiga tegishli bo'lsa ham, uning summasi qimmatroq
+     * Q mahsulotiga tushib ketardi. Bu `order_items` ga MUZLATILGAN
+     * holda yozilgani uchun keyin qaytarish summasi ham, fiskal
+     * chekdagi QQS ham noto'g'ri chiqardi.
+     */
+    const indices = eligibleIndices(rule, lines);
+    const share = allocateDiscount(
+      indices.map((i) => lines[i]!.lineTotal),
+      amount,
+    );
+    indices.forEach((lineIndex, k) => {
+      perLine[lineIndex] = perLine[lineIndex]! + (share[k] ?? 0n);
+    });
+
     total += amount;
     applied.push({ id: rule.id, code: rule.code, type: rule.type, amount });
+    valueApplied += 1;
 
     if (!rule.stackable) break;
   }
@@ -246,11 +294,15 @@ export function applyDiscounts(
           return applied.map((a, i) => ({ ...a, amount: scaled[i] ?? 0n }));
         })();
 
+  /*
+   * Umumiy chegara ishlagan bo'lsa, qator bo'yicha taqsimot ham
+   * proporsional qisqartiriladi — aks holda `sum(perLine)` haqiqiy
+   * chegirmadan katta bo'lib qolardi.
+   */
+  const finalPerLine = total === uncapped ? perLine : allocateDiscount(perLine, total);
+
   return {
-    perLine: allocateDiscount(
-      lines.map((l) => l.lineTotal),
-      total,
-    ),
+    perLine: finalPerLine,
     discountTotal: total,
     applied: reported,
     freeShipping,

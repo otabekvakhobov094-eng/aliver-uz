@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { PaymentService } from '../payment.service';
+import { OrderNotPayableError, PaymentService } from '../payment.service';
 import { parseBasicAuth, safeEqual } from '../webhook.util';
 import {
   PAYME_ERROR,
@@ -301,10 +301,28 @@ export class PaymeGateway implements PaymentGateway {
       throw new PaymeError(PAYME_ERROR.CANT_DO_OPERATION, 'timeout');
     }
 
-    await this.payments.markPaid({
-      paymentId: payment.id,
-      providerTxnId: String(params.id),
-    });
+    /*
+     * Buyurtma bekor qilingan bo'lsa, Payme ga XATO qaytaramiz — shunda
+     * pul umuman yechilmaydi. `CheckPerformTransaction` buni allaqachon
+     * tekshiradi, lekin uning va `PerformTransaction` ning orasida
+     * soatlar o'tishi mumkin (tranzaksiya muddati 12 soat, rezerv esa
+     * 30 daqiqa), shuning uchun tekshiruv shu yerda ham kerak.
+     */
+    try {
+      await this.payments.markPaid({
+        paymentId: payment.id,
+        providerTxnId: String(params.id),
+      });
+    } catch (error) {
+      if (error instanceof OrderNotPayableError) {
+        await this.payments.markCancelled({
+          paymentId: payment.id,
+          reason: `Payme: buyurtma ${error.orderStatus} holatida`,
+        });
+        throw new PaymeError(PAYME_ERROR.CANT_DO_OPERATION, 'order-not-payable');
+      }
+      throw error;
+    }
     await this.payments.upsertTransaction({
       paymentId: payment.id,
       state: 'PERFORMED',

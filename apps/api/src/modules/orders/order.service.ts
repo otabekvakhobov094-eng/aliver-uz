@@ -705,8 +705,30 @@ export class OrderService {
     //    o'zgarmagan bo'lsa ishlaydi. Ikki operator (yoki operator va cron)
     //    bir vaqtda bosganda ikkinchisi shu yerda to'xtaydi va yon ta'sirlar
     //    ikki marta bajarilmaydi (rezerv ikki marta bo'shamaydi).
+    /*
+     * "To'langan buyurtmada to'lov holatiga tegilmaydi" qoidasi ilgari
+     * OLDIN O'QILGAN qiymat asosida hal qilinardi. Bu yo'qolgan
+     * yangilanishga olib kelardi:
+     *
+     *   T    cron buyurtmani o'qidi: paymentStatus = WAITING
+     *   T+1  webhook keldi -> paymentStatus = PAID
+     *   T+2  cron o'zining eski qiymati bilan CANCELLED deb yozdi
+     *
+     * Natijada to'lovlar ro'yxatida pul kelgan, buyurtmalar ro'yxatida
+     * esa to'lanmagan bekor qilingan buyurtma turardi.
+     *
+     * Endi qoida SHARTNING O'ZIDA: `paymentStatus` ni faqat u hali
+     * PAID emas bo'lgandagina o'zgartiramiz, ya'ni tekshiruv va yozuv
+     * bitta atomar amalda bajariladi.
+     */
+    const cancellingUnpaid = to === 'CANCELLED' && order.paymentStatus !== 'PAID';
+
     const claimed = await this.prisma.order.updateMany({
-      where: { id: order.id, status: from as never },
+      where: {
+        id: order.id,
+        status: from as never,
+        ...(cancellingUnpaid ? { paymentStatus: { not: 'PAID' as never } } : {}),
+      },
       data: {
         status: to as never,
         ...(to === 'CONFIRMED' ? { confirmedAt: new Date(), reservationExpiresAt: null } : {}),
@@ -715,10 +737,7 @@ export class OrderService {
         ...(to === 'CANCELLED'
           ? {
               cancelledAt: new Date(),
-              // To'lovi qabul qilingan buyurtmada to'lov holati TEGILMAYDI:
-              // pul qaytarilmagan bo'lsa "CANCELLED" deb yozish qarzni
-              // yo'qotib yuborardi. Qaytarish 6-etapdagi alohida jarayon.
-              ...(order.paymentStatus === 'PAID' ? {} : { paymentStatus: 'CANCELLED' as never }),
+              ...(cancellingUnpaid ? { paymentStatus: 'CANCELLED' as never } : {}),
             }
           : {}),
       },
@@ -934,13 +953,28 @@ export class OrderService {
 
     assertPaymentTransition(payment.status as PaymentStatus, 'PAID');
 
+    // Buyurtma raqami tranzaksiya identifikatori uchun kerak (pastga qarang).
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { number: true },
+    });
+    if (!order) throw new NotFoundException('Buyurtma topilmadi');
+
     const paidAt = new Date();
     const claimed = await this.prisma.payment.updateMany({
       where: { id: payment.id, status: payment.status },
       data: {
         status: 'PAID',
         paidAt,
-        providerTxnId: payment.providerTxnId ?? `CASH-${orderId.slice(0, 8)}`,
+        providerTxnId:
+          payment.providerTxnId ??
+          // Buyurtma RAQAMI ishlatiladi: u o'zi unikal. Ilgari bu yerda
+          // UUID ning birinchi 8 belgisi turardi — 32 bit, ya'ni ~77 000
+          // naqd buyurtmada to'qnashuv ehtimoli 50%. To'qnashganda
+          // `(provider, providerTxnId)` unikal indeksi P2002 tashlardi
+          // va buyurtma DELIVERED bo'lib, puli esa yozilmay qolardi —
+          // fiskal chek ham berilmasdi.
+          `CASH-${order.number}`,
       },
     });
     if (claimed.count !== 1) return;
