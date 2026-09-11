@@ -557,6 +557,10 @@ export class ProductService {
       slug: true,
       nameUz: true,
       nameRu: true,
+      // Bir qatorli izoh — "bu nima" degan savolga kartochkaning o'zida
+      // javob beradi; aks holda mijoz bilish uchun bosishi kerak.
+      shortDescUz: true,
+      shortDescRu: true,
       ratingAvg: true,
       ratingCount: true,
       minPrice: true,
@@ -565,10 +569,14 @@ export class ProductService {
       isFeatured: true,
       publishedAt: true,
       images: {
-        where: { kind: 'MAIN' as const },
-        take: 1,
+        // IKKITA rasm: ikkinchisi hover'da almashadi. `kind` cheklovi
+        // olib tashlandi — ko'p mahsulotda faqat bitta MAIN rasm bor,
+        // ikkinchi kadr esa odatda boshqa turda saqlanadi.
+        take: 2,
+        orderBy: { sortOrder: 'asc' as const },
         select: { url: true, urlWebp: true, altUz: true, altRu: true },
       },
+      _count: { select: { variants: true } },
       variants: {
         where: { deletedAt: null, isActive: true },
         select: {
@@ -587,11 +595,14 @@ export class ProductService {
     slug: string;
     nameUz: string;
     nameRu: string;
+    shortDescUz?: string | null;
+    shortDescRu?: string | null;
     ratingAvg: number;
     ratingCount: number;
     minPrice: bigint;
     isFeatured: boolean;
     publishedAt: Date | null;
+    _count?: { variants: number };
     images: Array<{
       url: string;
       urlWebp: string | null;
@@ -626,7 +637,15 @@ export class ProductService {
       ratingAvg: p.ratingAvg,
       ratingCount: p.ratingCount,
       availableStock: available,
+      shortUz: p.shortDescUz ?? null,
+      shortRu: p.shortDescRu ?? null,
+      // Variant soni kosmetikada bosishga sabab: "16 ta soya" ni
+      // mahsulot sahifasiga yashirish bosishlarni yo'qotadi.
+      variantsCount: p._count?.variants ?? p.variants.length,
       imageUrl: p.images[0]?.urlWebp ?? p.images[0]?.url ?? null,
+      // Ikkinchi rasm bo'lmasa `null` — kartochka hover'da o'zgarmaydi,
+      // lekin buzilmaydi ham.
+      imageHoverUrl: p.images[1]?.urlWebp ?? p.images[1]?.url ?? null,
       imageAltUz: p.images[0]?.altUz ?? null,
       imageAltRu: p.images[0]?.altRu ?? null,
       badges: productBadges(

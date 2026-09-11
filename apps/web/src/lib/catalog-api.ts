@@ -11,6 +11,11 @@ export interface ProductCard {
   slug: string;
   nameUz: string;
   nameRu: string;
+  /** Bir qatorli izoh — "bu nima". TZ-3, 2.2. */
+  shortUz: string | null;
+  shortRu: string | null;
+  /** Variant (soya/hajm) soni — kosmetikada bosishga sabab. */
+  variantsCount: number;
   price: Tiyin;
   oldPrice: Tiyin | null;
   discountPercent: number;
@@ -18,6 +23,8 @@ export interface ProductCard {
   ratingCount: number;
   availableStock: number;
   imageUrl: string | null;
+  /** Hover'da almashadigan ikkinchi rasm; bo'lmasa null. */
+  imageHoverUrl: string | null;
   imageAltUz: string | null;
   imageAltRu: string | null;
   badges: Badge[];
