@@ -498,6 +498,26 @@
   .alv-h2 {
     font-size: 23px;
   }
+  .alv-pcard__body {
+    padding: 12px;
+  }
+  .alv-pcard__name {
+    font-size: 13px;
+    min-height: 35px;
+  }
+  .alv-chip {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .alv-page {
+    padding-inline: 12px;
+  }
+  .alv-grid,
+  .alv-grid--3 {
+    gap: 9px;
+  }
 }
 
 /* Mobil / desktop ko'rinish */
@@ -527,9 +547,46 @@
   align-items: start;
 }
 
+.alv-catalog-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin-top: 22px;
+}
+
+.alv-account-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+}
+
+.alv-cart-item__price {
+  min-width: 120px;
+  text-align: right;
+}
+
 @media (max-width: 900px) {
   .alv-shop-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .alv-catalog-layout {
+    display: block;
+  }
+  .alv-account-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .alv-account-nav {
+    display: flex !important;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+  .alv-account-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .alv-account-nav a {
+    flex: none;
   }
 }
 
@@ -543,6 +600,23 @@
 @media (max-width: 560px) {
   .alv-field-row {
     grid-template-columns: 1fr;
+  }
+  .alv-cart-item {
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+  .alv-cart-item__price {
+    width: 100%;
+    min-width: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--alv-line);
+    text-align: left;
+  }
+  .alv-tabs {
+    flex-wrap: nowrap;
+    gap: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 }
 

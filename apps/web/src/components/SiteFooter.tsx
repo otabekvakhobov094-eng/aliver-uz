@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Locale } from '@/i18n/messages';
+import styles from './SiteFooter.module.css';
 
 const LINKS: Array<[string, string, string]> = [
   ['/sahifa/delivery', 'Yetkazib berish', 'Доставка'],
@@ -14,39 +15,29 @@ const LINKS: Array<[string, string, string]> = [
 
 export function SiteFooter({ locale }: { locale: Locale }) {
   return (
-    <footer
-      style={{ background: 'var(--alv-ink)', color: '#fff', marginTop: 72, padding: '40px 0 28px' }}
-    >
+    <footer className={styles.footer}>
       <div className="alv-page">
-        <div
-          style={{
-            fontFamily: 'var(--alv-font-display)',
-            fontWeight: 800,
-            fontSize: 22,
-            letterSpacing: '-0.04em',
-          }}
-        >
+        <div className={styles.logo}>
           ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span>
         </div>
-        <p
-          style={{ color: '#B6A9BE', maxWidth: 420, lineHeight: 1.6, fontSize: 13, marginTop: 12 }}
-        >
+        <p className={styles.description}>
           {locale === 'ru'
             ? 'Официальный интернет-магазин продукции ALIVER в Узбекистане. Вся продукция оригинальная и сертифицированная.'
             : 'ALIVER mahsulotlarining O‘zbekistondagi rasmiy onlayn do‘koni. Barcha mahsulotlar original va sertifikatlangan.'}
         </p>
 
-        <nav style={{ display: 'flex', gap: '10px 24px', flexWrap: 'wrap', margin: '22px 0 20px' }}>
+        <nav className={styles.links}>
           {LINKS.map(([href, uz, ru]) => (
-            <Link key={href} href={`/${locale}${href}`} style={{ color: '#B6A9BE', fontSize: 13 }}>
+            <Link key={href} href={`/${locale}${href}`}>
               {locale === 'ru' ? ru : uz}
             </Link>
           ))}
         </nav>
 
-        <div style={{ height: 1, background: '#3A2C42', margin: '0 0 16px' }} />
-        <div style={{ color: '#8E8296', fontSize: 12 }}>
-          © 2026 ALIVER.UZ • {locale === 'ru' ? 'Официальный магазин в Узбекистане' : 'O‘zbekistondagi rasmiy do‘kon'}
+        <div className={styles.line} />
+        <div className={styles.copyright}>
+          © 2026 ALIVER.UZ •{' '}
+          {locale === 'ru' ? 'Официальный магазин в Узбекистане' : 'O‘zbekistondagi rasmiy do‘kon'}
         </div>
       </div>
     </footer>

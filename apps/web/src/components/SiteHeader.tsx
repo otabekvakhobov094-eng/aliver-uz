@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { t, type Locale } from '@/i18n/messages';
 import { CartBadge } from './CartBadge';
+import styles from './SiteHeader.module.css';
 
 const NAV: Array<{
   href: string;
@@ -17,85 +18,82 @@ export function SiteHeader({ locale }: { locale: Locale }) {
   const other: Locale = locale === 'uz' ? 'ru' : 'uz';
 
   return (
-    <header>
-      <div
-        style={{
-          background: 'var(--alv-ink)',
-          color: '#fff',
-          fontSize: 12.5,
-          fontWeight: 600,
-          textAlign: 'center',
-          padding: '10px 16px',
-        }}
-      >
+    <header className={styles.header}>
+      <div className={styles.announcement}>
         {locale === 'ru'
           ? 'Доставка по Узбекистану • 100% оригинал • Click, Payme или наличные'
           : 'O‘zbekiston bo‘ylab yetkazib berish • 100% original • Click, Payme yoki naqd to‘lov'}
       </div>
 
-      <div style={{ background: 'var(--alv-surface)', borderBottom: '1px solid var(--alv-line)' }}>
-        <div
-          className="alv-page"
-          style={{ display: 'flex', alignItems: 'center', gap: 24, height: 70, flexWrap: 'wrap' }}
-        >
-          <Link
-            href={`/${locale}`}
-            style={{
-              fontFamily: 'var(--alv-font-display)',
-              fontWeight: 800,
-              fontSize: 22,
-              letterSpacing: '-0.04em',
-              color: 'var(--alv-ink)',
-            }}
-          >
+      <div className={styles.bar}>
+        <div className={`alv-page ${styles.inner}`}>
+          <Link href={`/${locale}`} className={styles.logo}>
             ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span>
           </Link>
 
-          <nav style={{ display: 'flex', gap: 20, flexGrow: 1, fontSize: 14, fontWeight: 600 }}>
+          <nav
+            className={styles.desktopNav}
+            aria-label={locale === 'ru' ? 'Основная навигация' : 'Asosiy navigatsiya'}
+          >
             {NAV.map((item) => (
-              <Link
-                key={item.key}
-                href={`/${locale}${item.href}`}
-                style={{ color: 'var(--alv-ink)', whiteSpace: 'nowrap' }}
-              >
+              <Link key={item.key} href={`/${locale}${item.href}`} className={styles.navLink}>
                 {t(locale, item.key)}
               </Link>
             ))}
           </nav>
 
-          <Link
-            href={`/${locale}/qidiruv`}
-            className="alv-chip"
-            style={{ color: 'var(--alv-muted)', minWidth: 200, justifyContent: 'flex-start' }}
-          >
+          <Link href={`/${locale}/qidiruv`} className={`${styles.search} alv-chip`}>
             {locale === 'ru' ? 'Поиск товаров…' : 'Mahsulot qidirish…'}
           </Link>
 
-          <Link
-            href={`/${other}`}
-            className="alv-chip"
-            style={{ minHeight: 40, padding: '0 14px' }}
-          >
-            {other.toUpperCase()}
-          </Link>
+          <div className={styles.desktopActions}>
+            <Link href={`/${other}`} className="alv-chip">
+              {other.toUpperCase()}
+            </Link>
 
-          <Link
-            href={`/${locale}/kuzatuv`}
-            className="alv-chip"
-            style={{ minHeight: 40, padding: '0 14px', whiteSpace: 'nowrap' }}
-          >
-            {locale === 'ru' ? 'Отследить' : 'Kuzatuv'}
-          </Link>
+            <Link href={`/${locale}/kuzatuv`} className="alv-chip">
+              {locale === 'ru' ? 'Отследить' : 'Kuzatuv'}
+            </Link>
 
-          <Link
-            href={`/${locale}/kabinet`}
-            className="alv-chip"
-            style={{ minHeight: 40, padding: '0 14px', whiteSpace: 'nowrap' }}
-          >
-            {locale === 'ru' ? 'Кабинет' : 'Kabinet'}
-          </Link>
+            <Link href={`/${locale}/kabinet`} className="alv-chip">
+              {locale === 'ru' ? 'Кабинет' : 'Kabinet'}
+            </Link>
 
-          <CartBadge locale={locale} />
+            <CartBadge locale={locale} />
+          </div>
+
+          <div className={styles.mobileActions}>
+            <Link
+              href={`/${locale}/qidiruv`}
+              className={styles.iconLink}
+              aria-label={locale === 'ru' ? 'Поиск' : 'Qidiruv'}
+            >
+              ⌕
+            </Link>
+            <CartBadge locale={locale} />
+            <details className={styles.menu}>
+              <summary aria-label={locale === 'ru' ? 'Открыть меню' : 'Menyuni ochish'}>
+                <span aria-hidden>☰</span>
+              </summary>
+              <nav
+                className={styles.mobileMenu}
+                aria-label={locale === 'ru' ? 'Мобильная навигация' : 'Mobil navigatsiya'}
+              >
+                {NAV.map((item) => (
+                  <Link key={item.key} href={`/${locale}${item.href}`}>
+                    {t(locale, item.key)}
+                  </Link>
+                ))}
+                <Link href={`/${locale}/kuzatuv`}>
+                  {locale === 'ru' ? 'Отследить заказ' : 'Buyurtmani kuzatish'}
+                </Link>
+                <Link href={`/${locale}/kabinet`}>
+                  {locale === 'ru' ? 'Личный кабинет' : 'Shaxsiy kabinet'}
+                </Link>
+                <Link href={`/${other}`}>{other.toUpperCase()}</Link>
+              </nav>
+            </details>
+          </div>
         </div>
       </div>
     </header>

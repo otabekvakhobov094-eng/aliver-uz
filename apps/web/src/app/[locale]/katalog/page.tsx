@@ -102,7 +102,7 @@ export default async function CatalogPage({
           {data.total} {locale === 'ru' ? 'товаров' : 'ta mahsulot'}
         </p>
 
-        <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start', marginTop: 22 }}>
+        <div className="alv-catalog-layout">
           <CatalogFilters categories={categories} locale={locale} total={data.total} />
 
           <div style={{ flexGrow: 1, minWidth: 0 }}>

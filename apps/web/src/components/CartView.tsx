@@ -89,6 +89,7 @@ export function CartView({ locale }: { locale: Locale }) {
 
         {cart.items.map((item) => (
           <div
+            className="alv-cart-item"
             key={item.itemId}
             style={{
               display: 'flex',
@@ -222,7 +223,7 @@ export function CartView({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            <div style={{ textAlign: 'right', minWidth: 120 }}>
+            <div className="alv-cart-item__price">
               <div style={{ fontWeight: 800, fontSize: 16 }}>{money(item.lineTotal, locale)}</div>
               {item.oldUnitPrice ? (
                 <div

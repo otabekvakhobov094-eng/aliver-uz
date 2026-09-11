@@ -26,8 +26,9 @@ export function AccountShell({
   const base = `/${locale}/kabinet`;
 
   return (
-    <div className="alv-shop-grid" style={{ gridTemplateColumns: '240px minmax(0, 1fr)' }}>
+    <div className="alv-account-grid">
       <nav
+        className="alv-account-nav"
         style={{
           background: 'var(--alv-surface)',
           borderRadius: 'var(--alv-radius-lg)',
