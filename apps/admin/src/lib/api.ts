@@ -33,6 +33,20 @@ export interface B2bLead {
   comment: string | null; status: string; createdAt: string;
 }
 
+export interface DashboardData {
+  period: { from: string; to: string; key: string };
+  revenue: string;
+  orders: number;
+  avgOrder: string;
+  newCustomers: number;
+  paidOrders: number;
+  allOrders: number;
+  cancelledOrders: number;
+  lowStock: number;
+  previous: { revenue: string; orders: number };
+  series: Array<{ day: string; revenue: string; orders: number }>;
+}
+
 export interface ReportOverview {
   period: { from: string; to: string };
   orders: { count: number; revenue: string; discount: string; shipping: string };
@@ -867,6 +881,13 @@ export const adminApi = {
   reportOverview: (from?: string, to?: string) => {
     const qs = new URLSearchParams(); if (from) qs.set('from', from); if (to) qs.set('to', to);
     return request<ReportOverview>(`/admin/reports/overview?${qs.toString()}`);
+  },
+
+  dashboard: (period: string, from?: string, to?: string) => {
+    const qs = new URLSearchParams({ period });
+    if (from) qs.set('from', from);
+    if (to) qs.set('to', to);
+    return request<DashboardData>(`/admin/reports/dashboard?${qs.toString()}`);
   },
 
   templateUrl: () => `${apiBase()}/admin/import/products/template`,

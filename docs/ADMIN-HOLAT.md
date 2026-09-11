@@ -129,3 +129,44 @@ kerak, xodimlarga esa super-admin huquqidan boshqa narsa berib bo'lmaydi.
 
 To'rtinchidan — **Kolleksiyalar** (backend tayyor), keyin **Chegirmalar**,
 **Hisobotlar eksporti**, **Sharhlar** va **global qidiruv**.
+
+---
+
+## 7. Yangilanish — 11.09.2026, `dashboard` commiti
+
+2-bo'limdagi ikkala kamchilik tuzatildi va 6-bo'limdagi birinchi ikki
+navbat bajarildi.
+
+Navigatsiya mezoni o'zgardi: endi `stage` emas, **route mavjudmi** degan
+savol hal qiladi (`NavItem.ready`). Natijada **19 ta bo'lim bosiladigan
+bo'ldi**; sahifasi yo'q 6 tasi «tez orada» belgisi bilan o'chirilgan
+holda turadi va 404 bermaydi. Brauzerda o'lchab tekshirildi.
+
+Bosh sahifa 1-etap maketidan **haqiqiy Dashboard**ga almashtirildi:
+tushum, to'langan buyurtmalar, o'rtacha chek, yangi mijozlar, barcha va
+bekor qilingan buyurtmalar, kam qolgan mahsulot; oldingi davr bilan
+taqqoslash foizi; kunlik tushum grafigi; davr tanlagichi (bugun, kecha,
+7 kun, 30 kun, shu oy). Yangi endpoint — `GET /admin/reports/dashboard`.
+
+Davr **serverda** hisoblanadi, Toshkent vaqti bo'yicha. Brauzer vaqt
+mintaqasiga tayansak, server UTC da ishlagani uchun "bugungi tushum"
+tunda noto'g'ri chiqardi.
+
+### Yo'l-yo'lakay topilgan production xatosi
+
+Tekshirish paytida ma'lum bo'ldiki, Next.js `rewrites()` manzilini
+**qurilish paytida** `.next/routes-manifest.json` ga yozadi. VPS
+compose faylida `API_ORIGIN` esa faqat **ishga tushirish** o'zgaruvchisi
+edi — ya'ni tasvir ichida proxy `localhost:4000` ga qotib qolardi va
+**admin login VPS'da yana ishlamas edi**, aynan Render'dagi kabi.
+
+Tuzatildi: `API_ORIGIN` endi `apps/web/Dockerfile` va
+`apps/admin/Dockerfile` da build argumenti, compose'da esa
+`build.args` orqali beriladi. Render'da bu muammo yo'q edi, chunki u
+build paytida ham o'zgaruvchilarni beradi.
+
+### Qolgan ish
+
+Admin paneli **mobil ekranga moslashmagan** — 400 px kenglikda
+gorizontal skroll paydo bo'ladi, chunki sidebar 240 px qat'iy. Bu
+avvaldan mavjud nuqson; tuzatish uchun yig'iladigan sidebar kerak.

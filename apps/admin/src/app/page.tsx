@@ -1,94 +1,264 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card } from '@aliver/ui';
-import { adminApi } from '@/lib/api';
-import { visibleNav, type NavItem } from '@/lib/nav';
+import { useCallback, useEffect, useState } from 'react';
+import { AdminShell } from '@/components/AdminShell';
+import { adminApi, type DashboardData } from '@/lib/api';
 
 /**
- * Admin qobig'i. 1-etapda: kirish, huquqlar bo'yicha sidebar va audit log.
- * Modullar keyingi etaplarda shu qobiqqa qo'shiladi.
+ * Admin bosh sahifasi — KPI, grafik va e'tibor talab qiladigan ishlar.
+ * TZ-2, 4.9-bo'lim.
+ *
+ * Ilgari bu yerda 1-etap maketi turardi: sidebar `<span>` bilan chizilgan,
+ * ya'ni hech narsa bosilmaydigan. Endi qobiq umumiy `AdminShell` dan
+ * olinadi, shuning uchun navigatsiya bitta joyda boshqariladi.
  */
-export default function AdminHome() {
-  const router = useRouter();
-  const [items, setItems] = useState<NavItem[]>([]);
-  const [role, setRole] = useState<string>('');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    adminApi
-      .permissions()
-      .then((res) => {
-        setRole(res.role);
-        setItems(visibleNav(res.permissions, res.role));
-      })
-      .catch(() => router.push('/login'))
-      .finally(() => setLoading(false));
-  }, [router]);
+const PERIODS: Array<{ key: string; label: string }> = [
+  { key: 'today', label: 'Bugun' },
+  { key: 'yesterday', label: 'Kecha' },
+  { key: '7d', label: '7 kun' },
+  { key: '30d', label: '30 kun' },
+  { key: 'month', label: 'Shu oy' },
+];
 
-  if (loading) return <main style={{ padding: 40 }}>Yuklanmoqda…</main>;
+/** Tiyinni so'mga aylantiradi. Pul hech qachon suzuvchi nuqtada saqlanmaydi. */
+function money(tiyin: string | number | null | undefined): string {
+  const value = Number(tiyin ?? 0) / 100;
+  return `${Math.round(value).toLocaleString('uz-UZ')} so'm`;
+}
 
+function delta(current: string, previous: string): { text: string; up: boolean } | null {
+  const a = Number(current ?? 0);
+  const b = Number(previous ?? 0);
+  if (b === 0) return null;
+  const pct = ((a - b) / b) * 100;
+  return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`, up: pct >= 0 };
+}
+
+function Kpi({
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  label: string;
+  value: string;
+  hint?: { text: string; up: boolean } | string | null;
+  tone?: 'warn';
+}) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <aside
+    <div
+      className="alv-card"
+      style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}
+    >
+      <div style={{ color: 'var(--alv-muted)', fontSize: 13 }}>{label}</div>
+      <strong
         style={{
-          width: 250,
-          background: 'var(--alv-surface)',
-          borderRight: '1px solid var(--alv-line)',
-          padding: 16,
+          fontSize: 26,
+          lineHeight: 1.15,
+          fontVariantNumeric: 'tabular-nums',
+          color: tone === 'warn' ? 'var(--alv-amber, #9A5A12)' : undefined,
+          overflowWrap: 'break-word',
         }}
       >
-        <div style={{ fontFamily: 'var(--alv-font-display)', fontSize: 20, marginBottom: 4 }}>
-          ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span>
+        {value}
+      </strong>
+      {hint ? (
+        <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>
+          {typeof hint === 'string' ? (
+            hint
+          ) : (
+            <span style={{ color: hint.up ? 'var(--alv-mint, #1F7A5C)' : 'var(--alv-danger, #C0392B)' }}>
+              {hint.text} <span style={{ color: 'var(--alv-muted)' }}>oldingi davrga nisbatan</span>
+            </span>
+          )}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--alv-muted)', marginBottom: 16 }}>{role}</div>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {items.map((item) => (
-            <span
-              key={item.href}
+      ) : null}
+    </div>
+  );
+}
+
+/** Oddiy ustunli grafik. Kutubxonasiz — sahifa og'irlashmasin. */
+function RevenueChart({ series }: { series: DashboardData['series'] }) {
+  if (series.length === 0) {
+    return (
+      <p style={{ color: 'var(--alv-muted)', margin: 0 }}>
+        Bu davrda to&apos;langan buyurtma yo&apos;q.
+      </p>
+    );
+  }
+  const values = series.map((p) => Number(p.revenue ?? 0));
+  const peak = Math.max(...values, 1);
+  const first = series[0];
+  const last = series[series.length - 1];
+
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 4,
+          height: 180,
+          overflowX: 'auto',
+          paddingBottom: 4,
+        }}
+      >
+        {series.map((point) => {
+          const value = Number(point.revenue ?? 0);
+          const height = Math.max(2, Math.round((value / peak) * 168));
+          const day = new Date(point.day);
+          return (
+            <div
+              key={point.day}
+              title={`${day.toLocaleDateString('uz-UZ')} — ${money(point.revenue)} · ${point.orders} ta buyurtma`}
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                height: 40,
-                padding: '0 12px',
-                borderRadius: 10,
+                flex: '1 0 14px',
+                minWidth: 14,
+                height,
+                background: 'var(--alv-brand, #D6336C)',
+                borderRadius: '4px 4px 0 0',
+              }}
+            />
+          );
+        })}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginTop: 8,
+          fontSize: 12,
+          color: 'var(--alv-muted)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        <span>{first ? new Date(first.day).toLocaleDateString('uz-UZ') : ''}</span>
+        <span>Eng yuqori kun: {money(peak)}</span>
+        <span>{last ? new Date(last.day).toLocaleDateString('uz-UZ') : ''}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminHome() {
+  const [period, setPeriod] = useState('30d');
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setData(await adminApi.dashboard(period));
+    } catch (e) {
+      // Xato yutilmaydi: aks holda sahifa bo'sh turadi va sababi ko'rinmaydi.
+      setError((e as Error).message || 'Ma’lumotni yuklab bo‘lmadi');
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const revenueDelta = data ? delta(data.revenue, data.previous.revenue) : null;
+  const ordersDelta = data
+    ? delta(String(data.orders), String(data.previous.orders))
+    : null;
+
+  return (
+    <AdminShell title="Dashboard">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 22 }}>
+        {PERIODS.map((p) => {
+          const active = p.key === period;
+          return (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setPeriod(p.key)}
+              aria-pressed={active}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 999,
+                border: '1px solid var(--alv-line)',
+                background: active ? 'var(--alv-ink)' : 'var(--alv-surface)',
+                color: active ? '#fff' : 'var(--alv-ink)',
                 fontSize: 14,
                 fontWeight: 600,
-                color: item.stage === 1 ? 'var(--alv-ink)' : 'var(--alv-muted)',
+                cursor: 'pointer',
               }}
             >
-              {item.label}
-              {item.stage > 1 ? (
-                <span className="alv-badge alv-badge--neutral" style={{ height: 20, fontSize: 10 }}>
-                  {item.stage}-etap
-                </span>
-              ) : null}
-            </span>
-          ))}
-        </nav>
-      </aside>
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
 
-      <main style={{ flex: 1, padding: 32 }}>
-        <h1 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 32, margin: '0 0 8px' }}>
-          Admin panel
-        </h1>
-        <p style={{ color: 'var(--alv-muted)', margin: '0 0 24px' }}>
-          1-etap yakunlandi: autentifikatsiya, rollar va huquqlar, audit log ishlaydi. Sidebardagi
-          bo‘limlar o‘z etapida ochiladi.
-        </p>
-        <Card style={{ padding: 24, maxWidth: 640 }}>
-          <h2 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 18, margin: '0 0 10px' }}>
-            Keyingi qadam
-          </h2>
-          <p style={{ margin: 0, color: 'var(--alv-ink-2)', lineHeight: 1.7 }}>
-            2-etap — katalog: mahsulot, variant, kategoriya, kolleksiya, media, qidiruv va Excel
-            import. Prototipdagi «Bosh sahifa», «Katalog», «Mahsulot» va «Qidiruv» ekranlari shu
-            etapda ishga tushadi.
-          </p>
-        </Card>
-      </main>
-    </div>
+      {error ? (
+        <div
+          role="alert"
+          className="alv-card"
+          style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}
+        >
+          <strong>Ma&apos;lumot yuklanmadi</strong>
+          <span style={{ color: 'var(--alv-muted)', fontSize: 14 }}>{error}</span>
+          <button
+            type="button"
+            onClick={() => void load()}
+            style={{
+              alignSelf: 'flex-start',
+              padding: '8px 18px',
+              borderRadius: 10,
+              border: 'none',
+              background: 'var(--alv-ink)',
+              color: '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            Qayta urinish
+          </button>
+        </div>
+      ) : null}
+
+      {loading && !data ? <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p> : null}
+
+      {data ? (
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+              gap: 14,
+            }}
+          >
+            <Kpi label="Tushum" value={money(data.revenue)} hint={revenueDelta} />
+            <Kpi label="To'langan buyurtmalar" value={String(data.paidOrders)} hint={ordersDelta} />
+            <Kpi label="O'rtacha chek" value={money(data.avgOrder)} />
+            <Kpi label="Yangi mijozlar" value={String(data.newCustomers)} />
+            <Kpi
+              label="Barcha buyurtmalar"
+              value={String(data.allOrders)}
+              hint={`shundan ${data.cancelledOrders} ta bekor qilingan`}
+            />
+            <Kpi
+              label="Kam qolgan mahsulot"
+              value={String(data.lowStock)}
+              tone={data.lowStock > 0 ? 'warn' : undefined}
+              hint={data.lowStock > 0 ? 'Omborni to‘ldirish kerak' : 'Hammasi yetarli'}
+            />
+          </div>
+
+          <section style={{ marginTop: 32 }}>
+            <h2 style={{ fontSize: 18, margin: '0 0 14px' }}>Tushum dinamikasi</h2>
+            <div className="alv-card" style={{ padding: 20 }}>
+              <RevenueChart series={data.series} />
+            </div>
+          </section>
+        </>
+      ) : null}
+    </AdminShell>
   );
 }

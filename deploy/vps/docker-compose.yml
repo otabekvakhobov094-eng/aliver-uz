@@ -93,8 +93,10 @@ services:
       context: ../..
       dockerfile: apps/web/Dockerfile
       args:
-        # `NEXT_PUBLIC_*` QURILISH paytida paketga kiradi — keyin
-        # o'zgartirib bo'lmaydi, tasvirni qayta yig'ish kerak.
+        # `NEXT_PUBLIC_*` va `API_ORIGIN` QURILISH paytida paketga
+        # kiradi — keyin o'zgartirib bo'lmaydi, tasvirni qayta yig'ish
+        # kerak.
+        API_ORIGIN: http://api:4000
         NEXT_PUBLIC_WEB_URL: https://${DOMAIN}
     image: aliver-web:${TAG:-latest}
     restart: unless-stopped
@@ -116,6 +118,9 @@ services:
     build:
       context: ../..
       dockerfile: apps/admin/Dockerfile
+      args:
+        # Qurilish paytida kerak: Next.js proxy manzilini tasvirga yozadi.
+        API_ORIGIN: http://api:4000
     image: aliver-admin:${TAG:-latest}
     restart: unless-stopped
     environment:

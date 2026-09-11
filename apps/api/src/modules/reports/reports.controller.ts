@@ -1,7 +1,47 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { RequirePermissions } from '../../common/decorators';
 import { PrismaService } from '../../prisma/prisma.service';
-import { PaymentStatus, Prisma } from '@prisma/client';
+import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
+
+/**
+ * Davr kalitini aniq sanalarga aylantiradi. Toshkent vaqti (UTC+5)
+ * bo'yicha — server UTC da ishlasa ham "bugun" mijoz uchun bugun bo'lsin.
+ */
+const TZ_OFFSET_MS = 5 * 60 * 60 * 1000;
+
+function startOfLocalDay(d: Date): Date {
+  const shifted = new Date(d.getTime() + TZ_OFFSET_MS);
+  shifted.setUTCHours(0, 0, 0, 0);
+  return new Date(shifted.getTime() - TZ_OFFSET_MS);
+}
+
+function resolvePeriod(period: string, from?: string, to?: string): { gte: Date; lte: Date } {
+  const now = new Date();
+  const today = startOfLocalDay(now);
+  const day = 86400000;
+
+  switch (period) {
+    case 'today':
+      return { gte: today, lte: now };
+    case 'yesterday':
+      return { gte: new Date(today.getTime() - day), lte: today };
+    case '7d':
+      return { gte: new Date(today.getTime() - 6 * day), lte: now };
+    case 'month': {
+      const m = new Date(today);
+      m.setUTCDate(1);
+      return { gte: startOfLocalDay(m), lte: now };
+    }
+    case 'custom':
+      return {
+        gte: from ? new Date(from) : new Date(today.getTime() - 29 * day),
+        lte: to ? new Date(to) : now,
+      };
+    case '30d':
+    default:
+      return { gte: new Date(today.getTime() - 29 * day), lte: now };
+  }
+}
 
 @Controller('admin/reports')
 export class ReportsController {
@@ -20,5 +60,95 @@ export class ReportsController {
       this.prisma.order.groupBy({ by: ['utmSource'], where: saleWhere, _count: true, _sum: { grandTotal: true }, orderBy: { _sum: { grandTotal: 'desc' } }, take: 10 }),
     ]);
     return { period: { from: placedAt.gte, to: placedAt.lte }, orders: { count: orders._count, revenue: orders._sum?.grandTotal ?? 0n, discount: orders._sum?.discountTotal ?? 0n, shipping: orders._sum?.shippingTotal ?? 0n }, newCustomers: customers, topProducts: products, b2b: leads, attribution: channels };
+  }
+
+  /**
+   * Dashboard KPI va grafigi. TZ-2, 4.9-bo'lim.
+   *
+   * Davr tanlagichi mijozda emas, serverda hisoblanadi — aks holda
+   * brauzer vaqt mintaqasi bilan hisobot vaqt mintaqasi mos kelmaydi
+   * va "bugungi tushum" tunda noto'g'ri chiqadi.
+   */
+  @Get('dashboard')
+  @RequirePermissions('dashboard.view')
+  async dashboard(
+    @Query('period') period = '30d',
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const { gte, lte } = resolvePeriod(period, from, to);
+    // Oldingi davr — bir xil uzunlikda, taqqoslash uchun.
+    const span = lte.getTime() - gte.getTime();
+    const prevGte = new Date(gte.getTime() - span);
+
+    const paid = { in: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED] };
+    const sale = (a: Date, b: Date): Prisma.OrderWhereInput => ({
+      placedAt: { gte: a, lte: b },
+      deletedAt: null,
+      paymentStatus: paid,
+    });
+
+    const [current, previous, allOrders, cancelled, newCustomers, lowStock, series] =
+      await Promise.all([
+        this.prisma.order.aggregate({
+          where: sale(gte, lte),
+          _count: true,
+          _sum: { grandTotal: true },
+        }),
+        this.prisma.order.aggregate({
+          where: sale(prevGte, gte),
+          _count: true,
+          _sum: { grandTotal: true },
+        }),
+        this.prisma.order.count({
+          where: { placedAt: { gte, lte }, deletedAt: null },
+        }),
+        this.prisma.order.count({
+          where: { placedAt: { gte, lte }, deletedAt: null, status: OrderStatus.CANCELLED },
+        }),
+        this.prisma.customer.count({ where: { createdAt: { gte, lte } } }),
+        // Prisma `where` ichida ustunlarni o'zaro taqqoslay olmaydi,
+        // shuning uchun xom SQL.
+        this.prisma.$queryRaw<Array<{ count: bigint }>>`
+          SELECT COUNT(*)::bigint AS count
+          FROM inventory
+          WHERE "totalStock" - "reservedStock" <= "lowStockThreshold"
+        `,
+        this.prisma.$queryRaw<Array<{ day: Date; revenue: bigint | null; orders: bigint }>>`
+          SELECT date_trunc('day', "placedAt") AS day,
+                 SUM("grandTotal")::bigint     AS revenue,
+                 COUNT(*)::bigint              AS orders
+          FROM orders
+          WHERE "placedAt" >= ${gte}
+            AND "placedAt" <= ${lte}
+            AND "deletedAt" IS NULL
+            AND "paymentStatus" IN ('PAID', 'PARTIALLY_REFUNDED')
+          GROUP BY 1
+          ORDER BY 1
+        `,
+      ]);
+
+    const revenue = current._sum?.grandTotal ?? 0n;
+    const prevRevenue = previous._sum?.grandTotal ?? 0n;
+    // O'rtacha chek butun songa yaxlitlanadi — pul har doim tiyinda.
+    const avgOrder = current._count > 0 ? revenue / BigInt(current._count) : 0n;
+
+    return {
+      period: { from: gte, to: lte, key: period },
+      revenue,
+      orders: current._count,
+      avgOrder,
+      newCustomers,
+      paidOrders: current._count,
+      allOrders,
+      cancelledOrders: cancelled,
+      lowStock: Number(lowStock[0]?.count ?? 0n),
+      previous: { revenue: prevRevenue, orders: previous._count },
+      series: series.map((row) => ({
+        day: row.day,
+        revenue: row.revenue ?? 0n,
+        orders: Number(row.orders),
+      })),
+    };
   }
 }

@@ -8,6 +8,13 @@ COPY . .
 ARG NEXT_PUBLIC_WEB_URL=https://aliver.uz
 ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
 
+# `rewrites()` manzili QURILISH paytida `.next/routes-manifest.json` ga
+# yoziladi — ishga tushirishdagi `API_ORIGIN` ga kech qoladi. Shuning
+# uchun u build argumenti bo'lishi SHART: runtime o'zgaruvchisi bo'lsa,
+# proxy `localhost:4000` ga qotib qoladi va admin login yana ishlamaydi.
+ARG API_ORIGIN=http://api:4000
+ENV API_ORIGIN=$API_ORIGIN
+
 RUN npm ci && npm run -w @aliver/web build
 
 FROM node:20.18-alpine AS runtime

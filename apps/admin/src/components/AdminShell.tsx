@@ -48,8 +48,8 @@ export function AdminShell({ title, children }: { title: string; children: React
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {items.map((item) => {
-            const active = pathname === item.href;
-            const ready = item.stage <= 2;
+            const active = pathname === item.href || pathname === item.href.split('#')[0];
+            const { ready } = item;
             return (
               <Link
                 key={item.href}
@@ -60,7 +60,8 @@ export function AdminShell({ title, children }: { title: string; children: React
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   minHeight: 40,
-                  padding: '0 12px',
+                  padding: '0 10px',
+                  gap: 8,
                   borderRadius: 10,
                   fontSize: 14,
                   fontWeight: active ? 700 : 600,
@@ -69,13 +70,16 @@ export function AdminShell({ title, children }: { title: string; children: React
                   pointerEvents: ready ? 'auto' : 'none',
                 }}
               >
-                {item.label}
+                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {item.label}
+                </span>
                 {!ready ? (
                   <span
                     className="alv-badge alv-badge--neutral"
-                    style={{ height: 20, fontSize: 10 }}
+                    style={{ height: 18, fontSize: 9, padding: '0 6px', letterSpacing: '.04em', whiteSpace: 'nowrap', flex: 'none' }}
+                    title="Bu bo'lim hali yozilmagan"
                   >
-                    {item.stage}
+                    tez orada
                   </span>
                 ) : null}
               </Link>
