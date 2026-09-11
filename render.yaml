@@ -12,7 +12,10 @@ services:
     plan: free
     region: frankfurt
     buildCommand: npm ci --include=dev && npm run db:generate && npm run -w @aliver/api build
-    startCommand: npm run -w @aliver/api prisma:deploy && npm run -w @aliver/api start
+    # Seed idempotent: mavjud yozuvlarni takrorlamaydi, superadmin parolini esa
+    # SEED_SUPERADMIN_PASSWORD qiymatiga moslaydi. Bu oldin seed qilinmagan
+    # associated staging bazada ham admin loginini yaratadi.
+    startCommand: npm run -w @aliver/api prisma:deploy && npm run db:seed && npm run -w @aliver/api start
     healthCheckPath: /api/health
     initialDeployHook: npm run db:seed && npm run migrate:aliver-catalog -- --commit --usd-to-uzs=11783.47
     envVars:

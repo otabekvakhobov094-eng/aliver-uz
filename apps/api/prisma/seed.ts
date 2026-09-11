@@ -91,7 +91,9 @@ async function seedSuperAdmin(): Promise<void> {
 
   await prisma.admin.upsert({
     where: { email },
-    update: { roleId: role.id },
+    // Staging paroli Render env orqali keyinroq berilgan yoki aylantirilgan
+    // bo'lsa, idempotent seed mavjud admin parolini ham yangilashi kerak.
+    update: { roleId: role.id, passwordHash },
     create: { email, fullName: 'Super Admin', passwordHash, roleId: role.id },
   });
   console.log(`  super admin: ${email}`);
