@@ -1,9 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, Input, formatTiyin } from '@aliver/ui';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { DataList, type DataColumn } from '@/components/DataList';
 import { adminApi, type AdminProduct } from '@/lib/api';
+
+/**
+ * Mahsulotlar ro'yxati — TZ-2, 4.4.
+ *
+ * Ro'yxat mexanikasi (saqlangan ko'rinishlar, ustun sozlamalari,
+ * ommaviy amallar, bo'sh holatlar) `DataList` da: u bir marta yozilgan
+ * va boshqa ro'yxatlarga ham shu ko'rinishda qo'llaniladi. Bu sahifada
+ * faqat MAHSULOTGA xos narsa qoladi — qaysi ustunlar bor va ular nima
+ * ko'rsatadi.
+ */
 
 const STATUS_TONE: Record<string, 'mint' | 'neutral' | 'low' | 'new'> = {
   ACTIVE: 'mint',
@@ -11,6 +22,14 @@ const STATUS_TONE: Record<string, 'mint' | 'neutral' | 'low' | 'new'> = {
   HIDDEN: 'neutral',
   OUT_OF_STOCK: 'low',
   ARCHIVED: 'neutral',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  ACTIVE: 'Faol',
+  DRAFT: 'Qoralama',
+  HIDDEN: 'Yashirilgan',
+  OUT_OF_STOCK: 'Tugagan',
+  ARCHIVED: 'Arxiv',
 };
 
 const STATUS_FILTERS = [
@@ -21,14 +40,119 @@ const STATUS_FILTERS = [
   { value: 'OUT_OF_STOCK', label: 'Tugagan' },
 ];
 
+const COLUMNS: Array<DataColumn<AdminProduct>> = [
+  {
+    key: 'name',
+    label: 'Mahsulot',
+    locked: true,
+    minWidth: 260,
+    render: (p) => (
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0 }}>
+        {p.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={p.imageUrl}
+            alt=""
+            width={40}
+            height={40}
+            style={{ borderRadius: 8, objectFit: 'cover', flex: 'none' }}
+          />
+        ) : (
+          <span
+            aria-hidden
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 8,
+              background: 'var(--alv-line)',
+              flex: 'none',
+            }}
+          />
+        )}
+        <div style={{ minWidth: 0 }}>
+          <strong style={{ display: 'block', overflowWrap: 'break-word' }}>{p.nameUz}</strong>
+          <span style={{ color: 'var(--alv-muted)', fontSize: 13 }}>/{p.slug}</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: 'status',
+    label: 'Holat',
+    render: (p) => <Badge tone={STATUS_TONE[p.status] ?? 'neutral'}>{STATUS_LABEL[p.status] ?? p.status}</Badge>,
+  },
+  {
+    key: 'price',
+    label: 'Narx',
+    align: 'right',
+    render: (p) => (
+      <span style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {p.minPrice === p.maxPrice
+          ? formatTiyin(p.minPrice)
+          : `${formatTiyin(p.minPrice)} – ${formatTiyin(p.maxPrice)}`}
+        {p.hasSale ? (
+          <span style={{ color: 'var(--alv-brand)', marginLeft: 6, fontSize: 12.5 }}>chegirma</span>
+        ) : null}
+      </span>
+    ),
+  },
+  {
+    key: 'stock',
+    label: 'Ombor',
+    render: (p) => (
+      <span style={{ color: p.inStock ? 'var(--alv-mint)' : 'var(--alv-brand-deep)' }}>
+        {p.inStock ? 'Bor' : 'Tugagan'}
+      </span>
+    ),
+  },
+  {
+    key: 'variants',
+    label: 'Variant',
+    align: 'right',
+    render: (p) => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{p.variantsCount}</span>,
+  },
+  {
+    key: 'ikpu',
+    // Fiskal chek uchun majburiy. Standart holatda yashirin, lekin
+    // buxgalter uni bitta bosish bilan ochib, bo'sh qolganlarini
+    // ko'ra oladi — bu odatda relizdan oldin eslanadi.
+    label: 'IKPU',
+    defaultVisible: false,
+    render: (p) =>
+      p.ikpuCode ? (
+        <code style={{ fontSize: 12.5 }}>{p.ikpuCode}</code>
+      ) : (
+        <span style={{ color: 'var(--alv-amber, #9a6200)' }}>yo‘q</span>
+      ),
+  },
+  {
+    key: 'vat',
+    label: 'QQS',
+    defaultVisible: false,
+    align: 'right',
+    render: (p) => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{p.vatRate}%</span>,
+  },
+  {
+    key: 'updated',
+    label: 'Yangilangan',
+    defaultVisible: false,
+    render: (p) => (
+      <span style={{ color: 'var(--alv-muted)', whiteSpace: 'nowrap' }}>
+        {new Date(p.updatedAt).toLocaleDateString('uz-UZ')}
+      </span>
+    ),
+  },
+];
+
 export default function ProductsPage() {
   const [items, setItems] = useState<AdminProduct[]>([]);
   const [total, setTotal] = useState(0);
-  const [q, setQ] = useState('');
-  const [status, setStatus] = useState('');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<Record<string, unknown>>({ q: '', status: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const q = (filters.q as string) ?? '';
+  const status = (filters.status as string) ?? '';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,7 +161,6 @@ export default function ProductsPage() {
       const res = await adminApi.products({ q: q || undefined, status: status || undefined });
       setItems(res.items);
       setTotal(res.total);
-      setSelected(new Set());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     } finally {
@@ -46,161 +169,100 @@ export default function ProductsPage() {
   }, [q, status]);
 
   useEffect(() => {
+    // Qidiruvda har bosilgan harf uchun so'rov yubormaslik.
     const timer = setTimeout(() => void load(), 250);
     return () => clearTimeout(timer);
   }, [load]);
 
-  const toggle = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelected(next);
-  };
+  const bulkActions = useMemo(
+    () => [
+      {
+        key: 'activate',
+        label: 'Faollashtirish',
+        run: (ids: string[]) => adminApi.bulkStatus(ids, 'ACTIVE'),
+      },
+      {
+        key: 'hide',
+        label: 'Yashirish',
+        run: (ids: string[]) => adminApi.bulkStatus(ids, 'HIDDEN'),
+      },
+      {
+        key: 'archive',
+        label: 'Arxivlash',
+        tone: 'danger' as const,
+        // Ommaviy va qaytarish qiyin bo'lgan amal sonini aytib tasdiqlaydi.
+        confirm: (n: number) => `${n} ta mahsulot arxivlansinmi?`,
+        run: (ids: string[]) => adminApi.bulkStatus(ids, 'ARCHIVED'),
+      },
+    ],
+    [],
+  );
 
-  const bulk = async (newStatus: string) => {
-    await adminApi.bulkStatus([...selected], newStatus);
-    await load();
+  const input: React.CSSProperties = {
+    padding: '9px 12px',
+    borderRadius: 10,
+    border: '1px solid var(--alv-line)',
+    fontSize: 14,
+    background: 'var(--alv-surface)',
+    color: 'var(--alv-ink)',
+    minWidth: 0,
   };
 
   return (
     <AdminShell title="Mahsulotlar">
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-          marginBottom: 18,
-        }}
-      >
-        <div style={{ minWidth: 280 }}>
-          <Input
-            name="q"
-            label="Qidiruv"
-            placeholder="Nom, SKU yoki barcode — kirill ham ishlaydi"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s.value}
-              className={`alv-chip${status === s.value ? ' alv-chip--on' : ''}`}
-              onClick={() => setStatus(s.value)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-        <span style={{ marginLeft: 'auto', color: 'var(--alv-muted)', fontSize: 13 }}>
-          Jami: {total}
-        </span>
-      </div>
-
-      {selected.size > 0 ? (
-        <div
-          style={{
-            display: 'flex',
-            gap: 10,
-            alignItems: 'center',
-            background: 'var(--alv-surface-2)',
-            borderRadius: 14,
-            padding: '12px 16px',
-            marginBottom: 14,
-          }}
-        >
-          <strong style={{ fontSize: 14 }}>{selected.size} ta tanlandi</strong>
-          <Button size="sm" variant="outline" onClick={() => void bulk('ACTIVE')}>
-            Faollashtirish
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => void bulk('HIDDEN')}>
-            Yashirish
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
-            Bekor qilish
-          </Button>
-        </div>
-      ) : null}
-
       {error ? (
-        <p role="alert" style={{ color: 'var(--alv-brand-deep)', fontWeight: 600 }}>
+        <div
+          role="alert"
+          className="alv-card"
+          style={{ padding: 14, marginBottom: 14, borderLeft: '3px solid var(--alv-danger)' }}
+        >
           {error}
-        </p>
+        </div>
       ) : null}
 
-      <div className="alv-card" style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
-          <thead>
-            <tr style={{ textAlign: 'left', fontSize: 12, color: 'var(--alv-muted)' }}>
-              <th style={{ padding: '14px 16px', width: 44 }} />
-              <th style={{ padding: '14px 8px' }}>Nomi</th>
-              <th style={{ padding: '14px 8px' }}>Status</th>
-              <th style={{ padding: '14px 8px' }}>IKPU</th>
-              <th style={{ padding: '14px 8px' }}>QQS</th>
-              <th style={{ padding: '14px 8px' }}>Narx</th>
-              <th style={{ padding: '14px 8px' }}>Variant</th>
-              <th style={{ padding: '14px 16px' }}>Qoldiq</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={8} style={{ padding: 24, color: 'var(--alv-muted)' }}>
-                  Yuklanmoqda…
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={8} style={{ padding: 24, color: 'var(--alv-muted)' }}>
-                  Mahsulot topilmadi. Import orqali qo‘shishingiz mumkin.
-                </td>
-              </tr>
-            ) : (
-              items.map((p) => (
-                <tr key={p.id} style={{ borderTop: '1px solid var(--alv-line)' }}>
-                  <td style={{ padding: '12px 16px' }}>
-                    <button
-                      className={`alv-check${selected.has(p.id) ? ' alv-check--on' : ''}`}
-                      style={{ minHeight: 32, width: 'auto' }}
-                      onClick={() => toggle(p.id)}
-                      aria-label={`${p.nameUz} ni tanlash`}
-                      aria-pressed={selected.has(p.id)}
-                    >
-                      <span className="alv-check__box">{selected.has(p.id) ? '✓' : ''}</span>
-                    </button>
-                  </td>
-                  <td style={{ padding: '12px 8px' }}>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{p.nameUz}</div>
-                    <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>/{p.slug}</div>
-                  </td>
-                  <td style={{ padding: '12px 8px' }}>
-                    <Badge tone={STATUS_TONE[p.status] ?? 'neutral'}>{p.status}</Badge>
-                  </td>
-                  <td style={{ padding: '12px 8px', fontSize: 12, fontFamily: 'monospace' }}>
-                    {p.ikpuCode}
-                  </td>
-                  <td style={{ padding: '12px 8px', fontSize: 13 }}>{p.vatRate}%</td>
-                  <td style={{ padding: '12px 8px', fontSize: 13, whiteSpace: 'nowrap' }}>
-                    {formatTiyin(p.minPrice)}
-                    {p.minPrice !== p.maxPrice ? ` – ${formatTiyin(p.maxPrice)}` : ''}
-                    {p.hasSale ? ' 🏷' : ''}
-                  </td>
-                  <td style={{ padding: '12px 8px', fontSize: 13 }}>{p.variantsCount}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <Badge tone={p.inStock ? 'mint' : 'low'}>{p.inStock ? 'Bor' : 'Yo‘q'}</Badge>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <p style={{ fontSize: 12, color: 'var(--alv-muted)', marginTop: 14, lineHeight: 1.6 }}>
-        Mahsulot tahrirlash oynasi keyingi iteratsiyada qo‘shiladi. Hozircha yaratish va yangilash
-        API (<code>POST /api/admin/catalog/products</code>) va Excel import orqali bajariladi.
+      <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
+        Jami {total} ta mahsulot
       </p>
+
+      <DataList<AdminProduct>
+        storageKey="products"
+        columns={COLUMNS}
+        rows={items}
+        rowKey={(p) => p.id}
+        filters={filters}
+        onFiltersChange={setFilters}
+        loading={loading}
+        bulkActions={bulkActions}
+        onDone={load}
+        onClearFilters={() => setFilters({ q: '', status: '' })}
+        emptyTitle="Hali mahsulot qo‘shilmagan"
+        emptyHint="Excel orqali import qiling yoki qo‘lda yarating."
+        noResultsTitle="Bu so‘rovga mos mahsulot topilmadi"
+        filterBar={
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+              placeholder="Nom, SKU yoki barcode — kirill ham ishlaydi"
+              aria-label="Mahsulot qidirish"
+              style={{ ...input, flex: '1 1 280px' }}
+            />
+            <select
+              value={status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              aria-label="Holat bo‘yicha filtr"
+              style={input}
+            >
+              {STATUS_FILTERS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        }
+      />
     </AdminShell>
   );
 }
