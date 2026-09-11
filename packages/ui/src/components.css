@@ -124,9 +124,13 @@
   flex-wrap: wrap;
 }
 .alv-price__value {
-  font-family: var(--alv-font-display);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  /* Narx ATAYLAB matn shriftida: Prata bitta og'irlikka ega va
+     didone raqamlari narx jadvalida yengil hamda tengsiz kenglikda
+     chiqadi. Golos Text da tabular raqamlar bor. */
+  font-family: var(--alv-font-body);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 .alv-price--sm .alv-price__value {
   font-size: 17px;
@@ -228,7 +232,7 @@
   box-shadow: inset 0 0 0 2px var(--alv-line-2);
   text-align: center;
   font-family: var(--alv-font-display);
-  font-weight: 800;
+  font-weight: var(--alv-weight-display);
   font-size: 26px;
   color: var(--alv-ink);
   outline: none;
@@ -427,7 +431,7 @@
 }
 .alv-h1 {
   font-family: var(--alv-font-display);
-  font-weight: 800;
+  font-weight: var(--alv-weight-display);
   letter-spacing: -0.03em;
   font-size: 40px;
   margin: 0;
@@ -435,16 +439,19 @@
 }
 .alv-h2 {
   font-family: var(--alv-font-display);
-  font-weight: 800;
+  font-weight: var(--alv-weight-display);
   letter-spacing: -0.025em;
   font-size: 30px;
   margin: 0;
   line-height: 1.1;
 }
 .alv-h3 {
-  font-family: var(--alv-font-display);
+  /* h3 ATAYLAB matn shriftida: Prata — yuqori kontrastli didone va
+     20 px da uning yupqa shtrixlari yo'qoladi. Display shrift faqat
+     h1 va h2 da, ya'ni u haqiqatan ko'rinadigan o'lchamlarda. */
+  font-family: var(--alv-font-body);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   font-size: 20px;
   margin: 0;
 }

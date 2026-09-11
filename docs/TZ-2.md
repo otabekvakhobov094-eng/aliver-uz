@@ -161,7 +161,7 @@ O'zbekiston bozorida "qimmat" o'qiladi.
 | `--alv-ink` | `#1A1218` | 18.4:1 | Asosiy matn, iliq qora |
 | `--alv-ink-2` | `#4A4048` | 9.9:1 | Ikkilamchi matn |
 | `--alv-muted` | `#6E6270` | 5.8:1 | Uchinchi darajali matn |
-| `--alv-brand` | `#D6336C` | 4.6:1 | **Asosiy harakat**: tugma foni, havola, faol holat |
+| `--alv-brand` | `#D42A64` | 4.7:1 | **Asosiy harakat**: tugma foni, havola, faol holat |
 | `--alv-brand-deep` | `#A8285A` | 6.7:1 | Bosilgan va hover holati |
 | `--alv-brand-soft` | `#E0457B` | 4.0:1 | **Faqat bezak**: gradient, katta sarlavha, fon dog'i |
 | `--alv-plum` | `#3D1B33` | 15.0:1 | Chuqur fon, footer, premium bloklar |
@@ -176,9 +176,18 @@ O'zbekiston bozorida "qimmat" o'qiladi.
 Kontrast ustunini **hisoblab chiqdim**, ko'z bilan baholamadim. Sabab:
 dastlab asosiy rang sifatida `#E0457B` ni tanlagandim va u yetarli deb
 o'ylagandim — hisoblaganda **3.96:1** chiqdi, ya'ni WCAG AA (4.5:1) dan
-past. Oq matnli tugma uchun bu yiqiladi. Shuning uchun asosiy harakat
-rangi `#D6336C` ga o'zgartirildi (4.62:1), `#E0457B` esa faqat bezak
-sifatida qoldi.
+past.
+
+Ikkinchi tuzatish kodga joriy qilish paytida chiqdi va u muhimroq.
+Bu jadvaldagi qiymatlar dastlab **sof oq** (`#FFFFFF`) fonda
+hisoblangan edi. Saytning haqiqiy sahifa foni esa `#FFF9FC` — biroz
+quyuqroq. `#D6336C` sof oqda 4.62:1 beradi, **haqiqiy fonda esa
+4.44:1**, ya'ni amalda AA dan pastga tushadi. Shuning uchun asosiy
+rang `#D42A64` ga o'zgartirildi: sahifa fonida 4.68:1, kartochka
+fonida 4.87:1.
+
+Xulosa: kontrast **har doim elementning haqiqiy foni** bilan
+o'lchanadi, "oq" deb taxmin qilinmaydi.
 
 Xuddi shu sababdan yashil va sariq ranglar ham quyuqlashtirildi: odatdagi
 "yumshoq" yashil (`#2FA37C`) 3.16:1 beradi va kichik matn uchun

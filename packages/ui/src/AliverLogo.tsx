@@ -86,13 +86,13 @@ export function AliverLogo({
         <text
           x="0"
           y="25"
-          fontFamily="var(--alv-font-display, 'Bricolage Grotesque', sans-serif)"
-          fontWeight="800"
+          fontFamily="var(--alv-font-display, 'Prata', Georgia, serif)"
+          fontWeight="400"
           fontSize="28"
           letterSpacing="-1.2"
         >
           <tspan fill="var(--alv-ink, #1b1220)">ALIVER</tspan>
-          <tspan fill="var(--alv-brand, #e4175c)">.UZ</tspan>
+          <tspan fill="var(--alv-brand, #d42a64)">.UZ</tspan>
         </text>
 
         {/*
@@ -104,8 +104,8 @@ export function AliverLogo({
           <text
             x="0"
             y="25"
-            fontFamily="var(--alv-font-display, 'Bricolage Grotesque', sans-serif)"
-            fontWeight="800"
+            fontFamily="var(--alv-font-display, 'Prata', Georgia, serif)"
+            fontWeight="400"
             fontSize="28"
             letterSpacing="-1.2"
             fill={`url(#${sweepId})`}

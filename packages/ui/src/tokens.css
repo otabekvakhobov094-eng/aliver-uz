@@ -7,7 +7,9 @@
   /* Matn va fon */
   --alv-ink: #1b1220;
   --alv-ink-2: #463a4f;
-  --alv-muted: #8b7d94;
+  /* Kontrast oq-pushti fon (#fff9fc) ustida o'lchangan, sof oq ustida emas:
+     sahifa foni aynan shu va farq AA chegarasini hal qiladi. */
+  --alv-muted: #7c6e85; /* 4.57:1 — avvalgi #8b7d94 atigi 3.70:1 edi */
   --alv-line: #f1e3eb;
   --alv-line-2: #e3d2dd;
   --alv-bg: #fff9fc;
@@ -16,14 +18,14 @@
   --alv-surface-3: #fff3e9;
 
   /* Brend */
-  --alv-brand: #e4175c;
+  --alv-brand: #d42a64; /* 4.68:1 — avvalgi #e4175c 4.42:1, ya'ni AA dan past */
   --alv-brand-deep: #b00e45;
   --alv-brand-soft: #ffe3ee;
 
   /* Yordamchi ranglar */
-  --alv-gold: #f0a007;
+  --alv-gold: #8f5f00; /* 5.31:1 — avvalgi #f0a007 2.08:1, matn uchun yaroqsiz edi */
   --alv-gold-soft: #fff0d6;
-  --alv-mint: #00a97f;
+  --alv-mint: #0b7a5c; /* 5.11:1 — avvalgi #00a97f 2.89:1 */
   --alv-mint-soft: #ddf6ee;
   --alv-violet: #7a3df5;
   --alv-violet-soft: #eee6ff;
@@ -34,8 +36,17 @@
   --alv-warn-soft: #fff3d6;
 
   /* Tipografika */
-  --alv-font-display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
-  --alv-font-body: 'Manrope', system-ui, -apple-system, sans-serif;
+  /* Bricolage Grotesque'da KIRILL YO'Q (latin, latin-ext, vietnamese) —
+     ya'ni ruscha sarlavhalar tizim shriftiga tushib qolardi va sayt
+     ikki tilda ikki xil ko'rinardi. Prata va Golos Text ikkalasi ham
+     kirill va lotinni qamraydi.
+     Prata'da faqat 400 og'irlik bor — shuning uchun sarlavhalar
+     qalinlik bilan emas, O'LCHAM bilan ajratiladi. */
+  --alv-font-display: 'Prata', 'Times New Roman', Georgia, serif;
+  --alv-font-body: 'Golos Text', 'Manrope', system-ui, -apple-system, sans-serif;
+  /* Display shrift yagona og'irlikka ega: bold so'ralsa brauzer uni
+     sun'iy qalinlashtiradi va didone serif buziladi. */
+  --alv-weight-display: 400;
 
   /* Radius */
   --alv-radius-sm: 10px;
