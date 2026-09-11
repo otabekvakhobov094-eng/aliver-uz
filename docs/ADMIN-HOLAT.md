@@ -213,3 +213,27 @@ Qolgan ish: admin mobil ekranga moslashmagan (240 px sidebar), va TZ-2
 4.2 dagi umumiy ro'yxat platformasi (saqlangan ko'rinishlar, ustun
 sozlamalari, ommaviy tahrirlash) hali yozilmagan — u har bir ro'yxatga
 birdan qo'llanadigan alohida modul bo'lishi kerak.
+
+## 10. Ro'yxat platformasi — 11.09.2026
+
+TZ-2 4.2 dagi umumiy ro'yxat platformasi (`DataList`) yozildi va uchta
+ro'yxat unga o'tkazildi: **Mahsulotlar, Mijozlar, Buyurtmalar**.
+
+Beradigan narsalari: saqlangan ko'rinishlar, ustunlarni ko'rsatish va
+tartiblash, ommaviy tanlash va yopishgan amal paneli, skelet qatorlar,
+va ikki xil bo'sh holat — «yozuv yo'q» hamda «filtrga mos natija yo'q».
+
+Buyurtmalarni o'tkazishda ikkita narsa ataylab saqlab qolindi.
+Birinchisi — **qisman muvaffaqiyatsizlik xabari**: holat mashinasi
+ba'zi o'tishlarni rad etadi, va "bajarildi" deb yozish yolg'on bo'lardi.
+Endi xabar qaysi buyurtma va nega o'tmaganini aytadi. Ikkinchisi —
+sahifalash; filtr o'zgarganda birinchi sahifaga qaytadi, aks holda
+3-sahifada turib filtr qo'ygan xodim bo'sh natija ko'radi va sababini
+tushunmaydi.
+
+Ommaviy amallar 11 holatli ochiluvchi ro'yxat o'rniga to'rtta kundalik
+o'tishga qisqartirildi (tasdiqlash, yig'ishga, jo'natildi, yetkazildi).
+Qolgan o'tishlar buyurtma sahifasida yakka tartibda bajariladi.
+
+Qolgan ro'yxatlar (Ombor, Qaytarishlar, To'lovlar va boshqalar) keyingi
+navbatda, har biri alohida tekshirilib.

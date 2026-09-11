@@ -41,7 +41,12 @@ export interface BulkAction {
   tone?: 'danger';
   /** Tasdiq so'raladimi va qanday matn bilan. */
   confirm?: (count: number) => string;
-  run: (ids: string[]) => Promise<unknown>;
+  /**
+   * Natijada matn qaytarsa, u ro'yxat ustida ko'rsatiladi. Bu ommaviy
+   * amallar uchun muhim: 40 tadan 3 tasi o'tmasa, "bajarildi" deyish
+   * yolg'on bo'ladi — qaysi biri va nega o'tmagani ko'rinishi kerak.
+   */
+  run: (ids: string[]) => Promise<string | void | unknown>;
 }
 
 interface SavedView {
@@ -71,6 +76,8 @@ interface Props<T> {
   noResultsTitle: string;
   onClearFilters?: () => void;
   onDone?: () => void | Promise<void>;
+  /** Jadval ostidagi joy — odatda sahifalash. */
+  footer?: React.ReactNode;
 }
 
 function readViews(key: string): SavedView[] {
@@ -106,6 +113,7 @@ export function DataList<T>({
   noResultsTitle,
   onClearFilters,
   onDone,
+  footer,
 }: Props<T>) {
   const [views, setViews] = useState<SavedView[]>([]);
   const [activeView, setActiveView] = useState<string>('');
@@ -117,6 +125,7 @@ export function DataList<T>({
   const [showColumns, setShowColumns] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -193,8 +202,10 @@ export function DataList<T>({
       if (action.confirm && !window.confirm(action.confirm(ids.length))) return;
       setBusy(true);
       setError('');
+      setNotice('');
       try {
-        await action.run(ids);
+        const result = await action.run(ids);
+        if (typeof result === 'string' && result) setNotice(result);
         setSelected(new Set());
         await onDone?.();
       } catch (e) {
@@ -400,6 +411,15 @@ export function DataList<T>({
           {error}
         </div>
       ) : null}
+      {notice ? (
+        <div
+          role="status"
+          className="alv-card"
+          style={{ padding: 14, marginBottom: 12, borderLeft: '3px solid var(--alv-mint)' }}
+        >
+          {notice}
+        </div>
+      ) : null}
 
       {/* Ommaviy amal paneli — faqat tanlov bo'lganda */}
       {selected.size > 0 && bulkActions.length > 0 ? (
@@ -579,6 +599,8 @@ export function DataList<T>({
           </tbody>
         </table>
       </div>
+
+      {footer ? <div style={{ marginTop: 14 }}>{footer}</div> : null}
     </div>
   );
 }
