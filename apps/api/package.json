@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nest start --watch",
     "build": "nest build",
-    "prestart": "node ../../scripts/ensure-aliver-catalog.mjs",
+    "prestart": "node ../../scripts/ensure-aliver-catalog.mjs && node ../../scripts/ensure-legal-pages.mjs",
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
