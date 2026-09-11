@@ -23,7 +23,9 @@
 .logo {
   flex: none;
   font-family: var(--alv-font-display);
-  font-weight: 800;
+  /* Prata bitta og'irlikka ega — 800 so'ralsa brauzer sun'iy
+     qalinlashtiradi va didone serif buziladi. */
+  font-weight: 400;
   font-size: 22px;
   letter-spacing: -0.04em;
   color: var(--alv-ink);

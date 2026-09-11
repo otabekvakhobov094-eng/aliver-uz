@@ -23,7 +23,7 @@ export default function NotFound() {
           style={{
             fontFamily: 'var(--alv-font-display)',
             fontSize: 64,
-            fontWeight: 800,
+            fontWeight: 400,
             letterSpacing: '-0.05em',
             color: 'var(--alv-brand)',
             lineHeight: 1,

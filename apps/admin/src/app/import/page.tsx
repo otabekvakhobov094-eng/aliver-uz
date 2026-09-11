@@ -266,7 +266,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: 'mi
       <span
         style={{
           fontFamily: 'var(--alv-font-display)',
-          fontWeight: 800,
+          fontWeight: 400,
           fontSize: 22,
           color:
             tone === 'low'
