@@ -38,11 +38,16 @@ export class TokensService {
   }
 
   cookieOptions(maxAgeSeconds: number): CookieOptions {
+    const secure = this.config.get<boolean>('COOKIE_SECURE', false);
+    const configuredDomain = this.config.get<string>('COOKIE_DOMAIN')?.trim();
+
     return {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: this.config.get<boolean>('COOKIE_SECURE', false),
-      domain: this.config.get<string>('COOKIE_DOMAIN', 'localhost'),
+      sameSite: secure ? 'none' : 'lax',
+      secure,
+      // Domain berilmasa host-only cookie ishlaydi. `localhost` domeni Render'da
+      // brauzer tomonidan rad qilinib, adminni yana login sahifasiga qaytarardi.
+      ...(configuredDomain ? { domain: configuredDomain } : {}),
       path: '/',
       maxAge: maxAgeSeconds * 1000,
     };

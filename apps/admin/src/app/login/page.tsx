@@ -20,9 +20,17 @@ export default function AdminLoginPage() {
     setError(null);
     try {
       await adminApi.login(email, password, totp || undefined);
-      router.push('/');
+      // Panelga o'tishdan avval cookie/sessiya haqiqatan ishlashini tekshiramiz.
+      await adminApi.permissions();
+      router.replace('/');
+      router.refresh();
     } catch (err) {
-      const msg = err instanceof AdminApiError ? err.message : 'Xatolik yuz berdi';
+      const msg =
+        err instanceof AdminApiError && err.status === 401
+          ? 'Email yoki parol noto‘g‘ri, yoxud login sessiyasi saqlanmadi.'
+          : err instanceof AdminApiError
+            ? err.message
+            : 'Server bilan bog‘lanishda xatolik yuz berdi. Qayta urinib ko‘ring.';
       if (msg.includes('2FA')) setNeedsTotp(true);
       setError(msg);
     } finally {
