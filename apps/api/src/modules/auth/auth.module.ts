@@ -9,6 +9,8 @@ import { TokensService } from './tokens.service';
   imports: [JwtModule.register({})],
   controllers: [AuthController],
   providers: [AuthService, OtpService, TokensService],
-  exports: [AuthService, OtpService, TokensService],
+  // JwtAuthGuard global APP_GUARD sifatida AppModule kontekstida yaratiladi.
+  // Shu sabab JwtService ham ota modulga eksport qilinishi kerak.
+  exports: [JwtModule, AuthService, OtpService, TokensService],
 })
 export class AuthModule {}

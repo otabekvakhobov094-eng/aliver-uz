@@ -65,7 +65,9 @@ services:
     region: frankfurt
     buildCommand: npm ci --include=dev && npm run -w @aliver/web build
     startCommand: npm run -w @aliver/web start
-    healthCheckPath: /
+    # Bosh sahifa katalog API sini chaqiradi. API uyg'onayotgan paytda Web
+    # health-check yiqilmasligi uchun statik endpoint ishlatiladi.
+    healthCheckPath: /robots.txt
     envVars:
       - key: NODE_ENV
         value: production
