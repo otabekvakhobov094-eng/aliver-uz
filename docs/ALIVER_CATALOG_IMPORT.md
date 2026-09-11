@@ -2,6 +2,17 @@
 
 Migrator rasmiy Shopify katalogidan mahsulotlar, variantlar, USD narxlar, qoldiq va barcha rasm URL’larini olib ALIVER.UZ PostgreSQL bazasiga `upsert` qiladi. Xaridor ko‘radigan nom, tavsif va rasm alt-matnlari faqat o‘zbekcha/ruscha maydonlarga yoziladi; `nameEn` bo‘sh qoladi.
 
+Importer ALIVER.com navigatsiyasidagi Nail, Make up, Foot & Hand, Hair Care,
+Skin Care, Men's Care, Oral va Other kategoriyalarini yaratadi va har bir
+mahsulotni `product_type`, teg, nom va slug bo‘yicha asosiy kategoriyaga
+bog‘laydi. Bestseller, yangi mahsulot, muharrir tanlovi va sovg‘a to‘plamlari
+ham alohida kolleksiyalar sifatida saqlanadi.
+
+Render API ishga tushganda `ensure-aliver-catalog.mjs` import versiyasini
+tekshiradi. Joriy versiya avval muvaffaqiyatli yozilgan bo‘lsa, tarmoqqa
+chiqmaydi va darhol API serverini ishga tushiradi. Yangi versiya faqat bir
+marta to‘liq katalogni yangilaydi.
+
 ## Tekshirish
 
 ```bash

@@ -47,6 +47,50 @@ const termsRu = new Map([
   ['moisturizing', 'увлажняющий'], ['cleaning', 'очищающий'], ['remover', 'средство для снятия'],
 ]);
 
+// ALIVER.com navigatsiyasidagi rasmiy asosiy bo‘limlar. Shopify public
+// products.json kolleksiya aloqalarini bermaydi, shuning uchun product_type,
+// tags, title va handle asosida barqaror klassifikatsiya qilinadi.
+const taxonomy = [
+  { slug: 'nail', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
+  { slug: 'make-up', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
+  { slug: 'foot-hand', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
+  { slug: 'hair-care', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
+  { slug: 'skin-care', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
+  { slug: 'mens-care', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
+  { slug: 'oral', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
+  { slug: 'other', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
+];
+
+const curatedCollections = [
+  { slug: 'best-sellers', nameUz: 'Bestsellerlar', nameRu: 'Хиты продаж', words: ['best seller', 'bestseller', 'hot sell', 'hot-sale', 'hot_sale'] },
+  { slug: 'new-arrivals', nameUz: 'Yangi kelganlar', nameRu: 'Новинки', words: ['new arrival', 'new-arrival', 'new_arrival', 'new'] },
+  { slug: 'editor-choice', nameUz: 'Muharrir tanlovi', nameRu: 'Выбор редакции', words: ['editor choice', 'editor-choice', 'editor_choice'] },
+  { slug: 'gifts-sets', nameUz: 'Sovg‘alar va to‘plamlar', nameRu: 'Подарки и наборы', words: ['gift', ' set', 'kit', 'bundle'] },
+];
+
+function productHaystack(product) {
+  return `${product.title ?? ''} ${product.handle ?? ''} ${product.product_type ?? ''} ${product.tags ?? ''}`.toLowerCase();
+}
+
+function matches(words, haystack) {
+  return words.some((word) => haystack.includes(word));
+}
+
+function categoryFor(product) {
+  const haystack = productHaystack(product);
+  return taxonomy.find((item) => item.slug !== 'other' && matches(item.words, haystack)) ?? taxonomy.at(-1);
+}
+
+function collectionsFor(product) {
+  const haystack = productHaystack(product);
+  const selected = curatedCollections.filter((item) => matches(item.words, haystack));
+  const publishedAt = product.published_at ? new Date(product.published_at).getTime() : 0;
+  const recentCutoff = Date.now() - 180 * 24 * 60 * 60 * 1000;
+  const newest = curatedCollections.find((item) => item.slug === 'new-arrivals');
+  if (publishedAt >= recentCutoff && newest && !selected.includes(newest)) selected.push(newest);
+  return selected;
+}
+
 function localizeTitle(title, dictionary) {
   return title.split(/(\s+|[-/(),])/).map((part) => {
     const translated = dictionary.get(part.toLowerCase());
@@ -117,7 +161,7 @@ function productData(product, brandId) {
   };
 }
 
-async function importProduct(tx, product, brandId, warehouseId) {
+async function importProduct(tx, product, brandId, warehouseId, categoryIds, collectionIds) {
   const data = productData(product, brandId);
   const saved = await tx.product.upsert({
     where: { slug: product.handle },
@@ -178,6 +222,22 @@ async function importProduct(tx, product, brandId, warehouseId) {
       sortOrder: index,
     })) });
   }
+
+  const category = categoryFor(product);
+  const categoryId = categoryIds.get(category.slug);
+  if (categoryId) {
+    await tx.productCategory.deleteMany({ where: { productId: saved.id } });
+    await tx.productCategory.create({ data: { productId: saved.id, categoryId, isPrimary: true } });
+    if (product.images[0]?.src) {
+      await tx.category.updateMany({ where: { id: categoryId, imageUrl: null }, data: { imageUrl: product.images[0].src } });
+    }
+  }
+
+  await tx.collectionProduct.deleteMany({ where: { productId: saved.id } });
+  for (const [sortOrder, collection] of collectionsFor(product).entries()) {
+    const collectionId = collectionIds.get(collection.slug);
+    if (collectionId) await tx.collectionProduct.create({ data: { productId: saved.id, collectionId, sortOrder } });
+  }
 }
 
 const products = snapshotFile
@@ -212,11 +272,29 @@ if (commit) {
     const brand = await prisma.brand.upsert({ where: { slug: 'aliver' }, update: { name: 'ALIVER' }, create: { slug: 'aliver', name: 'ALIVER' } });
     const warehouse = await prisma.warehouse.findUnique({ where: { code: warehouseCode } });
     if (!warehouse) throw new Error(`Ombor topilmadi: ${warehouseCode}`);
+    const categoryIds = new Map();
+    for (const [sortOrder, item] of taxonomy.entries()) {
+      const category = await prisma.category.upsert({
+        where: { slug: item.slug },
+        update: { nameUz: item.nameUz, nameRu: item.nameRu, sortOrder, isActive: true },
+        create: { slug: item.slug, nameUz: item.nameUz, nameRu: item.nameRu, sortOrder, isActive: true, depth: 0 },
+      });
+      categoryIds.set(item.slug, category.id);
+    }
+    const collectionIds = new Map();
+    for (const [sortOrder, item] of curatedCollections.entries()) {
+      const collection = await prisma.collection.upsert({
+        where: { slug: item.slug },
+        update: { nameUz: item.nameUz, nameRu: item.nameRu, sortOrder, isActive: true, deletedAt: null },
+        create: { slug: item.slug, nameUz: item.nameUz, nameRu: item.nameRu, sortOrder, isActive: true },
+      });
+      collectionIds.set(item.slug, collection.id);
+    }
     for (const [index, product] of products.entries()) {
-      await prisma.$transaction((tx) => importProduct(tx, product, brand.id, warehouse.id), { timeout: 30_000 });
+      await prisma.$transaction((tx) => importProduct(tx, product, brand.id, warehouse.id, categoryIds, collectionIds), { timeout: 30_000 });
       if ((index + 1) % 25 === 0 || index + 1 === products.length) console.log(`${index + 1}/${products.length}`);
     }
-    console.log('ALIVER katalog importi yakunlandi.');
+    console.log(`ALIVER katalog importi yakunlandi: ${taxonomy.length} kategoriya, ${curatedCollections.length} kolleksiya.`);
   } finally {
     await prisma.$disconnect();
   }
