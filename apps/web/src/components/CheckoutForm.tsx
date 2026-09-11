@@ -125,7 +125,19 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
 
   const codNeedsOtp = payment === 'CASH_ON_DELIVERY';
 
+  /*
+   * Qoldiq ogohlantirishlari checkoutda ham KO'RSATILADI.
+   *
+   * Ilgari ular faqat savat sahifasida chizilardi. Natijada mijoz
+   * savatdan checkoutga o'tsa, ogohlantirish yo'qolardi, tugma esa
+   * faol qolardi — va har bosishda server 409 qaytarardi. Mijoz nima
+   * qilish kerakligini o'zi topishi kerak edi.
+   */
+  const blockingItems = cart.items.filter((i) => i.exceedsStock);
+  const hasBlocking = blockingItems.length > 0;
+
   const canSubmit =
+    !hasBlocking &&
     !submitting &&
     phone.replace(/\D/g, '').length >= 9 &&
     firstName.trim().length >= 2 &&
@@ -165,7 +177,18 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
         acceptOffer: accept,
         idempotencyKey,
       });
-      await refresh();
+      /*
+       * Savatni bu yerda YANGILAMAYMIZ.
+       *
+       * Buyurtma yaratilgach savat serverda bo'shaydi. Agar shu zahoti
+       * `refresh()` chaqirilsa, komponent "Savat bo'sh" tarmog'iga
+       * o'tib ketardi va mijoz to'lovga yo'naltirilishini kutayotgan
+       * paytda bo'sh savat ekranini ko'rib turardi — va "Katalogga"
+       * tugmasini bosib, allaqachon yaratilgan buyurtmasidan chiqib
+       * ketishi mumkin edi.
+       *
+       * Savat yo'naltirishdan keyin, buyurtma sahifasida yangilanadi.
+       */
 
       // Onlayn to'lovda mijoz darhol to'lov sahifasiga yuboriladi.
       // Havola olinmasa ham buyurtma YARATILGAN — shuning uchun
@@ -522,11 +545,17 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
           />
           <span>
             {locale === 'ru' ? 'Я согласен с ' : 'Men '}
-            <Link href={`/${locale}/oferta`} style={{ textDecoration: 'underline' }}>
+            <Link href={`/${locale}/sahifa/public-offer`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'underline' }}>
               {locale === 'ru' ? 'публичной офертой' : 'ommaviy oferta'}
             </Link>
             {locale === 'ru' ? ' и ' : ' va '}
-            <Link href={`/${locale}/maxfiylik`} style={{ textDecoration: 'underline' }}>
+            <Link href={`/${locale}/sahifa/privacy-policy`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'underline' }}>
               {locale === 'ru' ? 'политикой конфиденциальности' : 'maxfiylik siyosati'}
             </Link>
             {locale === 'ru' ? '.' : ' shartlariga roziman.'}
@@ -551,6 +580,69 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
             {cart.couponError}
           </div>
         ) : null}
+
+        {hasBlocking ? (
+
+          <div
+
+            role="alert"
+
+            style={{
+
+              background: 'var(--alv-danger-soft)',
+
+              color: 'var(--alv-danger)',
+
+              borderRadius: 'var(--alv-radius-md)',
+
+              padding: '14px 16px',
+
+              marginBottom: 16,
+
+              fontSize: 14,
+
+              lineHeight: 1.5,
+
+            }}
+
+          >
+
+            <strong style={{ display: 'block', marginBottom: 6 }}>
+
+              {locale === 'ru' ? 'Товара не хватает на складе' : 'Omborda tovar yetarli emas'}
+
+            </strong>
+
+            <ul style={{ margin: '0 0 10px', paddingLeft: 18 }}>
+
+              {blockingItems.map((item) => (
+
+                <li key={item.itemId}>
+
+                  {locale === 'ru' ? item.nameRu : item.nameUz} —{' '}
+
+                  {locale === 'ru'
+
+                    ? `осталось ${item.availableStock}, в корзине ${item.quantity}`
+
+                    : `${item.availableStock} dona qoldi, savatda ${item.quantity}`}
+
+                </li>
+
+              ))}
+
+            </ul>
+
+            <Link href={`/${locale}/savat`} style={{ fontWeight: 700, textDecoration: 'underline' }}>
+
+              {locale === 'ru' ? 'Изменить в корзине' : 'Savatda o‘zgartirish'}
+
+            </Link>
+
+          </div>
+
+        ) : null}
+
 
         {error ? (
           <div

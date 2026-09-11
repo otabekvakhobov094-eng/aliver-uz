@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@aliver/ui';
 import type { CategoryNode } from '@/lib/catalog-api';
 import { pick } from '@/lib/catalog-api';
@@ -38,6 +38,24 @@ export function CatalogFilters({
   const router = useRouter();
   const params = useSearchParams();
   const [open, setOpen] = useState(false);
+
+  /*
+   * Narx maydonlari MANZILDAN boshqariladi.
+   *
+   * `useState(...)` boshlang'ich qiymati faqat birinchi chizishda
+   * o'qiladi, shuning uchun manzil o'zgarganda (masalan "Tozalash"
+   * bosilganda) maydonlar `useEffect` orqali yangilanadi — komponent
+   * qayta yaratilmaydi, chunki `router.push` uni remount qilmaydi.
+   */
+  const urlMin = params.get('minPrice') ?? '';
+  const urlMax = params.get('maxPrice') ?? '';
+  const [minPrice, setMinPrice] = useState(urlMin);
+  const [maxPrice, setMaxPrice] = useState(urlMax);
+
+  useEffect(() => {
+    setMinPrice(urlMin);
+    setMaxPrice(urlMax);
+  }, [urlMin, urlMax]);
 
   const setParam = useCallback(
     (key: string, value: string | null) => {
@@ -122,7 +140,11 @@ export function CatalogFilters({
             className="alv-input"
             style={{ height: 44 }}
             inputMode="numeric"
-            defaultValue={params.get('minPrice') ?? ''}
+            // Boshqariladigan maydon: `defaultValue` bilan "Tozalash" bosilganda
+            // DOM dagi eski qiymat qolib ketardi va mijoz filtr hali
+            // ishlayapti deb o'ylardi.
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.currentTarget.value)}
             placeholder="0"
             aria-label={locale === 'ru' ? 'Минимальная цена' : 'Eng past narx'}
             onBlur={(e) => setParam('minPrice', e.target.value.replace(/\D/g, '') || null)}
@@ -132,7 +154,8 @@ export function CatalogFilters({
             className="alv-input"
             style={{ height: 44 }}
             inputMode="numeric"
-            defaultValue={params.get('maxPrice') ?? ''}
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.currentTarget.value)}
             placeholder="500000"
             aria-label={locale === 'ru' ? 'Максимальная цена' : 'Eng yuqori narx'}
             onBlur={(e) => setParam('maxPrice', e.target.value.replace(/\D/g, '') || null)}
@@ -157,6 +180,24 @@ export function CatalogFilters({
       </div>
 
       <aside className="alv-desktop-only" style={{ width: 264, flex: 'none' }}>
+        {/*
+          Saralash DESKTOPDA ham kerak.
+
+          Ilgari `SortSelect` faqat mobil panelda chizilardi, ya'ni 900px
+          dan keng ekranda saralashni o'zgartirishning yagona yo'li
+          manzilga `?sort=` ni qo'lda yozish edi.
+        */}
+        <div style={{ marginBottom: 18 }}>
+          <strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
+            {locale === 'ru' ? 'Сортировка' : 'Saralash'}
+          </strong>
+          <SortSelect
+            locale={locale}
+            value={params.get('sort') ?? 'popular'}
+            onChange={(v) => setParam('sort', v)}
+          />
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
           <strong style={{ fontSize: 14 }}>{locale === 'ru' ? 'Фильтры' : 'Filtrlar'}</strong>
           {activeCount > 0 ? (

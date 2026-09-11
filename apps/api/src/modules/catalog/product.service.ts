@@ -76,6 +76,19 @@ export class ProductService {
       const tokens = searchTokens(query.q);
       if (tokens.length > 0) {
         where.AND = tokens.map((t) => ({ searchText: { contains: t } }));
+      } else {
+        /*
+         * So'rov berilgan, lekin undan birorta ham qidiriladigan
+         * bo'lak chiqmadi (masalan "3", "!!!", yoki apostrof olib
+         * tashlangandan keyin bitta harf qolgan "o'").
+         *
+         * Ilgari bunday holatda `q` JIMGINA tashlab yuborilardi va
+         * mijoz "Natijalar: 120" degan yozuv bilan BUTUN katalogni
+         * ko'rardi — go'yo hammasi so'roviga mos kelgandek.
+         *
+         * To'g'ri javob — hech narsa topilmadi.
+         */
+        where.AND = [{ id: '00000000-0000-0000-0000-000000000000' }];
       }
     }
 

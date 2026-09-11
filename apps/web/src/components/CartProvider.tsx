@@ -15,6 +15,8 @@ interface CartContextValue {
   cart: Cart | null;
   /** Birinchi yuklash tugagunicha — sarlavhadagi hisoblagich ko‘rsatilmaydi. */
   ready: boolean;
+  /** Savat YUKLANMADI (bo'sh emas). Ikkisini ajratish shart. */
+  failed: boolean;
   busy: boolean;
   error: string | null;
   add: (variantId: string, quantity?: number) => Promise<void>;
@@ -38,6 +40,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,9 +60,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       setCart(await shopApi.cart());
+      setFailed(false);
     } catch {
-      // Savat bo'sh yoki API hali ishlamayapti — sayt baribir ochilishi kerak.
-      setCart(null);
+      /*
+       * NOSOZLIK BO'SH SAVAT EMAS.
+       *
+       * Ilgari bu yerda `setCart(null)` turardi va u savat sahifasida
+       * "Savat bo'sh" deb ko'rinardi. Ya'ni API bir soniyaga yiqilsa,
+       * mijoz o'zi tanlagan tovarlar yo'qolgan deb o'ylab ketardi.
+       *
+       * Endi nosozlik alohida belgilanadi: savat sahifasi "yuklanmadi,
+       * qayta urinib ko'ring" deb yozadi va tanlov saqlanib turganini
+       * bildiradi.
+       */
+      setFailed(true);
     } finally {
       setReady(true);
     }
@@ -73,6 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       cart,
       ready,
+      failed,
       busy,
       error,
       refresh,

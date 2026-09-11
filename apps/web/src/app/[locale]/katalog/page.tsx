@@ -40,8 +40,18 @@ export default async function CatalogPage({
 
   const page = Number(one(sp.page) ?? '1') || 1;
 
+  /*
+   * API xatosi sahifani YIQITMAYDI.
+   *
+   * Ilgari bu chaqiruvlar istisno tashlardi va mijoz Next.js ning
+   * yalang'och "Application error" ekranini ko'rardi — sarlavhasiz,
+   * footersiz, qaytish yo'lisiz. Noto'g'ri `?sort=` qiymati ham shu
+   * holatga olib borardi.
+   *
+   * Endi xato tushunarli xabarga aylanadi va sayt ochiq qoladi.
+   */
   const [categories, data] = await Promise.all([
-    catalogApi.categories(),
+    catalogApi.categories().catch(() => []),
     catalogApi.products({
       category: one(sp.category),
       collection: one(sp.collection),
@@ -54,8 +64,30 @@ export default async function CatalogPage({
       sort: one(sp.sort) ?? 'popular',
       page,
       perPage: 24,
-    }),
+    }).catch(() => null),
   ]);
+
+  if (!data) {
+    return (
+      <>
+        <SiteHeader locale={locale} />
+        <main className="alv-page" style={{ padding: '64px 0', textAlign: 'center' }}>
+          <h1 className="alv-h2" style={{ marginBottom: 10 }}>
+            {locale === 'ru' ? 'Каталог не загрузился' : 'Katalog yuklanmadi'}
+          </h1>
+          <p style={{ color: 'var(--alv-muted)', marginBottom: 22 }}>
+            {locale === 'ru'
+              ? 'Не удалось связаться с сервером или фильтр указан неверно.'
+              : 'Server bilan bog‘lanib bo‘lmadi yoki filtr noto‘g‘ri ko‘rsatilgan.'}
+          </p>
+          <Link href={`/${locale}/katalog`} className="alv-btn alv-btn--primary alv-btn--md">
+            {locale === 'ru' ? 'Сбросить фильтры' : 'Filtrlarni tozalash'}
+          </Link>
+        </main>
+        <SiteFooter locale={locale} />
+      </>
+    );
+  }
 
   const totalPages = Math.max(1, Math.ceil(data.total / data.perPage));
   const activeCategory = categories.find((c) => c.slug === one(sp.category));

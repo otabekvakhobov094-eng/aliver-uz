@@ -35,12 +35,49 @@ function Notice({ tone, children }: { tone: 'warn' | 'danger'; children: React.R
  * bo'ladi (ekspertiza A-5).
  */
 export function CartView({ locale }: { locale: Locale }) {
-  const { cart, ready, busy, error, update, remove, applyCoupon, removeCoupon } = useCart();
+  const { cart, ready, failed, busy, error, refresh, update, remove, applyCoupon, removeCoupon } =
+    useCart();
   const [code, setCode] = useState('');
 
   if (!ready) {
     return (
       <p style={{ color: 'var(--alv-muted)' }}>{locale === 'ru' ? 'Загрузка…' : 'Yuklanmoqda…'}</p>
+    );
+  }
+
+  /*
+   * Yuklanmagan savat — BO'SH savat emas.
+   *
+   * Ilgari ikkalasi ham "Savat bo'sh" deb ko'rsatilardi: API bir
+   * soniyaga yiqilsa, mijoz tanlagan tovarlari yo'qolgan deb o'ylardi
+   * va ketib qolardi.
+   */
+  if (failed && !cart) {
+    return (
+      <div
+        style={{
+          background: 'var(--alv-surface)',
+          borderRadius: 'var(--alv-radius-xl)',
+          padding: '40px 24px',
+          textAlign: 'center',
+          boxShadow: 'var(--alv-shadow-sm)',
+        }}
+      >
+        <div style={{ fontSize: 36, marginBottom: 12 }} aria-hidden>
+          ⚠️
+        </div>
+        <h2 style={{ fontSize: 18, margin: '0 0 8px' }}>
+          {locale === 'ru' ? 'Корзина не загрузилась' : 'Savat yuklanmadi'}
+        </h2>
+        <p style={{ color: 'var(--alv-muted)', fontSize: 14, margin: '0 0 20px' }}>
+          {locale === 'ru'
+            ? 'Товары на месте — не удалось связаться с сервером. Попробуйте ещё раз.'
+            : 'Tanlagan tovarlaringiz joyida — server bilan bog‘lanib bo‘lmadi. Qayta urinib ko‘ring.'}
+        </p>
+        <Button variant="primary" onClick={() => void refresh()} disabled={busy}>
+          {locale === 'ru' ? 'Повторить' : 'Qayta urinish'}
+        </Button>
+      </div>
     );
   }
 

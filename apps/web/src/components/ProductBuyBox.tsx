@@ -68,7 +68,21 @@ export function ProductBuyBox({
                 <button
                   key={v.id}
                   type="button"
-                  onClick={() => !disabled && setIndex(i)}
+                  onClick={() => {
+                    if (disabled) return;
+                    setIndex(i);
+                    /*
+                     * Variant almashganda MIQDOR TIKLANADI.
+                     *
+                     * Ilgari u saqlanib qolardi: A variantida 10 ta
+                     * tanlab, 2 tasi qolgan B variantiga o'tilsa,
+                     * "Savatga qo'shish" 10 ta so'rardi. Server esa
+                     * jimgina 2 taga qisqartirardi va mijoz 10 ta
+                     * qo'shildi deb o'ylab qolardi.
+                     */
+                    setQty(1);
+                    setAdded(false);
+                  }}
                   disabled={disabled}
                   aria-pressed={on}
                   style={{

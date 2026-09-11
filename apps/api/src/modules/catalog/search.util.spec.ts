@@ -90,3 +90,25 @@ describe('imlo xatosiga chidamlilik', () => {
     expect(similarity('shampun', 'lipstick')).toBeLessThan(0.4);
   });
 });
+
+describe('juda qisqa so‘rovlar', () => {
+  it('bitta raqam yoki harf bo‘lak sifatida qabul qilinmaydi', () => {
+    expect(searchTokens('3')).toEqual([]);
+    expect(searchTokens('a')).toEqual([]);
+  });
+
+  it('faqat tinish belgilaridan iborat so‘rov bo‘sh qoladi', () => {
+    expect(searchTokens('!!!')).toEqual([]);
+    expect(searchTokens('???  ...')).toEqual([]);
+  });
+
+  it('apostrof olib tashlangach qisqa qolgan so‘z ham tashlanadi', () => {
+    // "oʻ" -> "o" -> bitta harf. Mahsulot qidiruvida bu ma'nosiz,
+    // lekin ilgari u butun katalogni qaytarishga sabab bo'lardi.
+    expect(searchTokens('oʻ')).toEqual([]);
+  });
+
+  it('ikki harfli haqiqiy so‘z qabul qilinadi', () => {
+    expect(searchTokens('bb krem')).toEqual(['bb', 'krem']);
+  });
+});

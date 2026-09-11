@@ -22,7 +22,7 @@ export default async function SearchPage({
   const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q) ?? '';
   const ru = locale === 'ru';
 
-  const data = q ? await catalogApi.products({ q, perPage: 24 }) : null;
+  const data = q ? await catalogApi.products({ q, perPage: 24 }).catch(() => null) : null;
 
   return (
     <>
