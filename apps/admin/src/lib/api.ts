@@ -39,6 +39,49 @@ export interface B2bLead {
   comment: string | null; status: string; createdAt: string;
 }
 
+export interface AdminCollection {
+  id: string;
+  slug: string;
+  nameUz: string;
+  nameRu: string;
+  isActive?: boolean;
+  productCount?: number;
+}
+
+export interface AdminDiscount {
+  id: string;
+  code: string | null;
+  nameUz: string;
+  nameRu: string;
+  type: 'PERCENT' | 'FIXED_AMOUNT' | 'FREE_SHIPPING';
+  scope: 'CART' | 'PRODUCT' | 'CATEGORY' | 'COLLECTION';
+  value: number;
+  minOrderAmount: string | null;
+  maxDiscountAmount: string | null;
+  minQuantity: number | null;
+  usageLimit: number | null;
+  usagePerCustomer: number | null;
+  usedCount: number;
+  stackable: boolean;
+  priority: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  isActive: boolean;
+}
+
+export interface AdminReview {
+  id: string;
+  rating: number;
+  body: string | null;
+  mediaUrls: string[];
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  isVerified: boolean;
+  adminReply: string | null;
+  createdAt: string;
+  product: { id: string; slug: string; nameUz: string };
+  customer: { id: string; fullName: string | null; phone: string | null };
+}
+
 export interface AdminUser {
   id: string;
   fullName: string;
@@ -947,6 +990,48 @@ export const adminApi = {
     if (to) qs.set('to', to);
     return request<DashboardData>(`/admin/reports/dashboard?${qs.toString()}`);
   },
+
+  collections: () => request<AdminCollection[]>('/admin/collections'),
+  createCollection: (body: Record<string, unknown>) =>
+    request<AdminCollection>('/admin/collections', { method: 'POST', body: JSON.stringify(body) }),
+  updateCollection: (id: string, body: Record<string, unknown>) =>
+    request<AdminCollection>(`/admin/collections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  deleteCollection: (id: string) =>
+    request<{ ok: true }>(`/admin/collections/${id}`, { method: 'DELETE' }),
+
+  discounts: (state?: string) =>
+    request<AdminDiscount[]>(`/admin/discounts${state ? `?state=${state}` : ''}`),
+  createDiscount: (body: Record<string, unknown>) =>
+    request<AdminDiscount>('/admin/discounts', { method: 'POST', body: JSON.stringify(body) }),
+  updateDiscount: (id: string, body: Record<string, unknown>) =>
+    request<AdminDiscount>(`/admin/discounts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  toggleDiscount: (id: string) =>
+    request<AdminDiscount>(`/admin/discounts/${id}/toggle`, { method: 'POST' }),
+  deleteDiscount: (id: string) =>
+    request<{ ok: true }>(`/admin/discounts/${id}`, { method: 'DELETE' }),
+
+  reviews: (params?: { status?: string; rating?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set('status', params.status);
+    if (params?.rating) qs.set('rating', params.rating);
+    const s = qs.toString();
+    return request<{ items: AdminReview[]; counts: Record<string, number> }>(
+      `/admin/reviews${s ? `?${s}` : ''}`,
+    );
+  },
+  moderateReview: (id: string, status: string, adminReply?: string | null) =>
+    request<AdminReview>(`/admin/reviews/${id}/moderate`, {
+      method: 'POST',
+      body: JSON.stringify({ status, adminReply }),
+    }),
+  bulkModerateReviews: (ids: string[], status: string) =>
+    request<{ updated: number }>('/admin/reviews/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ ids, status }),
+    }),
 
   users: (params?: { q?: string; status?: string }) => {
     const qs = new URLSearchParams();

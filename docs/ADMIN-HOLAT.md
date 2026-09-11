@@ -61,18 +61,18 @@ uning haqiqiy holati.
 | Orders (36) | bor | bor | ishlaydi, menyudan o'chirilgan |
 | Products | bor | bor | ishlaydi |
 | Categories | bor | bor | ishlaydi |
-| Collections | **bor** (CRUD to'liq) | **yo'q** | faqat UI kerak |
+| Collections | bor | bor | to'liq |
 | Inventory (66) | bor | bor | ishlaydi, menyudan o'chirilgan |
 | Customers (612–639) | bor | bor | ishlaydi, menyudan o'chirilgan |
-| Reviews | **yo'q** | **yo'q** | faqat baza modeli bor |
-| Discounts (673) | **yo'q** (faqat engine) | **yo'q** | chegirma checkoutda ishlaydi, boshqarib bo'lmaydi |
+| Reviews | bor | bor | moderatsiya navbati, ommaviy tasdiqlash |
+| Discounts (673) | bor | bor | yaratish, to'xtatish, muddat va chegaralar |
 | Banners (708) | bor | `/content` ichida | ishlaydi |
 | Pages (740) | bor | bor | ishlaydi |
 | Blog | bor | `/content` ichida | ishlaydi |
 | B2B | bor | bor | ishlaydi |
 | Reports (62–66) | 1 ta endpoint | 1 ta sahifa | TZda 7 ta hisobot, bittasi bor |
-| Users (72) | **yo'q** | **yo'q** | admin yaratib bo'lmaydi |
-| Roles (73, 74) | qisman | **yo'q** | huquqlar kodda, UI yo'q |
+| Users (72) | bor | bor | qulflanishdan himoya bilan |
+| Roles (73, 74) | bor | bor | modul × harakat matritsasi |
 | Notifications (71) | bor | bor | ishlaydi |
 | Audit Logs (75) | bor | bor | ishlaydi |
 | Settings (76) | bor | bor | 23 ta sozlama, turi va tekshiruvi bilan |
@@ -196,3 +196,20 @@ qolsa, tinch vaqt oralig'i teskari bo'ladi.
 
 Ta'riflar seed bilan solishtirib tekshirildi: 23 = 23, ortiqchasi ham,
 yetishmagani ham yo'q.
+
+## 9. Yakun — 11.09.2026
+
+Sidebardagi **25 ta bo'limning hammasida sahifa bor**. «Tez orada»
+belgisi qolmadi.
+
+Shu bosqichda qo'shilganlar: Adminlar, Rollar (huquqlar matritsasi),
+Sozlamalar, Kolleksiyalar, Chegirmalar, Sharhlar. Yangi API modullari:
+`users`, `settings`, `reviews`, hamda `discounts` va `reports` ga
+qo'shimcha kontrollerlar.
+
+Butun API test to'plami: 359 ta test, 31 ta to'plam — hammasi o'tdi.
+
+Qolgan ish: admin mobil ekranga moslashmagan (240 px sidebar), va TZ-2
+4.2 dagi umumiy ro'yxat platformasi (saqlangan ko'rinishlar, ustun
+sozlamalari, ommaviy tahrirlash) hali yozilmagan — u har bir ro'yxatga
+birdan qo'llanadigan alohida modul bo'lishi kerak.

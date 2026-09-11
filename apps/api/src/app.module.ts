@@ -32,6 +32,7 @@ import { ContentModule } from './modules/content/content.module';
 import { B2bModule } from './modules/b2b/b2b.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 import { UsersModule } from './modules/users/users.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -73,6 +74,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     ReportsModule,
     SettingsModule,
     UsersModule,
+    ReviewsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
