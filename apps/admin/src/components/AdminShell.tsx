@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AliverLogo } from '@aliver/ui';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { adminApi } from '@/lib/api';
@@ -70,11 +71,8 @@ export function AdminShell({ title, children }: { title: string; children: React
       />
 
       <aside id="alv-adm-nav" className="alv-adm__side">
-        <Link
-          href="/"
-          style={{ fontFamily: 'var(--alv-font-display)', fontSize: 20, color: 'var(--alv-ink)' }}
-        >
-          ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span>
+        <Link href="/" aria-label="ALIVER.UZ — bosh sahifa" style={{ color: 'var(--alv-ink)' }}>
+          <AliverLogo height={18} decorative />
         </Link>
         <div style={{ fontSize: 12, color: 'var(--alv-muted)', margin: '4px 0 16px' }}>{role}</div>
 

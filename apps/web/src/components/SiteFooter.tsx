@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AliverLogo } from '@aliver/ui';
 import type { Locale } from '@/i18n/messages';
 import styles from './SiteFooter.module.css';
 
@@ -26,7 +27,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     <footer className={styles.footer}>
       <div className="alv-page">
         <div className={styles.logo}>
-          ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span>
+          <AliverLogo height={24} />
         </div>
         <p className={styles.description}>
           {locale === 'ru'

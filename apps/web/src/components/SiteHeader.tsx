@@ -31,10 +31,11 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           <Link href={`/${locale}`} className={styles.logo} aria-label="ALIVER.UZ">
             {/*
               Sarlavhadagi logo ANIMATSIYASIZ: u ekranda doim turadi va
-              doimiy harakat o'qishga xalaqit beradi. Animatsion variant
-              faqat bosh sahifaning hero qismida ishlatiladi.
+              doimiy harakat o'qishga xalaqit beradi. `decorative` —
+              havolaning o'zida allaqachon aria-label bor, logotip uni
+              takrorlamasligi kerak.
             */}
-            <AliverLogo height={24} animated={false} />
+            <AliverLogo height={26} decorative />
           </Link>
 
           <nav

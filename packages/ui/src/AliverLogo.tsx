@@ -1,120 +1,84 @@
-'use client';
-
-import { useId } from 'react';
+import type { CSSProperties } from 'react';
 
 /**
- * ALIVER.UZ logotipi — animatsion matn belgisi.
+ * ALIVER rasmiy logotipi.
  *
- * HOZIRCHA BU VAQTINCHALIK YECHIM. aliver.com dagi rasmiy logotip fayli
- * hali yo'q (uni yuklab olishga urinish tarmoq siyosati tomonidan
- * bloklandi). Shuning uchun belgi saytning o'z shriftida chizilgan.
+ * Yo'llar brend egasi bergan rasmdan vektorga o'girilgan. Bu
+ * QAYTA TIKLASH, asl chizma emas — dizayner faylida (.ai yoki .svg)
+ * egri chiziqlar aniqroq va kamroq nuqtadan iborat bo'ladi. Agar u
+ * topilsa, shu yerdagi yo'llarni almashtirish kifoya: komponentning
+ * qolgan qismi o'zgarmaydi.
  *
- * Rasmiy logo kelganda ALMASHTIRISH OSON: `mark` qismini `<image>` yoki
- * import qilingan SVG bilan almashtirish yetarli — o'rash, o'lchamlar
- * va animatsiya o'z joyida qoladi.
- *
- * Animatsiya matn ustidan o'tuvchi yorug'likdan iborat: kosmetika
- * qadog'idagi yaltiroq plyonka effekti. U `<text>` ning o'zida emas,
- * gradient ichida harakatlanadi — shuning uchun matn har doim to'liq
- * o'qiladi va qidiruv tizimlari uni ko'radi.
+ * Rang `currentColor` dan olinadi — logotip qora fonda ham, oq fonda
+ * ham ishlaydi va alohida variant kerak emas.
  */
-export function AliverLogo({
-  height = 26,
-  animated = true,
-  title = 'ALIVER.UZ',
-}: {
-  height?: number;
-  /** Sarlavhada `false`: doimiy harakat diqqatni tortadi. */
-  animated?: boolean;
-  title?: string;
-}) {
-  // Bitta sahifada bir nechta logo bo'lishi mumkin — gradient id lari
-  // to'qnashmasligi kerak, aks holda ikkinchisi birinchisining
-  // gradientini oladi.
-  const id = useId().replace(/:/g, '');
-  const sweepId = `alv-logo-sweep-${id}`;
 
+export interface AliverLogoProps {
+  /** Balandligi pikselda. Kenglik nisbatga qarab o'zi hisoblanadi. */
+  height?: number;
+  /**
+   * Sahifa ochilganda bir marta paydo bo'ladimi. Takrorlanuvchi
+   * animatsiya charchatadi — faqat bitta kirish harakati.
+   */
+  animate?: boolean;
+  className?: string;
+  style?: CSSProperties;
+  /** Yonida «ALIVER» matni bo'lsa — ekran o'quvchidan yashiriladi. */
+  decorative?: boolean;
+}
+
+const VIEW_BOX = '0 0 2502.000000 588.000000';
+/** Asl nisbat: kenglik / balandlik. */
+const RATIO = 4.2551;
+
+export function AliverLogo({
+  height = 28,
+  animate = false,
+  className,
+  style,
+  decorative = false,
+}: AliverLogoProps) {
   return (
     <svg
-      role="img"
-      aria-label={title}
+      viewBox={VIEW_BOX}
       height={height}
-      viewBox="0 0 208 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'block', overflow: 'visible' }}
+      width={Math.round(height * RATIO)}
+      className={className}
+      style={{ display: 'block', color: 'inherit', ...style }}
+      {...(decorative
+        ? { 'aria-hidden': true as const }
+        : { role: 'img' as const, 'aria-label': 'ALIVER' })}
     >
-      <title>{title}</title>
-
-      <defs>
-        {/* Yorug'lik dog'i — matn ustidan chapdan o'ngga suriladi. */}
-        <linearGradient id={sweepId} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0" />
-          <stop offset="45%" stopColor="#fff" stopOpacity="0.85" />
-          <stop offset="55%" stopColor="#fff" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-          {animated ? (
-            <animate
-              attributeName="x1"
-              values="-1.4;1;1"
-              keyTimes="0;0.45;1"
-              dur="5s"
-              repeatCount="indefinite"
-            />
-          ) : null}
-          {animated ? (
-            <animate
-              attributeName="x2"
-              values="-0.4;2;2"
-              keyTimes="0;0.45;1"
-              dur="5s"
-              repeatCount="indefinite"
-            />
-          ) : null}
-        </linearGradient>
-      </defs>
-
-      <g>
-        {/*
-          Ikki qism BITTA `<text>` ichida, `tspan` bilan.
-
-          Ilgari ".UZ" alohida `<text>` da qat'iy `x` bilan turardi va
-          shrift yuklanmaganda (yoki boshqa shrift tushganda) "ALIVER"
-          bilan orasida bo'shliq paydo bo'lardi. `tspan` esa oldingi
-          qismdan KEYIN joylashadi — shrift qanday bo'lishidan qat'i nazar.
-        */}
-        <text
-          x="0"
-          y="25"
-          fontFamily="var(--alv-font-display, 'Prata', Georgia, serif)"
-          fontWeight="400"
-          fontSize="28"
-          letterSpacing="-1.2"
-        >
-          <tspan fill="var(--alv-ink, #1b1220)">ALIVER</tspan>
-          <tspan fill="var(--alv-brand, #d42a64)">.UZ</tspan>
-        </text>
-
-        {/*
-         * Yaltirash qatlami matn USTIDA turadi.
-         * `pointer-events: none` majburiy: aks holda u logo ustidagi
-         * bosishni to'sib qo'yardi.
-         */}
-        {animated ? (
-          <text
-            x="0"
-            y="25"
-            fontFamily="var(--alv-font-display, 'Prata', Georgia, serif)"
-            fontWeight="400"
-            fontSize="28"
-            letterSpacing="-1.2"
-            fill={`url(#${sweepId})`}
-            style={{ mixBlendMode: 'overlay', pointerEvents: 'none' }}
-            aria-hidden="true"
-          >
-            ALIVER.UZ
-          </text>
-        ) : null}
+      {animate ? (
+        <style>{`
+          @keyframes alv-logo-in {
+            from { opacity: 0; transform: translateY(-6%); }
+            to   { opacity: 1; transform: none; }
+          }
+          .alv-logo-mark {
+            animation: alv-logo-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+            transform-origin: center;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .alv-logo-mark { animation: none; }
+          }
+        `}</style>
+      ) : null}
+      <g
+        className={animate ? 'alv-logo-mark' : undefined}
+        transform="translate(0.000000,588.000000) scale(0.100000,-0.100000)"
+        fill="currentColor"
+        stroke="none"
+      >
+        <path d="M23715 5734 c-197 -49 -357 -153 -507 -329 -65 -77 -150 -229 -176 -315 -53 -175 -59 -369 -18 -550 14 -63 39 -142 56 -175 44 -90 126 -212 184 -273 53 -56 212 -173 261 -192 15 -6 41 -20 56 -31 112 -80 555 -88 689 -13 14 7 44 23 67 34 23 11 45 25 48 30 4 6 30 22 58 36 100 50 273 252 334 389 83 188 109 329 93 506 -15 158 -18 172 -57 273 -38 95 -77 168 -126 231 -68 87 -184 207 -222 230 -264 157 -509 207 -740 149z m351 -123 c32 -10 85 -26 117 -35 72 -21 213 -116 299 -200 100 -98 167 -209 215 -358 25 -77 27 -95 26 -248 -1 -154 -3 -171 -31 -256 -36 -110 -50 -137 -119 -235 -59 -85 -104 -129 -176 -174 -26 -17 -63 -40 -82 -52 -166 -106 -487 -129 -686 -49 -129 53 -303 196 -350 288 -11 21 -23 38 -28 38 -12 0 -102 196 -108 238 -3 20 -9 44 -14 53 -4 9 -13 55 -19 104 -12 94 -7 121 57 315 27 83 103 216 171 300 86 106 220 204 325 236 29 8 75 24 102 34 70 26 220 27 301 1z"/> 
+        <path d="M23623 5312 c-51 -7 -53 -22 -53 -366 0 -355 14 -593 35 -615 12 -12 17 -12 38 2 23 15 24 22 30 144 9 208 41 273 134 273 89 0 172 -67 275 -220 134 -199 268 -292 268 -186 0 19 -5 38 -11 42 -6 3 -20 25 -30 48 -10 22 -55 82 -100 131 -124 138 -125 151 -17 244 39 35 79 73 88 84 31 39 42 94 35 160 -10 80 -17 99 -61 153 -44 53 -89 69 -243 84 -131 14 -358 26 -388 22z m490 -149 c77 -37 87 -53 87 -142 0 -54 -2 -59 -45 -101 l-46 -45 -176 -3 c-97 -2 -187 -1 -200 3 -30 7 -48 49 -57 132 -9 85 23 159 79 184 11 5 81 8 155 6 128 -2 138 -4 203 -34z"/> 
+        <path d="M8155 5261 c-223 -132 -389 -340 -479 -602 -31 -91 -56 -267 -45 -324 5 -22 8 -56 9 -75 1 -47 40 -139 80 -191 93 -117 275 -105 406 25 71 72 149 201 164 271 50 245 51 262 55 550 2 155 0 306 -4 335 -14 90 -48 92 -186 11z"/> 
+        <path d="M14375 4518 c-86 -14 -93 -17 -152 -67 -54 -44 -102 -115 -183 -267 -9 -16 -25 -43 -36 -60 -11 -16 -38 -60 -59 -99 -21 -38 -47 -81 -57 -95 -43 -56 -69 -98 -91 -145 -13 -27 -40 -75 -60 -107 -20 -31 -64 -111 -97 -179 -33 -68 -65 -128 -71 -135 -5 -7 -31 -52 -56 -101 -25 -48 -68 -122 -95 -164 -26 -42 -48 -78 -48 -82 0 -3 -27 -49 -60 -104 -33 -54 -60 -102 -60 -106 0 -5 -23 -47 -52 -95 -89 -151 -113 -192 -218 -387 -57 -104 -111 -199 -120 -210 -9 -11 -68 -112 -130 -225 -62 -113 -127 -227 -145 -255 -17 -27 -64 -116 -104 -196 -90 -182 -149 -273 -177 -277 -24 -3 -59 34 -101 106 -14 26 -34 56 -44 67 -9 11 -40 63 -69 115 -28 52 -68 122 -87 155 -65 109 -165 288 -215 385 -27 52 -67 124 -89 160 -21 36 -51 88 -65 115 -15 28 -44 78 -65 112 -21 35 -40 72 -44 82 -3 11 -38 73 -77 138 -39 65 -80 138 -91 163 -11 25 -28 56 -37 70 -10 14 -39 68 -66 120 -26 52 -62 118 -80 145 -17 28 -57 101 -89 163 -31 62 -61 115 -66 118 -6 3 -20 27 -33 52 -13 26 -40 76 -61 112 -21 36 -59 106 -85 155 -26 50 -59 108 -73 129 -15 21 -27 43 -27 48 0 5 -13 28 -28 51 -25 36 -172 300 -212 380 -7 15 -17 27 -21 27 -5 0 -18 18 -29 40 -25 49 -71 86 -145 116 -55 23 -70 24 -284 24 -195 0 -231 -2 -261 -18 -46 -23 -59 -59 -35 -103 10 -19 29 -55 41 -80 13 -26 54 -95 90 -155 37 -60 74 -125 83 -144 24 -52 99 -198 186 -360 42 -80 95 -181 117 -225 23 -44 46 -87 53 -95 7 -8 30 -49 53 -90 22 -41 59 -109 82 -150 23 -41 53 -97 66 -125 14 -27 39 -75 57 -106 75 -131 188 -340 227 -419 23 -47 48 -92 56 -101 8 -8 14 -18 14 -22 0 -10 95 -200 135 -267 20 -36 46 -81 57 -100 11 -19 35 -57 53 -85 35 -55 77 -129 108 -190 11 -22 30 -53 42 -70 13 -16 26 -41 30 -55 10 -32 88 -190 156 -313 30 -54 70 -127 89 -163 19 -35 55 -99 79 -141 99 -174 149 -269 156 -292 4 -14 20 -42 36 -64 16 -22 29 -44 29 -50 0 -5 43 -79 96 -164 88 -140 99 -154 123 -151 19 2 36 19 68 66 22 35 47 69 55 75 8 7 34 46 58 87 24 41 64 107 89 145 26 39 62 97 80 130 18 33 61 105 95 160 35 55 78 127 98 160 19 33 61 105 93 160 33 55 69 113 82 128 13 16 23 33 23 38 0 13 129 238 151 264 9 11 40 65 69 120 29 55 58 107 65 115 7 8 36 59 65 114 29 54 68 118 86 142 18 23 41 60 52 81 19 39 169 300 234 407 20 34 54 93 76 131 22 39 63 111 92 160 76 129 111 190 160 275 46 81 77 131 120 195 15 22 54 90 88 150 94 172 147 264 196 341 25 39 50 82 55 96 5 14 40 79 77 144 186 329 207 381 164 404 -34 18 -103 26 -155 18z"/> 
+        <path d="M5489 4489 c-20 -12 -45 -35 -55 -53 -18 -30 -19 -88 -22 -2108 l-3 -2077 23 -14 c28 -18 330 -24 1859 -33 1206 -8 1260 -6 1318 57 26 28 27 70 4 91 -10 9 -36 25 -58 36 -36 18 -67 20 -330 26 -159 3 -387 8 -505 11 -118 3 -469 8 -780 11 -820 8 -811 8 -827 29 -10 15 -13 331 -13 1745 1 1466 -2 1762 -15 1965 -17 262 -19 268 -85 313 -32 21 -41 22 -254 22 -206 0 -223 -2 -257 -21z"/> 
+        <path d="M9067 4498 c-50 -39 -56 -266 -56 -2188 0 -1582 6 -2013 29 -2095 20 -70 73 -95 121 -56 25 20 25 25 59 556 15 228 7 3331 -8 3425 -6 36 -14 124 -18 195 -8 154 -16 175 -72 175 -21 0 -46 -6 -55 -12z"/> 
+        <path d="M14881 4497 c-9 -11 -11 -537 -11 -2143 0 -2065 1 -2129 19 -2147 18 -18 50 -19 1127 -7 1120 11 1222 13 1709 30 277 10 346 20 386 56 41 37 14 89 -59 113 -28 10 -317 14 -1247 18 -955 3 -1213 7 -1223 17 -20 20 -19 2864 2 2884 12 12 199 14 1270 16 1159 1 1257 2 1272 18 24 23 27 212 4 240 -15 18 -55 19 -1262 18 -928 0 -1254 3 -1273 12 -35 16 -39 43 -26 166 7 59 15 185 19 281 7 151 10 175 26 186 13 10 61 14 175 14 225 0 1464 21 1881 31 234 5 367 12 390 20 52 19 80 48 80 84 0 42 -8 52 -65 78 l-50 23 -1566 3 c-1335 2 -1568 1 -1578 -11z"/> 
+        <path d="M18860 4496 c-26 -33 -9 -3945 20 -4217 13 -133 48 -163 109 -94 17 20 31 37 31 38 0 1 5 45 11 97 6 52 14 131 20 175 5 44 12 264 15 490 6 358 8 412 23 428 17 20 75 20 971 2 102 -2 383 -7 625 -10 263 -4 451 -11 467 -17 39 -15 74 -73 135 -228 14 -36 34 -77 45 -92 27 -39 208 -397 208 -413 0 -7 8 -23 18 -36 21 -27 46 -75 154 -292 40 -82 81 -153 92 -159 23 -13 51 -14 427 -23 168 -5 318 -5 333 -1 26 6 28 10 23 45 -5 40 -26 88 -82 186 -45 79 -372 720 -510 998 l-108 218 24 23 c13 13 97 89 185 169 135 122 173 163 228 245 36 55 75 125 85 155 11 30 25 65 32 78 6 13 18 55 25 94 8 38 20 95 29 125 23 82 23 896 -1 961 -8 24 -19 66 -24 92 -11 53 -117 282 -183 392 -136 229 -313 426 -456 508 -26 15 -88 37 -137 49 l-89 22 -1366 3 c-1207 3 -1367 2 -1379 -11z m2757 -248 c109 -73 285 -220 325 -271 18 -23 55 -70 83 -104 27 -34 63 -79 78 -100 48 -65 126 -234 148 -323 12 -47 28 -97 35 -112 42 -82 38 -557 -5 -666 -12 -29 -21 -62 -21 -72 0 -50 -85 -253 -146 -347 -110 -172 -236 -333 -306 -395 -136 -117 -225 -150 -488 -178 -226 -24 -537 -26 -1519 -8 -610 11 -676 14 -695 29 l-21 17 -7 1273 c-7 1163 -6 1275 9 1291 15 17 79 18 1234 18 l1218 0 78 -52z"/> 
+        <path d="M2487 4409 c-9 -5 -26 -27 -37 -47 -32 -57 -139 -227 -201 -319 -16 -23 -32 -50 -37 -60 -7 -19 -106 -188 -147 -253 -12 -19 -38 -62 -57 -95 -19 -33 -51 -88 -71 -122 -21 -33 -37 -64 -37 -68 0 -4 -27 -48 -60 -99 -60 -92 -92 -148 -191 -326 -29 -52 -72 -126 -97 -164 -24 -39 -53 -88 -64 -110 -10 -23 -36 -70 -57 -106 -22 -36 -55 -96 -74 -135 -20 -38 -46 -86 -59 -105 -27 -40 -74 -120 -153 -265 -15 -27 -38 -66 -50 -85 -47 -76 -101 -168 -165 -284 -37 -66 -95 -170 -130 -231 -35 -60 -73 -128 -85 -150 -76 -136 -105 -182 -128 -199 -22 -16 -51 -21 -169 -27 -196 -11 -246 -28 -275 -96 -32 -77 41 -135 191 -152 57 -7 84 -15 99 -29 20 -20 20 -22 2 -69 -17 -48 -123 -246 -156 -293 -9 -14 -28 -46 -42 -70 -13 -25 -40 -74 -61 -109 -69 -120 -60 -142 64 -152 46 -4 93 -4 105 1 23 9 150 192 190 275 11 22 84 165 152 295 24 47 55 95 69 108 l25 22 1513 0 c1429 0 1514 -1 1527 -17 19 -25 35 -52 97 -173 30 -58 60 -112 68 -121 8 -8 19 -31 25 -50 7 -19 18 -41 25 -49 13 -15 32 -51 112 -203 32 -60 56 -94 75 -103 33 -18 491 -41 581 -30 65 9 106 38 106 78 0 13 -18 57 -40 98 -22 41 -60 117 -85 168 -25 51 -58 112 -74 135 -27 40 -83 136 -198 344 -12 22 -40 67 -63 101 -22 34 -80 139 -129 234 -92 179 -165 313 -181 332 -7 10 -45 79 -108 201 -8 17 -24 43 -35 59 -12 16 -30 47 -41 68 -12 21 -51 88 -87 150 -37 62 -88 153 -115 201 -44 79 -135 242 -215 382 -15 28 -37 70 -49 95 -12 25 -30 54 -40 65 -10 11 -39 60 -65 110 -26 49 -65 118 -86 153 -22 35 -39 66 -39 68 0 7 -273 517 -295 551 -11 17 -30 49 -43 70 -12 21 -51 87 -87 146 -35 60 -67 116 -70 125 -3 9 -54 89 -113 177 -109 162 -125 178 -165 154z m-128 -931 c22 -35 50 -79 62 -98 12 -19 97 -181 187 -360 90 -179 170 -332 177 -340 7 -8 22 -33 33 -55 68 -136 135 -262 146 -275 7 -8 31 -51 53 -95 46 -92 233 -447 387 -733 36 -68 66 -127 66 -130 0 -4 21 -41 45 -82 49 -81 57 -123 25 -140 -29 -15 -1627 -25 -2110 -12 -411 10 -450 16 -465 61 -8 27 2 76 20 91 8 6 39 62 70 123 56 112 79 155 150 277 49 83 70 121 140 250 32 58 67 119 79 135 12 17 39 62 60 100 21 39 63 111 92 160 62 105 124 219 159 291 54 110 248 456 282 500 13 17 23 36 23 42 0 10 189 301 218 335 30 34 59 22 101 -45z"/>
       </g>
     </svg>
   );
