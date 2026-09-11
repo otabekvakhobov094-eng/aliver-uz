@@ -88,7 +88,7 @@ services:
         value: production
       # Brauzer API ga to'g'ridan-to'g'ri bormaydi — u o'z domenidagi
       # /api ga so'rov yuboradi, Next.js esa uni serverda uzatadi.
-      # Shu sababli `NEXT_PUBLIC_` EMAS: qiymat brauzerga tushmasligi kerak.
+      # `API_ORIGIN` server o'zgaruvchisi: brauzer paketiga tushmaydi.
       - key: API_ORIGIN
         value: https://aliver-uz-api-stage.onrender.com
 

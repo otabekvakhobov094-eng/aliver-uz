@@ -26,14 +26,26 @@
  * cookie o'z domenidan kelgan bo'ladi — ya'ni BIRINCHI TOMON cookie si,
  * uni hech bir brauzer bloklamaydi.
  *
- * Shu sababli bu yerda `NEXT_PUBLIC_API_URL` ATAYLAB ISHLATILMAYDI:
- * u qiymat brauzer paketiga tushadi va kimdir uni yana tashqi manzilga
- * yo'naltirib, xatoni qaytarib keltirishi mumkin edi.
+ * Shu sababli BRAUZER hech qachon `NEXT_PUBLIC_API_URL` ga qaramaydi —
+ * u har doim nisbiy `/api` ga boradi. O'sha o'zgaruvchi faqat SERVER
+ * tomonida, proxy manzilini aniqlash uchun zaxira sifatida o'qiladi.
  */
 
 /** Server (SSR, route handler) uchun API ning haqiqiy manzili. */
 export function serverApiBase(): string {
-  const origin = (process.env.API_ORIGIN ?? 'http://localhost:4000').replace(/\/+$/, '');
+  /*
+   * `NEXT_PUBLIC_API_URL` zaxira sifatida qabul qilinadi: u Render'da
+   * allaqachon sozlangan, ya'ni deploy uchun panelda hech narsa
+   * o'zgartirish shart emas. `API_ORIGIN` berilsa u ustun turadi.
+   *
+   * Diqqat: brauzer baribir `/api` ga boradi (`apiBase` ga qarang) —
+   * bu qiymat faqat SERVER tomonida ishlatiladi.
+   */
+  const origin = (
+    process.env.API_ORIGIN ??
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') ??
+    'http://localhost:4000'
+  ).replace(/\/+$/, '');
   return `${origin}/api`;
 }
 

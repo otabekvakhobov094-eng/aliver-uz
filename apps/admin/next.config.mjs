@@ -20,7 +20,19 @@ const nextConfig = {
    * domenga yo'naltirib, cookie muammosini qaytarib keltirardi.
    */
   async rewrites() {
-    const origin = (process.env.API_ORIGIN ?? 'http://localhost:4000').replace(/\/+$/, '');
+    /*
+     * Zaxira: `NEXT_PUBLIC_API_URL` allaqachon sozlangan bo'lsa, undan
+     * origin ajratib olinadi (`.../api` qismi kesiladi).
+     *
+     * Bu ATAYLAB: Render'da bu o'zgaruvchi allaqachon bor, ya'ni kodni
+     * deploy qilish uchun panelda hech narsa o'zgartirish shart emas.
+     * `API_ORIGIN` berilsa — u ustun turadi.
+     */
+    const origin = (
+      process.env.API_ORIGIN ??
+      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') ??
+      'http://localhost:4000'
+    ).replace(/\/+$/, '');
     return [{ source: '/api/:path*', destination: `${origin}/api/:path*` }];
   },
 
