@@ -39,6 +39,34 @@ export interface B2bLead {
   comment: string | null; status: string; createdAt: string;
 }
 
+export interface AdminUser {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  status: 'ACTIVE' | 'BLOCKED';
+  lastLoginAt: string | null;
+  twoFaEnabled: boolean;
+  createdAt: string;
+  role: { id: string; code: string; name: string };
+}
+
+export interface AdminRole {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  adminCount: number;
+  permissions: string[];
+}
+
+export interface PermissionMatrix {
+  modules: Array<{ key: string; label: string }>;
+  actions: Array<{ key: string; label: string }>;
+  permissions: string[];
+}
+
 export type SettingType = 'string' | 'number' | 'boolean' | 'enum' | 'stringList';
 
 export interface SettingItem {
@@ -919,6 +947,46 @@ export const adminApi = {
     if (to) qs.set('to', to);
     return request<DashboardData>(`/admin/reports/dashboard?${qs.toString()}`);
   },
+
+  users: (params?: { q?: string; status?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.q) qs.set('q', params.q);
+    if (params?.status) qs.set('status', params.status);
+    const suffix = qs.toString();
+    return request<AdminUser[]>(`/admin/users${suffix ? `?${suffix}` : ''}`);
+  },
+
+  createUser: (body: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    roleId: string;
+    password: string;
+  }) =>
+    request<AdminUser>('/admin/users', { method: 'POST', body: JSON.stringify(body) }),
+
+  updateUser: (
+    id: string,
+    body: { fullName?: string; phone?: string | null; roleId?: string; status?: string },
+  ) => request<AdminUser>(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  resetUserPassword: (id: string, password: string) =>
+    request<{ ok: true }>(`/admin/users/${id}/password`, {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    }),
+
+  deleteUser: (id: string) => request<{ ok: true }>(`/admin/users/${id}`, { method: 'DELETE' }),
+
+  roles: () => request<AdminRole[]>('/admin/roles'),
+  permissionMatrix: () => request<PermissionMatrix>('/admin/roles/matrix'),
+  createRole: (body: { name: string; code?: string; description?: string; permissions: string[] }) =>
+    request<AdminRole>('/admin/roles', { method: 'POST', body: JSON.stringify(body) }),
+  updateRole: (
+    id: string,
+    body: { name?: string; description?: string | null; permissions?: string[] },
+  ) => request<AdminRole>(`/admin/roles/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteRole: (id: string) => request<{ ok: true }>(`/admin/roles/${id}`, { method: 'DELETE' }),
 
   settings: () => request<SettingsPayload>('/admin/settings'),
 
