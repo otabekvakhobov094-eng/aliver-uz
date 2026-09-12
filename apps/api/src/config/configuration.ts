@@ -29,6 +29,14 @@ export const envSchema = z.object({
 
   JWT_ACCESS_SECRET: z.string().min(16, 'JWT_ACCESS_SECRET juda qisqa'),
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET juda qisqa'),
+  /*
+   * Sovg'a sertifikati kodlarining xeshlash kaliti.
+   *
+   * Ixtiyoriy, LEKIN berilsa qisqa bo'lmasligi kerak. Bunsiz
+   * sertifikat moduli ishlamaydi va buni faqat birinchi sertifikat
+   * chiqarishda — ya'ni ish paytida — bilib qolinardi.
+   */
+  GIFTCARD_SECRET: z.string().min(16, 'GIFTCARD_SECRET juda qisqa').optional(),
   JWT_ACCESS_TTL: int(900),
   JWT_REFRESH_TTL: int(2592000),
   /**

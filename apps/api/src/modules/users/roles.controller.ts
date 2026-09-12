@@ -137,7 +137,25 @@ export class RolesController {
   @Post()
   @RequirePermissions('roles.create')
   @Audit('roles', 'create')
-  async create(@Body() body: RoleBody) {
+  async create(@Body() body: RoleBody, @CurrentUser() user: AuthPrincipal | undefined) {
+    /*
+     * HUQUQ BERISH — FAQAT SUPER ADMIN.
+     *
+     * Tahrirlashda (`PUT`) bu shart bor edi, YARATISHDA esa yo'q.
+     * Ya'ni `roles.create` huquqiga ega xodim yangi rol ochib, unga
+     * TIZIMDAGI BARCHA huquqlarni bog'lay olardi — keyin o'sha rolni
+     * o'ziga yoki yangi hisobga berib, super-admin darajasiga
+     * chiqardi. `users.controller.ts` faqat `SUPER_ADMIN` KODLI rolni
+     * berishni to'sardi, huquqlari aynan o'shanday bo'lgan boshqa
+     * kodli rolni esa bemalol o'tkazardi.
+     *
+     * Huquqsiz rol yaratishga ruxsat qoladi: nomi va tavsifi bor
+     * bo'sh rol zararsiz, huquqlarni esa super-admin beradi.
+     */
+    if ((body.permissions?.length ?? 0) > 0 && user?.roleCode !== 'SUPER_ADMIN') {
+      throw new ForbiddenException('Rolga huquq berishni faqat Super Admin qila oladi');
+    }
+
     const name = String(body?.name ?? '').trim();
     if (!name) throw new BadRequestException('Rol nomi majburiy');
 

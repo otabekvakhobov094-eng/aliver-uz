@@ -1,4 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators';
@@ -20,5 +21,19 @@ class CreateB2bLeadDto {
 @Controller('b2b')
 export class B2bController {
   constructor(private readonly service: B2bService) {}
-  @Post('leads') create(@Body() dto: CreateB2bLeadDto) { return this.service.create(dto); }
+
+  /**
+   * Ochiq endpoint, shuning uchun chastota cheklanadi.
+   *
+   * Ilgari bu yerda cheklov YO'Q edi va faqat umumiy chegara
+   * (daqiqasiga 120) ishlardi: bitta IP dan kuniga 170 mingga yaqin
+   * ariza yozish mumkin edi. Loyihadagi boshqa ochiq yozuvlarning
+   * hammasida (murojaat formasi, buyurtma, qaytarish, sharh) qattiq
+   * cheklov bor — bu bittasi tushib qolgan edi.
+   */
+  @Post('leads')
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
+  create(@Body() dto: CreateB2bLeadDto) {
+    return this.service.create(dto);
+  }
 }

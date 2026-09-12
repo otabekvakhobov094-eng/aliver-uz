@@ -1,0 +1,23 @@
+[
+  "apps/api/src/modules/catalog/admin-catalog.controller.ts:209",
+  "apps/api/src/modules/catalog/admin-catalog.controller.ts:277",
+  "apps/api/src/modules/content/contact.controller.ts:34",
+  "apps/api/src/modules/content/contact.controller.ts:81",
+  "apps/api/src/modules/discounts/admin-discounts.controller.ts:173",
+  "apps/api/src/modules/discounts/admin-discounts.controller.ts:187",
+  "apps/api/src/modules/import/import.controller.ts:95",
+  "apps/api/src/modules/media/media.controller.ts:44",
+  "apps/api/src/modules/media/media.controller.ts:69",
+  "apps/api/src/modules/payments/click.controller.ts:27",
+  "apps/api/src/modules/payments/click.controller.ts:36",
+  "apps/api/src/modules/payments/payme.controller.ts:36",
+  "apps/api/src/modules/reviews/reviews.controller.ts:122",
+  "apps/api/src/modules/reviews/reviews.controller.ts:88",
+  "apps/api/src/modules/settings/settings.controller.ts:54",
+  "apps/api/src/modules/telegram/telegram-link.controller.ts:26",
+  "apps/api/src/modules/users/roles.controller.ts:140",
+  "apps/api/src/modules/users/roles.controller.ts:193",
+  "apps/api/src/modules/users/users.controller.ts:110",
+  "apps/api/src/modules/users/users.controller.ts:145",
+  "apps/api/src/modules/users/users.controller.ts:202"
+]

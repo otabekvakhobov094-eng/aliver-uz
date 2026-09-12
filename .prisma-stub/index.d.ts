@@ -2219,6 +2219,7 @@ declare module '@prisma/client' {
     businessType?: string | null | undefined | { set?: string | null };
     monthlyVolume?: string | null | undefined | { set?: string | null };
     comment?: string | null | undefined | { set?: string | null };
+    note?: string | null | undefined | { set?: string | null };
     status?: B2BLeadStatus | undefined | { set?: B2BLeadStatus };
     assignedTo?: string | null | undefined | { set?: string | null };
     createdAt?: Date | string | undefined | { set?: Date | string };
@@ -2240,6 +2241,7 @@ declare module '@prisma/client' {
     businessType: string | null;
     monthlyVolume: string | null;
     comment: string | null;
+    note: string | null;
     status: B2BLeadStatus;
     assignedTo: string | null;
     createdAt: Date;

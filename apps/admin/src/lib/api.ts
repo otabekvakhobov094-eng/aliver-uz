@@ -224,7 +224,11 @@ export interface ShopifyImportResult {
 export interface B2bLead {
   id: string; company: string; contactPerson: string; phone: string; telegram: string | null;
   city: string | null; businessType: string | null; monthlyVolume: string | null;
-  comment: string | null; status: string; createdAt: string;
+  /** Ariza beruvchining o'zi yozgan matn — adminka BUNGA TEGMAYDI. */
+  comment: string | null;
+  /** Xodim izohi. */
+  note: string | null;
+  status: string; createdAt: string;
 }
 
 export interface AdminCollection {

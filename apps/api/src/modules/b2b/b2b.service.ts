@@ -17,7 +17,11 @@ export class B2bService {
     return this.prisma.b2BLead.findMany({ where: { status }, orderBy: { createdAt: 'desc' } });
   }
 
-  async update(id: string, data: { status?: B2BLeadStatus; assignedTo?: string | null; comment?: string }) {
+  /**
+   * `comment` ATAYLAB yo'q: u ariza beruvchining matni va adminkadan
+   * o'zgartirilmaydi. Xodim izohi — `note`.
+   */
+  async update(id: string, data: { status?: B2BLeadStatus; assignedTo?: string | null; note?: string }) {
     const exists = await this.prisma.b2BLead.findUnique({ where: { id }, select: { id: true } });
     if (!exists) throw new NotFoundException('B2B ariza topilmadi');
     return this.prisma.b2BLead.update({ where: { id }, data });

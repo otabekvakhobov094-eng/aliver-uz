@@ -4,10 +4,18 @@ import { IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator
 import { Audit, RequirePermissions } from '../../common/decorators';
 import { B2bService } from './b2b.service';
 
+/**
+ * Xodim izohi `note` ga yoziladi, `comment` ga EMAS.
+ *
+ * `comment` — ariza beruvchining o'zi yozgan matn. Ilgari adminka
+ * o'sha ustunga yozardi: xodim "qo'ng'iroq qildim" deb saqlasa,
+ * mijozning arizasi butunlay o'chib ketardi. Audit jurnalida ham iz
+ * qolmasdi — bu handler `auditBefore` ni umuman yozmasdi.
+ */
 class UpdateLeadDto {
   @IsOptional() @IsEnum(B2BLeadStatus) status?: B2BLeadStatus;
   @IsOptional() @IsUUID() assignedTo?: string;
-  @IsOptional() @IsString() @MaxLength(1000) comment?: string;
+  @IsOptional() @IsString() @MaxLength(1000) note?: string;
 }
 
 @Controller('admin/b2b')

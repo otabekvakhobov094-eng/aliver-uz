@@ -13,6 +13,23 @@ class CheckDto {
   code!: string;
 }
 
+/**
+ * ALOHIDA SINF, kesishma tip (`CheckDto & { … }`) EMAS.
+ *
+ * Kesishma tip uchun TypeScript `design:paramtypes` ga `Object` deb
+ * yozadi, `ValidationPipe` esa `Object` tipli tanani UMUMAN
+ * tekshirmaydi. Ya'ni `@IsString()` va `@Length()` bu yo'lda hech
+ * qachon ishlamagan: `{"code": 12345}` yuborilsa, kod satr emas son
+ * bo'lib o'tib ketardi va `normaliseCode` da `trim is not a function`
+ * xatosi bilan 500 qaytarardi. Notanish maydonlar ham kesib
+ * tashlanmasdi.
+ */
+class QuoteDto extends CheckDto {
+  @IsOptional()
+  @IsString()
+  orderTotal?: string;
+}
+
 class IssueDto {
   /** So'mda kiritiladi, bazada tiyinda. */
   @Type(() => Number)
@@ -56,7 +73,7 @@ export class GiftCardController {
   @Post('quote')
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @ApiOperation({ summary: 'Shu buyurtmada qancha qoplanadi' })
-  quote(@Body() dto: CheckDto & { orderTotal?: string }) {
+  quote(@Body() dto: QuoteDto) {
     let total: bigint;
     try {
       total = BigInt(dto.orderTotal ?? '0');

@@ -1575,6 +1575,12 @@ model GiftCardEntry {
 
   @@index([giftCardId, createdAt])
   @@index([orderId])
+  /// Bitta buyurtmada bitta sertifikat bir marta sarflanadi.
+  ///
+  /// Prisma qisman (partial) indeksni bilmaydi, shuning uchun haqiqiy
+  /// kafolat migratsiyada: `gift_card_entries_spend_once_per_order`
+  /// (`kind = 'SPEND' AND orderId IS NOT NULL`). Kod izohi bu indeks
+  /// BOR deb yozilgan edi, indeksning o'zi esa yo'q edi.
   @@map("gift_card_entries")
 }
 
@@ -1742,7 +1748,11 @@ model B2BLead {
   city          String?
   businessType  String?
   monthlyVolume String?
+  /// Ariza beruvchining O'ZI yozgan matn. Xodim bunga TEGMAYDI.
   comment       String?
+  /// Xodim izohi. Alohida ustun: aks holda "qo'ng'iroq qildim" degan
+  /// yozuv mijozning arizasini o'chirib yuborardi.
+  note          String?
   status        B2BLeadStatus @default(NEW)
   assignedTo    String?       @db.Uuid
 
