@@ -4,8 +4,10 @@ import {
   CURATED_COLLECTIONS,
   TAXONOMY,
   brandSlug,
+  TAG_RULES,
   categoryFor,
   collectionsFor,
+  tagsFor,
   descriptionFrom,
   productTitle,
   roundPriceTiyin,
@@ -214,6 +216,26 @@ export class ShopifyImportService {
       collectionIds.set(item.slug, row.id);
     }
 
+    /*
+     * Teglar.
+     *
+     * Ilgari importer teg umuman yaratmasdi. Natijada bosh sahifadagi
+     * «Vosita tanlash» — uch savolli tanlagich — qaysi javob berilsa
+     * ham BO'SH ro'yxat ochardi: u `?tags=namlantirish` bilan
+     * filtrlaydi, bazada esa bunday teg yo'q edi. Xato chiqmagani
+     * uchun buni hech kim nosozlik deb aytmagan.
+     */
+    const tagIds = new Map<string, string>();
+    for (const item of TAG_RULES) {
+      const row = await this.prisma.tag.upsert({
+        where: { slug: item.slug },
+        update: { nameUz: item.nameUz, nameRu: item.nameRu },
+        create: { slug: item.slug, nameUz: item.nameUz, nameRu: item.nameRu },
+        select: { id: true },
+      });
+      tagIds.set(item.slug, row.id);
+    }
+
     const brandIds = new Map<string, string>();
     const brandFor = async (vendor?: string | null) => {
       const { slug, name } = brandSlug(vendor);
@@ -247,6 +269,7 @@ export class ShopifyImportService {
           warehouseId: warehouse.id,
           categoryIds,
           collectionIds,
+          tagIds,
           usdToUzs,
           defaultIkpu,
           skuByVariant,
@@ -294,6 +317,7 @@ export class ShopifyImportService {
       warehouseId: string;
       categoryIds: Map<string, string>;
       collectionIds: Map<string, string>;
+      tagIds: Map<string, string>;
       usdToUzs: number;
       defaultIkpu: string;
       skuByVariant: Map<string, string>;
@@ -474,6 +498,18 @@ export class ShopifyImportService {
               data: { productId: saved.id, collectionId, sortOrder },
             });
           }
+        }
+
+        /*
+         * Teglar QO'LDA qo'yilgani bilan birga saqlanmaydi: import
+         * manbadagi holatni aks ettiradi. Admin tegni o'zgartirsa,
+         * keyingi import uni qaytadan hisoblaydi — bu ataylab, aks
+         * holda eski, endi noto'g'ri teglar abadiy qolib ketardi.
+         */
+        await tx.productTag.deleteMany({ where: { productId: saved.id } });
+        for (const slug of tagsFor(product)) {
+          const tagId = ctx.tagIds.get(slug);
+          if (tagId) await tx.productTag.create({ data: { productId: saved.id, tagId } });
         }
       },
       { timeout: 30_000 },

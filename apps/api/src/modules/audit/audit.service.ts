@@ -92,9 +92,21 @@ export class AuditService {
 
   /** Filtrlar uchun mavjud modul va harakatlar. */
   async facets() {
+    /*
+     * `groupBy`, `distinct` + `take` EMAS.
+     *
+     * `findMany({ distinct, take: 100 })` avval 100 ta QATOR oladi va
+     * shundan keyin takrorlarini tashlaydi. Audit jurnali kattalashsa
+     * o'sha 100 qator bitta-ikkita moduldan iborat bo'lib qoladi va
+     * filtr ro'yxatidan qolgan modullar JIMGINA yo'qoladi: xodim
+     * «bunday yozuv yo'q ekan» deb o'ylaydi, aslida u bor.
+     *
+     * `groupBy` esa bazaning o'zida guruhlaydi — ro'yxat har doim
+     * to'liq.
+     */
     const [modules, actions] = await Promise.all([
-      this.prisma.auditLog.findMany({ distinct: ['module'], select: { module: true }, take: 100 }),
-      this.prisma.auditLog.findMany({ distinct: ['action'], select: { action: true }, take: 100 }),
+      this.prisma.auditLog.groupBy({ by: ['module'] }),
+      this.prisma.auditLog.groupBy({ by: ['action'] }),
     ]);
     return {
       modules: modules.map((m: { module: string }) => m.module).sort(),

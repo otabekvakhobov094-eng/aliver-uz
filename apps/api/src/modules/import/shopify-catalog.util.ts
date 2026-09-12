@@ -161,16 +161,45 @@ export function roundPriceTiyin(tiyin: bigint, stepSum = 1000): bigint {
  * Tasniflash
  * ------------------------------------------------------------------ */
 
+/**
+ * Kategoriyalar.
+ *
+ * SLUG'LAR SAYT KUTGANICHA. Bu ataylab: bosh sahifadagi plitkalar,
+ * «Vosita tanlagich», landing sahifalar va menyu aynan shu slug'larga
+ * qarab turadi. Ilgari importer inglizcha slug yozardi (`hair-care`,
+ * `skin-care`) va natijada sarlavhadagi olti band saytda UMUMAN
+ * ko'rinmasdi — xato bermay, shunchaki yo'q bo'lib.
+ *
+ * TERI IKKIGA BO'LINGAN — yuz va tana. Sayt ularni alohida kutadi,
+ * va bu to'g'ri: xaridor «yuz uchun krem» bilan «tana losioni» ni
+ * bitta javonda ko'rishni istamaydi.
+ *
+ * TARTIB MUHIM: birinchi mos kelgan kategoriya olinadi. Qo'l-oyoq
+ * makiyajdan OLDIN turadi, aks holda «hand cream» pudra so'zi
+ * bo'yicha makiyajga tushib ketardi.
+ */
 export const TAXONOMY = [
   { slug: 'tirnoq', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
-  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
-  { slug: 'qol-oyoq-parvarishi', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
+  { slug: 'qol-oyoq-parvarishi', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand cream', 'hand mask', 'hand lotion', 'heel', 'callus', 'cuticle'] },
   { slug: 'soch-parvarishi', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
-  { slug: 'teri-parvarishi', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
+  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
+  { slug: 'yuz-parvarishi', nameUz: 'Yuz parvarishi', nameRu: 'Уход за лицом', words: ['face', 'facial', 'serum', 'cleanser', 'toner', 'acne', 'moistur', 'eye cream', 'sheet mask', 'skin care', 'skincare'] },
+  { slug: 'tana-parvarishi', nameUz: 'Tana parvarishi', nameRu: 'Уход за телом', words: ['body', 'lotion', 'scrub', 'shower', 'bath', 'waxing', 'deodorant', 'stretch mark'] },
   { slug: 'erkaklar-parvarishi', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
   { slug: 'ogiz-parvarishi', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
   { slug: 'boshqa', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
 ] as const;
+
+/**
+ * Umumiy so'zlar — FAQAT aniq so'z topilmagan holatda.
+ *
+ * «cream», «mask», «skin» o'zi hech narsa aytmaydi: «hand cream» ham,
+ * «face mask» ham shularni o'z ichiga oladi. Agar ular `TAXONOMY`
+ * ichida tursa, qo'l kremi teri parvarishiga tushib ketardi.
+ */
+const GENERIC: Array<{ slug: string; words: string[] }> = [
+  { slug: 'yuz-parvarishi', words: ['skin', 'cream', 'mask', 'ampoule', 'essence'] },
+];
 
 export const CURATED_COLLECTIONS = [
   { slug: 'best-sellers', nameUz: 'Bestsellerlar', nameRu: 'Хиты продаж', words: ['best seller', 'bestseller', 'hot sell', 'hot-sale', 'hot_sale'] },
@@ -191,10 +220,41 @@ function haystack(p: ShopifyProduct): string {
 
 export function categoryFor(p: ShopifyProduct) {
   const h = haystack(p);
-  return (
-    TAXONOMY.find((t) => t.slug !== FALLBACK_CATEGORY && t.words.some((w) => h.includes(w))) ??
-    TAXONOMY[TAXONOMY.length - 1]!
+  const specific = TAXONOMY.find(
+    (t) => t.slug !== FALLBACK_CATEGORY && t.words.some((w) => h.includes(w)),
   );
+  if (specific) return specific;
+
+  const generic = GENERIC.find((g) => g.words.some((w) => h.includes(w)));
+  const mapped = generic && TAXONOMY.find((t) => t.slug === generic.slug);
+  return mapped ?? TAXONOMY[TAXONOMY.length - 1]!;
+}
+
+/**
+ * Teglar — saytdagi «Vosita tanlagich» aynan shu slug'lar bo'yicha
+ * filtrlaydi.
+ *
+ * NEGA KERAK. Bosh sahifadagi «Vosita tanlash» uch savol beradi va
+ * javobga qarab katalogni `?tags=namlantirish` kabi filtr bilan
+ * ochadi. Importer esa teg umuman yaratmasdi, seed'da esa butunlay
+ * boshqa oltita teg bor edi — natijada tanlagich QAYSI javob
+ * berilsa ham BO'SH ro'yxat ko'rsatardi. 404 ham bermaydi, xato ham
+ * chiqmaydi: shunchaki «mahsulot topilmadi».
+ */
+export const TAG_RULES = [
+  { slug: 'namlantirish', nameUz: 'Namlantirish', nameRu: 'Увлажнение', words: ['moistur', 'hydrat', 'hyaluron', 'aloe', 'dry skin', 'nourish'] },
+  { slug: 'tiklash', nameUz: 'Tiklash', nameRu: 'Восстановление', words: ['repair', 'restor', 'keratin', 'damaged', 'collagen', 'regener'] },
+  { slug: 'yogni-kamaytirish', nameUz: 'Yog‘ni kamaytirish', nameRu: 'Против жирности', words: ['oil control', 'oily', 'sebum', 'matte', 'purif', 'acne', 'salicylic'] },
+  { slug: 'sezgir-teri', nameUz: 'Sezgir teri', nameRu: 'Чувствительная кожа', words: ['sensitive', 'soothing', 'calm', 'centella', 'cica', 'panthenol'] },
+  { slug: 'yorqinlik', nameUz: 'Yorqinlik', nameRu: 'Сияние', words: ['glow', 'bright', 'radian', 'vitamin c', 'niacinamide', 'shine'] },
+  { slug: 'moy', nameUz: 'Moylar', nameRu: 'Масла', words: [' oil', 'batana', 'castor', 'rosemary', 'argan', 'jojoba'] },
+  { slug: 'soch-tokilishi', nameUz: 'Soch to‘kilishi', nameRu: 'Выпадение волос', words: ['hair loss', 'hair growth', 'hair fall', 'biotin'] },
+] as const;
+
+/** Mahsulotga mos teg slug'lari. Hech biri mos kelmasa — bo'sh ro'yxat. */
+export function tagsFor(p: ShopifyProduct): string[] {
+  const h = haystack(p);
+  return TAG_RULES.filter((t) => t.words.some((w) => h.includes(w))).map((t) => t.slug);
 }
 
 /** Yaqinda chiqqan mahsulot avtomatik «Yangi kelganlar» ga tushadi. */

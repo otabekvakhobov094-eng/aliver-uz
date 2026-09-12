@@ -158,7 +158,7 @@ export const LANDING_PAGES: LandingPage[] = [
     introRu:
       'Наборы и товары, которые уместно подарить. При заказе от 300 000 сум ' +
       'пробник в подарок.',
-    filters: { collection: 'sovga', inStock: true },
+    filters: { collection: 'sovga-toplamlari', inStock: true },
   },
 ];
 

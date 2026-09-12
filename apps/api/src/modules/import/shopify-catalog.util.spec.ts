@@ -1,4 +1,6 @@
 import {
+  TAG_RULES,
+  TAXONOMY,
   brandSlug,
   categoryFor,
   collectionsFor,
@@ -11,6 +13,7 @@ import {
   previewRow,
   resolveSkus,
   stripHtml,
+  tagsFor,
   toTiyin,
   type ShopifyProduct,
 } from './shopify-catalog.util';
@@ -96,7 +99,59 @@ describe('Shopify katalogini o‘girish', () => {
     it('nomiga qarab kategoriya topadi', () => {
       expect(categoryFor(product({ title: 'Gel Polish UV' })).slug).toBe('tirnoq');
       expect(categoryFor(product({ title: 'Keratin Shampoo' })).slug).toBe('soch-parvarishi');
-      expect(categoryFor(product({ title: 'Vitamin C Serum' })).slug).toBe('teri-parvarishi');
+      expect(categoryFor(product({ title: 'Vitamin C Serum' })).slug).toBe('yuz-parvarishi');
+    });
+
+    it('yuz va tana ALOHIDA — sayt ularni alohida kutadi', () => {
+      expect(categoryFor(product({ title: 'Body Lotion Aloe' })).slug).toBe('tana-parvarishi');
+      expect(categoryFor(product({ title: 'Facial Cleanser Foam' })).slug).toBe('yuz-parvarishi');
+    });
+
+    it('«hand cream» qo‘l-oyoqqa boradi, teriga emas', () => {
+      expect(categoryFor(product({ title: 'Nourishing Hand Cream' })).slug).toBe(
+        'qol-oyoq-parvarishi',
+      );
+    });
+
+    it('umumiy so‘z FAQAT aniq so‘z topilmaganda ishlaydi', () => {
+      // «cream» o'zi — yuz parvarishiga
+      expect(categoryFor(product({ title: 'Rich Cream 50 ml' })).slug).toBe('yuz-parvarishi');
+      // lekin «hair cream» sochga
+      expect(categoryFor(product({ title: 'Hair Cream' })).slug).toBe('soch-parvarishi');
+    });
+
+    it('teglar mahsulotdan aniqlanadi — «Vosita tanlagich» shu bilan ishlaydi', () => {
+      expect(tagsFor(product({ title: 'Hyaluronic Moisturizing Cream' }))).toContain('namlantirish');
+      expect(tagsFor(product({ title: 'Keratin Repair Mask' }))).toContain('tiklash');
+      expect(tagsFor(product({ title: 'Vitamin C Brightening Serum' }))).toContain('yorqinlik');
+      expect(tagsFor(product({ title: 'Rosemary Hair Oil' }))).toContain('moy');
+      expect(tagsFor(product({ title: 'Centella Soothing Toner' }))).toContain('sezgir-teri');
+    });
+
+    it('mos kelmasa teg qo‘yilmaydi — soxta teg natijani buzadi', () => {
+      expect(tagsFor(product({ title: 'Nail File' }))).toEqual([]);
+    });
+
+    it('saytda qattiq yozilgan teg slug‘lari qoidalarda bor', () => {
+      const slugs = TAG_RULES.map((t) => t.slug);
+      for (const needed of [
+        'namlantirish',
+        'tiklash',
+        'yogni-kamaytirish',
+        'sezgir-teri',
+        'yorqinlik',
+        'moy',
+      ]) {
+        expect(slugs).toContain(needed);
+      }
+    });
+
+    it('saytda qattiq yozilgan slug‘lar tasnifda bor', () => {
+      // Bosh sahifadagi plitkalar va menyu aynan shularga qaraydi.
+      const slugs = TAXONOMY.map((t) => t.slug);
+      for (const needed of ['soch-parvarishi', 'yuz-parvarishi', 'tana-parvarishi', 'tirnoq', 'makiyaj']) {
+        expect(slugs).toContain(needed);
+      }
     });
 
     it('`product_type` ham hisobga olinadi', () => {

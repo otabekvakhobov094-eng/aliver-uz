@@ -294,7 +294,18 @@ const PRODUCTS: ProductSeed[] = [
   },
 ];
 
+/*
+ * BIRINCHI OLTITASI SAYT KUTGANI. «Vosita tanlagich» va landing
+ * sahifalar aynan shu slug'lar bo'yicha filtrlaydi — ular bo'lmasa
+ * tanlagich har safar bo'sh ro'yxat ochadi.
+ */
 const TAGS: Array<[string, string, string]> = [
+  ['namlantirish', 'Namlantirish', 'Увлажнение'],
+  ['tiklash', 'Tiklash', 'Восстановление'],
+  ['yogni-kamaytirish', 'Yog‘ni kamaytirish', 'Против жирности'],
+  ['sezgir-teri', 'Sezgir teri', 'Чувствительная кожа'],
+  ['yorqinlik', 'Yorqinlik', 'Сияние'],
+  ['moy', 'Moylar', 'Масла'],
   ['soch-tokilishi', 'Soch to‘kilishi', 'Выпадение волос'],
   ['quruqlik', 'Quruqlik', 'Сухость'],
   ['bolinish', 'Uchlarining bo‘linishi', 'Секущиеся кончики'],

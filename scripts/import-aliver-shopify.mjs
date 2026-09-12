@@ -39,14 +39,37 @@ const clean = (html = '') => html
 // tags, title va handle asosida barqaror klassifikatsiya qilinadi.
 const taxonomy = [
   { slug: 'tirnoq', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
-  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
-  { slug: 'qol-oyoq-parvarishi', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
+  { slug: 'qol-oyoq-parvarishi', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand cream', 'hand mask', 'hand lotion', 'heel', 'callus', 'cuticle'] },
   { slug: 'soch-parvarishi', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
-  { slug: 'teri-parvarishi', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
+  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
+  { slug: 'yuz-parvarishi', nameUz: 'Yuz parvarishi', nameRu: 'Уход за лицом', words: ['face', 'facial', 'serum', 'cleanser', 'toner', 'acne', 'moistur', 'eye cream', 'sheet mask', 'skin care', 'skincare'] },
+  { slug: 'tana-parvarishi', nameUz: 'Tana parvarishi', nameRu: 'Уход за телом', words: ['body', 'lotion', 'scrub', 'shower', 'bath', 'waxing', 'deodorant', 'stretch mark'] },
   { slug: 'erkaklar-parvarishi', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
   { slug: 'ogiz-parvarishi', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
   { slug: 'boshqa', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
 ];
+
+/** Umumiy so'zlar — faqat aniq so'z topilmaganda. */
+const genericWords = [{ slug: 'yuz-parvarishi', words: ['skin', 'cream', 'mask', 'ampoule', 'essence'] }];
+
+/**
+ * Teglar — saytdagi «Vosita tanlagich» shular bo'yicha filtrlaydi.
+ * Ular bo'lmasa tanlagich har safar bo'sh ro'yxat ochadi.
+ */
+const tagRules = [
+  { slug: 'namlantirish', nameUz: 'Namlantirish', nameRu: 'Увлажнение', words: ['moistur', 'hydrat', 'hyaluron', 'aloe', 'dry skin', 'nourish'] },
+  { slug: 'tiklash', nameUz: 'Tiklash', nameRu: 'Восстановление', words: ['repair', 'restor', 'keratin', 'damaged', 'collagen', 'regener'] },
+  { slug: 'yogni-kamaytirish', nameUz: 'Yog‘ni kamaytirish', nameRu: 'Против жирности', words: ['oil control', 'oily', 'sebum', 'matte', 'purif', 'acne', 'salicylic'] },
+  { slug: 'sezgir-teri', nameUz: 'Sezgir teri', nameRu: 'Чувствительная кожа', words: ['sensitive', 'soothing', 'calm', 'centella', 'cica', 'panthenol'] },
+  { slug: 'yorqinlik', nameUz: 'Yorqinlik', nameRu: 'Сияние', words: ['glow', 'bright', 'radian', 'vitamin c', 'niacinamide', 'shine'] },
+  { slug: 'moy', nameUz: 'Moylar', nameRu: 'Масла', words: [' oil', 'batana', 'castor', 'rosemary', 'argan', 'jojoba'] },
+  { slug: 'soch-tokilishi', nameUz: 'Soch to‘kilishi', nameRu: 'Выпадение волос', words: ['hair loss', 'hair growth', 'hair fall', 'biotin'] },
+];
+
+function tagsForProduct(product) {
+  const haystack = productHaystack(product);
+  return tagRules.filter((t) => matches(t.words, haystack)).map((t) => t.slug);
+}
 
 const curatedCollections = [
   { slug: 'best-sellers', nameUz: 'Bestsellerlar', nameRu: 'Хиты продаж', words: ['best seller', 'bestseller', 'hot sell', 'hot-sale', 'hot_sale'] },
@@ -65,7 +88,12 @@ function matches(words, haystack) {
 
 function categoryFor(product) {
   const haystack = productHaystack(product);
-  return taxonomy.find((item) => item.slug !== 'boshqa' && matches(item.words, haystack)) ?? taxonomy.at(-1);
+  const specific = taxonomy.find(
+    (item) => item.slug !== 'boshqa' && matches(item.words, haystack),
+  );
+  if (specific) return specific;
+  const generic = genericWords.find((g) => matches(g.words, haystack));
+  return (generic && taxonomy.find((t) => t.slug === generic.slug)) ?? taxonomy.at(-1);
 }
 
 function collectionsFor(product) {
@@ -155,7 +183,7 @@ function productData(product, brandId) {
   };
 }
 
-async function importProduct(tx, product, brandId, warehouseId, categoryIds, collectionIds) {
+async function importProduct(tx, product, brandId, warehouseId, categoryIds, collectionIds, tagIds) {
   const data = productData(product, brandId);
   const saved = await tx.product.upsert({
     where: { slug: product.handle },
@@ -238,6 +266,13 @@ async function importProduct(tx, product, brandId, warehouseId, categoryIds, col
   for (const [sortOrder, collection] of collectionsFor(product).entries()) {
     const collectionId = collectionIds.get(collection.slug);
     if (collectionId) await tx.collectionProduct.create({ data: { productId: saved.id, collectionId, sortOrder } });
+  }
+
+  // Teglarsiz «Vosita tanlagich» hech qachon natija bermaydi.
+  await tx.productTag.deleteMany({ where: { productId: saved.id } });
+  for (const slug of tagsForProduct(product)) {
+    const tagId = tagIds.get(slug);
+    if (tagId) await tx.productTag.create({ data: { productId: saved.id, tagId } });
   }
 }
 
@@ -322,9 +357,19 @@ if (commit) {
       });
       collectionIds.set(item.slug, collection.id);
     }
+
+    const tagIds = new Map();
+    for (const item of tagRules) {
+      const tag = await prisma.tag.upsert({
+        where: { slug: item.slug },
+        update: { nameUz: item.nameUz, nameRu: item.nameRu },
+        create: { slug: item.slug, nameUz: item.nameUz, nameRu: item.nameRu },
+      });
+      tagIds.set(item.slug, tag.id);
+    }
     for (const [index, product] of products.entries()) {
       const brandId = await brandFor(product.vendor);
-      await prisma.$transaction((tx) => importProduct(tx, product, brandId, warehouse.id, categoryIds, collectionIds), { timeout: 30_000 });
+      await prisma.$transaction((tx) => importProduct(tx, product, brandId, warehouse.id, categoryIds, collectionIds, tagIds), { timeout: 30_000 });
       if ((index + 1) % 25 === 0 || index + 1 === products.length) console.log(`${index + 1}/${products.length}`);
     }
     console.log(
