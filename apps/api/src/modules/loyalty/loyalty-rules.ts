@@ -125,3 +125,87 @@ export function reversalFor(params: { earned: number; redeemed: number }): {
     giveBack: Math.max(0, params.redeemed),
   };
 }
+
+/* ==========================================================================
+   BALLARNING KUYISHI
+   ========================================================================== */
+
+/**
+ * Kuyishdan necha kun oldin ogohlantiriladi.
+ *
+ * 14 kun ataylab: bir hafta kam — mijoz ta'tilda bo'lsa xabarni
+ * ko'rmaydi; bir oy ko'p — xabar unutiladi va ball baribir kuyadi.
+ * Ikki hafta ichida odam bitta buyurtma berishga ulguradi, buyurtma
+ * esa muddatni yana 12 oyga uzaytiradi.
+ */
+export const EXPIRY_WARN_DAYS = 14;
+
+/**
+ * Ballning holati.
+ *
+ *  - `none`    — kuyadigan ball yo'q (balans nol yoki manfiy);
+ *  - `active`  — muddat hali uzoq;
+ *  - `warning` — kuyishga `warnDays` yoki undan kam qoldi;
+ *  - `due`     — muddat o'tdi, ball kuyishi kerak.
+ */
+export type ExpiryStage = 'none' | 'active' | 'warning' | 'due';
+
+export interface ExpiryState {
+  stage: ExpiryStage;
+  /** Kuyish sanasi. Balans nol bo'lsa — `null`. */
+  expiresAt: Date | null;
+  /** Kuyishgacha qolgan to'liq kunlar. Muddat o'tgan bo'lsa — manfiy. */
+  daysLeft: number | null;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Ballning kuyish holati.
+ *
+ * FAOLIYAT deganda mijozning o'z harakati tushuniladi: ball olish,
+ * ishlatish, admin tuzatishi yoki qaytarish. Tizimning o'zi yozadigan
+ * EXPIRE yozuvi faoliyat EMAS — aks holda kuydirish amali muddatni
+ * o'zi qaytadan uzaytirib, ball hech qachon kuymasdi.
+ *
+ * Balans nol bo'lsa sana umuman ko'rsatilmaydi: «0 ball 12 oydan keyin
+ * kuyadi» degan yozuv mijozni chalg'itadi.
+ */
+export function expiryState(params: {
+  lastActivityAt: Date | null;
+  balance: number;
+  now: Date;
+  months?: number;
+  warnDays?: number;
+}): ExpiryState {
+  if (!params.lastActivityAt || params.balance <= 0) {
+    return { stage: 'none', expiresAt: null, daysLeft: null };
+  }
+
+  const at = expiresAt(params.lastActivityAt, params.months ?? EXPIRY_MONTHS);
+  const warnDays = params.warnDays ?? EXPIRY_WARN_DAYS;
+
+  // Yuqoriga yaxlitlash: muddat tugashiga 0.4 kun qolgan bo'lsa ham
+  // «1 kun qoldi» deyiladi, «0 kun» emas.
+  const daysLeft = Math.ceil((at.getTime() - params.now.getTime()) / DAY_MS);
+
+  if (at.getTime() <= params.now.getTime()) {
+    return { stage: 'due', expiresAt: at, daysLeft };
+  }
+  if (daysLeft <= warnDays) {
+    return { stage: 'warning', expiresAt: at, daysLeft };
+  }
+  return { stage: 'active', expiresAt: at, daysLeft };
+}
+
+/**
+ * Ogohlantirish takrorlanmasligi uchun kalit.
+ *
+ * Kalitga KUYISH SANASI kiradi, yuborilgan vaqt emas. Shuning uchun
+ * bitta muddat davrida faqat bitta xabar ketadi, mijoz biror amal
+ * qilib muddatni uzaytirsa esa sana o'zgaradi va keyingi davrda yana
+ * bitta xabar ketadi. Buning uchun alohida jadval kerak emas.
+ */
+export function expiryWarnKey(customerId: string, at: Date): string {
+  return `${customerId}:${at.toISOString().slice(0, 10)}`;
+}

@@ -91,6 +91,31 @@ function dataType(field) {
   return `${base}${nullable} | undefined${atomic}`;
 }
 
+/**
+ * Maydonning O'QILGAN yozuvdagi turi.
+ *
+ * `data` dagidan farq qiladi va farq ataylab:
+ *   — `DateTime` bu yerda faqat `Date`. Yozishda satr ham qabul
+ *     qilinadi, lekin bazadan har doim `Date` qaytadi, va `Date | string`
+ *     deb yozilsa `row.createdAt.getTime()` xato bergan bo'lardi;
+ *   — bog'lanishlar HAQIQIY tur bilan: `items: CartItemRow[]`. Aynan
+ *     shu narsa `cart.items.filter((i) => ...)` da `i` ni tanitadi.
+ *     `any` qaytarilganda TypeScript «implicitly any» deb yiqilardi —
+ *     haqiqiy klientda bunday xato yo'q, ya'ni stub o'zi 50 dan ortiq
+ *     soxta xato yasardi.
+ */
+function rowType(field) {
+  const base = models.has(field.type)
+    ? `${field.type}Row`
+    : enums.has(field.type)
+      ? field.type
+      : field.type === 'DateTime'
+        ? 'Date'
+        : (SCALARS[field.type] ?? 'any');
+  if (field.list) return `${base}[]`;
+  return field.optional ? `${base} | null` : base;
+}
+
 const lines = [];
 lines.push('/* ------------------------------------------------------------------');
 lines.push(' * AVTOMATIK GENERATSIYA — QO\'LDA TAHRIRLAMANG.');
@@ -153,24 +178,48 @@ for (const [name, fields] of models) {
     lines.push(`    ${f.name}?: ${dataType(f)};`);
   }
   lines.push('  }');
+
+  // O'qilgan yozuv. Indeks imzosi SHART: `select` bilan hisoblangan
+  // taxalluslar (`_count`, `_sum`, qo'shib olingan maydonlar) bo'lishi
+  // mumkin va ularsiz stub mavjud bo'lmagan xato bergan bo'lardi.
+  // Indeks imzosi qat'iylikni pasaytirmaydi: e'lon qilingan maydonlar
+  // o'z turida qoladi.
+  lines.push(`  export interface ${name}Row {`);
+  lines.push('    [key: string]: any;');
+  // Agregat maydonlari E'LON QILINADI, indeks imzosiga tashlab
+  // qo'yilmaydi. Kodda `rows.map((r: { _count: { admins: number } }) => ...)`
+  // kabi aniq izohlar bor; indeks imzosi majburiy maydonni
+  // QONDIRMAYDI va bunday joylar soxta xato bergan bo'lardi.
+  for (const agg of ['_count', '_sum', '_avg', '_min', '_max']) {
+    lines.push(`    ${agg}: any;`);
+  }
+  for (const f of fields) {
+    lines.push(`    ${f.name}: ${rowType(f)};`);
+  }
+  lines.push('  }');
 }
 lines.push('');
 
-lines.push('  interface Delegate<TData> {');
-lines.push('    findUnique(args: Loose): Promise<any>;');
-lines.push('    findUniqueOrThrow(args: Loose): Promise<any>;');
-lines.push('    findFirst(args?: Loose): Promise<any>;');
-lines.push('    findMany(args?: Loose): Promise<any>;');
+lines.push('  interface Delegate<TData, TRow> {');
+lines.push('    findUnique(args: Loose): Promise<TRow | null>;');
+lines.push('    findUniqueOrThrow(args: Loose): Promise<TRow>;');
+lines.push('    findFirst(args?: Loose): Promise<TRow | null>;');
+// `any[]` va `any` orasidagi farq muhim. `Promise<any>` qaytarilganda
+// `rows.map((r) => ...)` chaqiruvida `r` ning KONTEKSTUAL turi umuman
+// bo'lmaydi va TypeScript «implicitly has an any type» deb yiqiladi —
+// haqiqiy klientda esa bunday xato yo'q. Ya'ni stub o'zi mavjud
+// bo'lmagan 100 dan ortiq xato yasab, haqiqiylarini ko'mib tashlardi.
+lines.push('    findMany(args?: Loose): Promise<TRow[]>;');
 lines.push('    count(args?: Loose): Promise<number>;');
 lines.push('    aggregate(args?: Loose): Promise<any>;');
-lines.push('    groupBy(args: Loose): Promise<any>;');
+lines.push('    groupBy(args: Loose): Promise<any[]>;');
 lines.push('    // `data` QAT\'IY tiplangan: xato maydon va xato tur shu yerda chiqadi.');
-lines.push('    create(args: QueryArgs & { data: TData }): Promise<any>;');
+lines.push('    create(args: QueryArgs & { data: TData }): Promise<TRow>;');
 lines.push('    createMany(args: QueryArgs & { data: TData | TData[] }): Promise<any>;');
-lines.push('    update(args: QueryArgs & { data: TData }): Promise<any>;');
+lines.push('    update(args: QueryArgs & { data: TData }): Promise<TRow>;');
 lines.push('    updateMany(args: QueryArgs & { data: TData }): Promise<any>;');
-lines.push('    upsert(args: QueryArgs & { create: TData; update: TData }): Promise<any>;');
-lines.push('    delete(args: Loose): Promise<any>;');
+lines.push('    upsert(args: QueryArgs & { create: TData; update: TData }): Promise<TRow>;');
+lines.push('    delete(args: Loose): Promise<TRow>;');
 lines.push('    deleteMany(args?: Loose): Promise<any>;');
 lines.push('  }');
 lines.push('');
@@ -178,7 +227,7 @@ lines.push('');
 const delegateName = (n) => n[0].toLowerCase() + n.slice(1);
 lines.push('  export interface PrismaClientLike {');
 for (const name of models.keys()) {
-  lines.push(`    ${delegateName(name)}: Delegate<${name}Data>;`);
+  lines.push(`    ${delegateName(name)}: Delegate<${name}Data, ${name}Row>;`);
 }
 lines.push('    /*');
 lines.push('     * `$transaction` ATAYLAB tiplangan.');
@@ -190,11 +239,17 @@ lines.push('     * yozuv qismi aynan tranzaksiya ichida, va Render yiqilgan');
 lines.push('     * xato ham o\'sha yerda edi.');
 lines.push('     */');
 lines.push('    $transaction<T>(fn: (tx: PrismaClientLike) => Promise<T>, options?: { timeout?: number; maxWait?: number; isolationLevel?: string }): Promise<T>;');
-lines.push('    $transaction<T>(operations: T[], options?: Loose): Promise<any[]>;');
-lines.push('    $queryRaw: any;');
-lines.push('    $executeRaw: any;');
-lines.push('    $queryRawUnsafe: any;');
-lines.push('    $executeRawUnsafe: any;');
+// Massivli `$transaction` NATIJA TARTIBINI saqlaydi. `Promise<any[]>`
+// yozilganda `const [rows, total] = await tx([...])` dagi `rows` `any`
+// bo'lib qolar va undan keyingi `rows.map((p) => ...)` «implicitly any»
+// deb yiqilardi.
+lines.push('    $transaction<T extends readonly unknown[]>(operations: readonly [...T], options?: Loose): Promise<{ -readonly [K in keyof T]: Awaited<T[K]> }>;');
+// Teg-shablon sifatida chaqiriladi: $queryRaw<Array<{ id: string }>>`...`.
+// `any` bo'lsa e'lon qilingan tur yo'qolardi.
+lines.push('    $queryRaw<T = unknown>(query: TemplateStringsArray, ...values: any[]): Promise<T>;');
+lines.push('    $executeRaw(query: TemplateStringsArray, ...values: any[]): Promise<number>;');
+lines.push('    $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Promise<T>;');
+lines.push('    $executeRawUnsafe(query: string, ...values: any[]): Promise<number>;');
 lines.push('    $connect(): Promise<void>;');
 lines.push('    $disconnect(): Promise<void>;');
 lines.push('    $on: any;');
@@ -205,7 +260,7 @@ lines.push('');
 lines.push('  export class PrismaClient implements PrismaClientLike {');
 lines.push('    constructor(options?: any);');
 for (const name of models.keys()) {
-  lines.push(`    ${delegateName(name)}: Delegate<${name}Data>;`);
+  lines.push(`    ${delegateName(name)}: Delegate<${name}Data, ${name}Row>;`);
 }
 lines.push('    /*');
 lines.push('     * `$transaction` ATAYLAB tiplangan.');
@@ -217,11 +272,17 @@ lines.push('     * yozuv qismi aynan tranzaksiya ichida, va Render yiqilgan');
 lines.push('     * xato ham o\'sha yerda edi.');
 lines.push('     */');
 lines.push('    $transaction<T>(fn: (tx: PrismaClientLike) => Promise<T>, options?: { timeout?: number; maxWait?: number; isolationLevel?: string }): Promise<T>;');
-lines.push('    $transaction<T>(operations: T[], options?: Loose): Promise<any[]>;');
-lines.push('    $queryRaw: any;');
-lines.push('    $executeRaw: any;');
-lines.push('    $queryRawUnsafe: any;');
-lines.push('    $executeRawUnsafe: any;');
+// Massivli `$transaction` NATIJA TARTIBINI saqlaydi. `Promise<any[]>`
+// yozilganda `const [rows, total] = await tx([...])` dagi `rows` `any`
+// bo'lib qolar va undan keyingi `rows.map((p) => ...)` «implicitly any»
+// deb yiqilardi.
+lines.push('    $transaction<T extends readonly unknown[]>(operations: readonly [...T], options?: Loose): Promise<{ -readonly [K in keyof T]: Awaited<T[K]> }>;');
+// Teg-shablon sifatida chaqiriladi: $queryRaw<Array<{ id: string }>>`...`.
+// `any` bo'lsa e'lon qilingan tur yo'qolardi.
+lines.push('    $queryRaw<T = unknown>(query: TemplateStringsArray, ...values: any[]): Promise<T>;');
+lines.push('    $executeRaw(query: TemplateStringsArray, ...values: any[]): Promise<number>;');
+lines.push('    $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Promise<T>;');
+lines.push('    $executeRawUnsafe(query: string, ...values: any[]): Promise<number>;');
 lines.push('    $connect(): Promise<void>;');
 lines.push('    $disconnect(): Promise<void>;');
 lines.push('    $on: any;');
