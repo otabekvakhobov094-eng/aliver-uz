@@ -8,6 +8,7 @@ import {
   categoryFor,
   collectionsFor,
   tagsFor,
+  variantOptions,
   descriptionFrom,
   productTitle,
   roundPriceTiyin,
@@ -388,12 +389,7 @@ export class ShopifyImportService {
         const variantIds = new Map<string, string>();
         for (const [index, variant] of product.variants.entries()) {
           const sku = ctx.skuByVariant.get(`${product.id}:${variant.id}`)!;
-          const options = {
-            title: variant.title,
-            option1: variant.option1,
-            option2: variant.option2,
-            option3: variant.option3,
-          };
+          const options = variantOptions(product, variant);
           const variantData = {
             productId: saved.id,
             barcode: variant.barcode || null,

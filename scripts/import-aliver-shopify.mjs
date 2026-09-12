@@ -66,6 +66,30 @@ const tagRules = [
   { slug: 'soch-tokilishi', nameUz: 'Soch to‘kilishi', nameRu: 'Выпадение волос', words: ['hair loss', 'hair growth', 'hair fall', 'biotin'] },
 ];
 
+/**
+ * Variantning ko'rinadigan xususiyatlari.
+ *
+ * Ilgari bazaga `{ title, option1, option2, option3 }` yozilardi va
+ * sayt ularning hammasini « / » bilan qo'shardi — natijada
+ * «1 bottle / 1 bottle /  / ». Endi faqat ma'noli qiymatlar.
+ */
+function variantOptions(product, variant) {
+  const names = (product.options ?? [])
+    .slice()
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map((o) => (o.name ?? '').trim());
+  const values = [variant.option1, variant.option2, variant.option3];
+  const out = {};
+  for (const [i, raw] of values.entries()) {
+    const value = (raw ?? '').trim();
+    if (!value || value.toLowerCase() === 'default title') continue;
+    const name = (names[i] ?? '').trim();
+    if (!name || name.toLowerCase() === 'title') out[`variant${i + 1}`] = value;
+    else out[name] = value;
+  }
+  return out;
+}
+
 function tagsForProduct(product) {
   const haystack = productHaystack(product);
   return tagRules.filter((t) => matches(t.words, haystack)).map((t) => t.slug);
@@ -200,7 +224,7 @@ async function importProduct(tx, product, brandId, warehouseId, categoryIds, col
       update: {
         productId: saved.id,
         barcode: variant.barcode || null,
-        options: { title: variant.title, option1: variant.option1, option2: variant.option2, option3: variant.option3 },
+        options: variantOptions(product, variant),
         price: money(variant.price),
         oldPrice: variant.compare_at_price ? money(variant.compare_at_price) : null,
         weightGrams: variant.grams || null,
@@ -212,7 +236,7 @@ async function importProduct(tx, product, brandId, warehouseId, categoryIds, col
         productId: saved.id,
         sku,
         barcode: variant.barcode || null,
-        options: { title: variant.title, option1: variant.option1, option2: variant.option2, option3: variant.option3 },
+        options: variantOptions(product, variant),
         price: money(variant.price),
         oldPrice: variant.compare_at_price ? money(variant.compare_at_price) : null,
         weightGrams: variant.grams || null,

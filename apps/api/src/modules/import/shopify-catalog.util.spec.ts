@@ -14,6 +14,7 @@ import {
   resolveSkus,
   stripHtml,
   tagsFor,
+  variantOptions,
   toTiyin,
   type ShopifyProduct,
 } from './shopify-catalog.util';
@@ -118,6 +119,34 @@ describe('Shopify katalogini o‘girish', () => {
       expect(categoryFor(product({ title: 'Rich Cream 50 ml' })).slug).toBe('yuz-parvarishi');
       // lekin «hair cream» sochga
       expect(categoryFor(product({ title: 'Hair Cream' })).slug).toBe('soch-parvarishi');
+    });
+
+    it('variant yorlig‘i takrorlanmaydi va bo‘sh joy qoldirmaydi', () => {
+      const p = product({
+        options: [{ name: 'Size', position: 1, values: ['1 bottle', '2 bottles'] }],
+      });
+      expect(
+        variantOptions(p, { id: 1, title: '1 bottle', option1: '1 bottle', price: '10' } as never),
+      ).toEqual({ Size: '1 bottle' });
+    });
+
+    it('Shopify ning «Default Title» zaxirasi yozilmaydi', () => {
+      const p = product({ options: [{ name: 'Title', position: 1, values: ['Default Title'] }] });
+      expect(
+        variantOptions(p, {
+          id: 1,
+          title: 'Default Title',
+          option1: 'Default Title',
+          price: '10',
+        } as never),
+      ).toEqual({});
+    });
+
+    it('nomsiz o‘lchov ham yo‘qolmaydi', () => {
+      const p = product({ options: [] });
+      expect(
+        variantOptions(p, { id: 1, title: '60 ml', option1: '60 ml', price: '10' } as never),
+      ).toEqual({ variant1: '60 ml' });
     });
 
     it('teglar mahsulotdan aniqlanadi — «Vosita tanlagich» shu bilan ishlaydi', () => {

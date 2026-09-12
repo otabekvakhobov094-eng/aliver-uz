@@ -45,6 +45,51 @@ export interface ShopifyProduct {
   published_at?: string | null;
   variants: ShopifyVariant[];
   images: ShopifyImage[];
+  /** Variant o'lchovlarining NOMLARI: «Size», «Color». */
+  options?: Array<{ name?: string | null; position?: number; values?: string[] }> | null;
+}
+
+/**
+ * Variantning ko'rinadigan xususiyatlari.
+ *
+ * NEGA ALOHIDA FUNKSIYA. Ilgari bazaga `{ title, option1, option2,
+ * option3 }` yozilardi va sayt ularning HAMMASINI « / » bilan
+ * qo'shardi. Bitta o'lchovli mahsulotda natija shunday chiqardi:
+ *
+ *     «1 bottle / 1 bottle /  / »
+ *
+ * Ya'ni nom ikki marta va ikkita bo'sh joy. Buni hech kim xato deb
+ * yozmaydi — shunchaki «chala» ko'rinadi va ishonchni yo'qotadi.
+ *
+ * Endi: nomi bor o'lchovlar `{ «Hajm»: «60 ml» }` ko'rinishida,
+ * bo'shlari tashlanadi, Shopify ning «Title / Default Title»
+ * zaxirasi esa umuman yozilmaydi — u hech narsa anglatmaydi.
+ */
+export function variantOptions(
+  product: ShopifyProduct,
+  variant: ShopifyVariant,
+): Record<string, string> {
+  const names = (product.options ?? [])
+    .slice()
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map((o) => (o.name ?? '').trim());
+
+  const values = [variant.option1, variant.option2, variant.option3];
+  const out: Record<string, string> = {};
+
+  for (const [i, raw] of values.entries()) {
+    const value = (raw ?? '').trim();
+    if (!value || value.toLowerCase() === 'default title') continue;
+    const name = (names[i] ?? '').trim();
+    if (!name || name.toLowerCase() === 'title') {
+      // Nomi yo'q o'lchov: qiymatning o'zi yorliq bo'ladi.
+      out[`variant${i + 1}`] = value;
+      continue;
+    }
+    out[name] = value;
+  }
+
+  return out;
 }
 
 /* ------------------------------------------------------------------ *

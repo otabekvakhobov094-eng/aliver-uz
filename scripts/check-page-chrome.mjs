@@ -44,8 +44,32 @@ function pages(dir, prefix = '') {
 }
 
 const problems = [];
+const titleProblems = [];
+
+/**
+ * Sarlavha `page.tsx` da bo'lmasa, yonidagi `layout.tsx` da
+ * bo'lishi mumkin — mijoz komponenti (`'use client'`) `metadata`
+ * eksport qila olmaydi va sarlavha layout'ga chiqariladi.
+ */
+function hasTitle(file) {
+  const text = fs.readFileSync(file, 'utf8');
+  if (/generateMetadata|export const metadata/.test(text)) return true;
+  const layout = path.join(path.dirname(file), 'layout.tsx');
+  if (!fs.existsSync(layout)) return false;
+  return /generateMetadata|export const metadata/.test(fs.readFileSync(layout, 'utf8'));
+}
 
 for (const { route, file } of pages(APP)) {
+  /*
+   * SARLAVHA hamma sahifada kerak — chrome'dan istisno qilinganida
+   * ham. Usiz sahifa brauzer yorlig'ida, xatcho'pda va qidiruv
+   * natijasida boshqa hamma sahifa bilan bir xil «ALIVER.UZ» bo'lib
+   * chiqadi, ya'ni ularni ajratib bo'lmaydi.
+   */
+  if (!hasTitle(file)) {
+    titleProblems.push(`${route}  (${path.relative(ROOT, file)})`);
+  }
+
   if (EXEMPT.has(route)) continue;
   const text = fs.readFileSync(file, 'utf8');
   const rel = path.relative(ROOT, file);
@@ -62,6 +86,17 @@ for (const { route, file } of pages(APP)) {
   }
 }
 
+if (titleProblems.length > 0) {
+  console.error(`\n${titleProblems.length} ta sahifada SARLAVHA yo'q:\n`);
+  for (const p of titleProblems) console.error('  ' + p);
+  console.error(
+    "\nSahifa ochiladi, lekin yorliqda «ALIVER.UZ» bo'lib turadi —\n" +
+      "boshqa hamma sahifa bilan bir xil. `generateMetadata` qo'shing\n" +
+      "(mijoz komponenti bo'lsa — yonidagi `layout.tsx` ga).\n",
+  );
+  process.exit(1);
+}
+
 if (problems.length > 0) {
   console.error(`\n${problems.length} ta sahifada sayt chrome'i to'liq emas:\n`);
   for (const p of problems) console.error('  ' + p);
@@ -72,4 +107,6 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`Sayt chrome'i butun: ${pages(APP).length} ta sahifa tekshirildi.`);
+console.log(
+  `Sayt chrome'i va sarlavhalari butun: ${pages(APP).length} ta sahifa tekshirildi.`,
+);

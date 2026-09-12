@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { catalogApi } from '@/lib/catalog-api';
 import { ProductCardView } from '@/components/ProductCard';
 import { SearchBox } from '@/components/SearchBox';
@@ -6,6 +7,29 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
 
 export const dynamic = 'force-dynamic';
+
+/*
+ * Qidiruv sahifasi indekslanmaydi (`robots: noindex`) — har bir
+ * so'rov uchun alohida sahifa Google uchun shovqin. Lekin SARLAVHA
+ * baribir kerak: u brauzer yorlig'ida va xatcho'pda ko'rinadi.
+ */
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const { locale: raw } = await params;
+  const ru = (isLocale(raw) ? raw : 'uz') === 'ru';
+  const sp = await searchParams;
+  const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim();
+  const base = ru ? 'Поиск' : 'Qidiruv';
+  return {
+    title: q ? `${base}: ${q}` : base,
+    robots: { index: false, follow: true },
+  };
+}
 
 const POPULAR = ['shampun', 'serum', 'krem', 'niqob', 'lab bo‘yog‘i', 'to‘plam'];
 

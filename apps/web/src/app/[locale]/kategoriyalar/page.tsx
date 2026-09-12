@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { catalogApi, pick } from '@/lib/catalog-api';
 import { SiteHeader } from '@/components/SiteHeader';
@@ -5,6 +6,26 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
 
 export const revalidate = 300;
+
+/*
+ * SARLAVHASIZ sahifa brauzer yorlig'ida ham, qidiruv natijasida ham
+ * shunchaki «ALIVER.UZ» bo'lib chiqadi — ya'ni boshqa har qanday
+ * sahifadan farq qilmaydi. Xatcho'plar ham shunday saqlanadi.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale: raw } = await params;
+  const ru = (isLocale(raw) ? raw : 'uz') === 'ru';
+  return {
+    title: ru ? 'Весь каталог' : 'Butun katalog',
+    description: ru
+      ? 'Все разделы и подразделы каталога ALIVER.'
+      : 'ALIVER katalogining barcha bo‘limlari va ichki bo‘limlari.',
+  };
+}
 
 /** Kategoriyalar sahifasi — prototipdagi "Kategoriyalar" maketi. Maksimal 3 daraja. */
 export default async function CategoriesPage({ params }: { params: Promise<{ locale: string }> }) {

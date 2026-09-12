@@ -31,7 +31,27 @@ export function ProductBuyBox({
   const variant = variants[index];
   if (!variant) return null;
 
-  const label = (v: ProductVariant) => Object.values(v.options).join(' / ') || v.sku;
+  /*
+   * Variant yorlig'i.
+   *
+   * Bo'sh qiymatlar va TAKRORLAR tashlanadi. Ilgari ular shunday
+   * chiqardi: «1 bottle / 1 bottle /  / » — nom ikki marta va ikkita
+   * bo'sh joy. Importer endi to'g'ri yozadi, lekin bazada eski
+   * yozuvlar ham bor, shuning uchun himoya ikkala tomonda.
+   */
+  const label = (v: ProductVariant) => {
+    const seen = new Set<string>();
+    const parts: string[] = [];
+    for (const raw of Object.values(v.options ?? {})) {
+      const value = String(raw ?? '').trim();
+      if (!value) continue;
+      const key = value.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      parts.push(value);
+    }
+    return parts.join(' / ') || v.sku;
+  };
 
   const outOfStock = variant.availableStock === 0;
 
