@@ -14,7 +14,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthPrincipal, CurrentUser, Public } from '../../common/decorators';
 import { CartService } from './cart.service';
-import { AddToCartDto, ApplyCouponDto, UpdateCartItemDto } from './dto/cart.dto';
+import {
+  AddToCartDto,
+  ApplyCouponDto,
+  ChooseSampleDto,
+  UpdateCartItemDto,
+} from './dto/cart.dto';
 
 const CART_COOKIE = 'cart_token';
 const COOKIE_MAX_AGE = 30 * 24 * 3600 * 1000;
@@ -97,6 +102,33 @@ export class CartController {
   ) {
     const cart = await this.resolve(req, res, user);
     await this.cart.removeItem(cart.id, itemId);
+    return this.cart.view(cart.id, user?.phone);
+  }
+
+  @Public()
+  @Get('samples')
+  @ApiOperation({
+    summary: 'Tanlash mumkin bo‘lgan namunalar',
+    description: 'Tugaganlari ro‘yxatda ko‘rsatilmaydi.',
+  })
+  samples() {
+    return this.cart.availableSamples();
+  }
+
+  @Public()
+  @Post('sample')
+  @ApiOperation({
+    summary: 'Namunani tanlash yoki bekor qilish',
+    description: '`variantId: null` — tanlovni bekor qiladi.',
+  })
+  async chooseSample(
+    @Body() dto: ChooseSampleDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @CurrentUser() user?: AuthPrincipal,
+  ) {
+    const cart = await this.resolve(req, res, user);
+    await this.cart.chooseSample(cart.id, dto.variantId ?? null);
     return this.cart.view(cart.id, user?.phone);
   }
 

@@ -37,7 +37,26 @@ export interface Cart {
   couponError: string | null;
   appliedDiscounts: Array<{ code: string | null; amount: Tiyin }>;
   freeShipping: boolean;
+  /** Namuna tanlash holati — TZ-3. */
+  sample: {
+    unlocked: boolean;
+    remaining: Tiyin;
+    threshold: Tiyin;
+    /** 0..1 — progress chizig'i uchun. */
+    progress: number;
+    selectedVariantId: Uuid | null;
+    selectedName: string | null;
+  };
   warnings: string[];
+}
+
+export interface SampleOption {
+  variantId: Uuid;
+  sku: string;
+  nameUz: string;
+  nameRu: string;
+  imageUrl: string | null;
+  available: number;
 }
 
 export interface DeliveryRegion {
@@ -339,6 +358,12 @@ export const shopApi = {
     call<Cart>('/cart/coupon', { method: 'POST', body: JSON.stringify({ code }) }),
 
   removeCoupon: () => call<Cart>('/cart/coupon', { method: 'DELETE' }),
+
+  samples: () => call<SampleOption[]>('/cart/samples'),
+
+  /** `null` — tanlovni bekor qiladi. */
+  chooseSample: (variantId: Uuid | null) =>
+    call<Cart>('/cart/sample', { method: 'POST', body: JSON.stringify({ variantId }) }),
 
   regions: () => call<DeliveryRegion[]>('/delivery/regions'),
 

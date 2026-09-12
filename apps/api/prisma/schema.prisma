@@ -567,6 +567,14 @@ model Product {
   /// mahsulot sahifasida alohida yig'iladigan blokda turadi.
   ingredientsUz String?
   ingredientsRu String?
+  /// Bu mahsulot NAMUNA (sample) mi.
+  ///
+  /// Namuna katalogda alohida sotilmaydi va qidiruvda chiqmaydi: u
+  /// faqat savatdagi sovg'a tanlovida ko'rinadi. Shu sababdan oddiy
+  /// `status = HIDDEN` yetarli emas — yashirin mahsulot savatda ham
+  /// ko'rinmasligi kerak edi, namuna esa aynan shu yerda kerak.
+  isSample Boolean @default(false)
+
   /// Uchta asosiy tarkib, har biri oddiy tilda vazifasi bilan:
   /// [{ "nameUz": "Pantenol", "nameRu": "Пантенол",
   ///     "roleUz": "teri to'sig'ini mustahkamlaydi",
@@ -634,6 +642,7 @@ model Product {
 
   @@index([status, publishedAt])
   @@index([brandId])
+  @@index([isSample, status])
   @@index([status, minPrice])
   @@index([status, salesCount])
   @@index([status, ratingAvg])
@@ -747,6 +756,7 @@ model ProductVariant {
   sortOrder Int     @default(0)
 
   images       ProductImage[]
+  sampleInCarts Cart[] @relation("CartSample")
   cartItems    CartItem[]
   inventory    Inventory[]
   movements    InventoryMovement[]
@@ -970,6 +980,16 @@ model Cart {
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   couponCode String?
+
+  /// Mijoz tanlagan namuna varianti.
+  ///
+  /// `CartItem` sifatida EMAS, alohida maydon — ataylab: namuna
+  /// bepul, uni miqdori bilan o'zgartirib bo'lmaydi, chegirma
+  /// hisobiga kirmaydi va summaga qo'shilmaydi. Uni oddiy pozitsiya
+  /// qilib qo'yish har bir hisob-kitobda «bu qator namunami?» degan
+  /// shartni tarqatib yuborardi.
+  sampleVariantId String?         @db.Uuid
+  sampleVariant   ProductVariant? @relation("CartSample", fields: [sampleVariantId], references: [id], onDelete: SetNull)
 
   items CartItem[]
 

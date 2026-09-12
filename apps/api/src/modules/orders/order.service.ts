@@ -334,6 +334,61 @@ export class OrderService {
             });
           }
 
+          /*
+           * Namuna buyurtmaga BEPUL pozitsiya bo'lib qo'shiladi.
+           *
+           * Buni qilmasak mijoz namunani tanlar, lekin buyurtmada uning
+           * izi qolmasdi — ya'ni yig'uvchi uni solmasdi va mijoz
+           * va'da qilingan narsani olmasdi.
+           *
+           * Narxi nol, lekin IKPU va QQS baribir NUSXA qilinadi: chekda
+           * har bir pozitsiya kodi bilan ko'rsatilishi shart, narxi nol
+           * bo'lsa ham.
+           */
+          if (view.sample.selectedVariantId) {
+            const sample = await tx.productVariant.findFirst({
+              where: { id: view.sample.selectedVariantId, isActive: true, deletedAt: null },
+              include: {
+                product: {
+                  select: {
+                    nameUz: true,
+                    ikpuCode: true,
+                    vatRate: true,
+                    unitCode: true,
+                    images: { where: { kind: 'MAIN' }, take: 1, select: { url: true, urlWebp: true } },
+                  },
+                },
+              },
+            });
+
+            // Namuna oradan yo'qolgan bo'lsa buyurtma TO'XTAMAYDI:
+            // bepul sovg'a uchun to'lovni bekor qilish nomutanosib.
+            if (sample) {
+              const options = (sample.options ?? {}) as Record<string, string>;
+              await tx.orderItem.create({
+                data: {
+                  orderId: created.id,
+                  variantId: sample.id,
+                  productName: `${sample.product.nameUz} (namuna)`,
+                  variantName: Object.values(options).join(' / ') || null,
+                  sku: sample.sku,
+                  barcode: sample.barcode,
+                  imageUrl:
+                    sample.product.images[0]?.urlWebp ?? sample.product.images[0]?.url ?? null,
+                  ikpuCode: sample.product.ikpuCode,
+                  vatRate: sample.product.vatRate,
+                  unitCode: sample.product.unitCode,
+                  quantity: 1,
+                  unitPrice: 0n,
+                  oldUnitPrice: null,
+                  discountAmount: 0n,
+                  vatAmount: 0n,
+                  lineTotal: 0n,
+                },
+              });
+            }
+          }
+
           await tx.orderStatusHistory.create({
             data: {
               orderId: created.id,

@@ -39,7 +39,11 @@ export class ProductService {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? DEFAULT_PER_PAGE;
 
-    const where: Record<string, unknown> = { deletedAt: null, status: 'ACTIVE' };
+    // Namuna katalogda KO'RINMAYDI: u alohida sotilmaydi va faqat
+    // savatdagi sovg'a tanlovida chiqadi. `status = HIDDEN` bu yerda
+    // yetarli emas edi — yashirin mahsulot savatda ham ko'rinmasligi
+    // kerak, namuna esa aynan o'sha yerda kerak.
+    const where: Record<string, unknown> = { deletedAt: null, status: 'ACTIVE', isSample: false };
 
     if (query.category) {
       const ids = await this.categories.descendantIds(query.category);
@@ -129,6 +133,7 @@ export class ProductService {
       where: {
         deletedAt: null,
         status: 'ACTIVE',
+        isSample: false,
         AND: tokens.map((t) => ({ searchText: { contains: t } })),
       },
       take: limit,
@@ -162,7 +167,7 @@ export class ProductService {
 
   async publicDetail(slug: string) {
     const product = await this.prisma.product.findFirst({
-      where: { slug, deletedAt: null, status: { in: ['ACTIVE', 'OUT_OF_STOCK'] } },
+      where: { slug, deletedAt: null, isSample: false, status: { in: ['ACTIVE', 'OUT_OF_STOCK'] } },
       include: {
         brand: true,
         images: { orderBy: { sortOrder: 'asc' } },

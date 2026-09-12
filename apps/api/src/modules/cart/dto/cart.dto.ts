@@ -31,3 +31,18 @@ export class ApplyCouponDto {
   @Length(2, 40)
   code!: string;
 }
+
+
+/**
+ * Namunani tanlash.
+ *
+ * `variantId` bo'sh (null) bo'lsa tanlov BEKOR qilinadi — alohida
+ * DELETE endpoint yasashdan ko'ra shu oddiyroq va interfeysda ham
+ * «tanlovni olib tashlash» bitta so'rov bo'lib qoladi.
+ */
+export class ChooseSampleDto {
+  @ApiPropertyOptional({ description: 'Bo‘sh bo‘lsa tanlov bekor qilinadi' })
+  @IsOptional()
+  @IsUUID()
+  variantId?: string | null;
+}

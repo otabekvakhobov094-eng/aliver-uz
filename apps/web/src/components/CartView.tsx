@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Button, formatPrice } from '@aliver/ui';
 import { useCart } from './CartProvider';
+import { SamplePicker } from './SamplePicker';
 import type { Locale } from '@/i18n/messages';
 
 const money = (v: string, locale: Locale) => formatPrice(v, locale === 'ru' ? 'RU' : 'UZ');
@@ -124,6 +125,10 @@ export function CartView({ locale }: { locale: Locale }) {
         ))}
         {error ? <Notice tone="danger">{error}</Notice> : null}
 
+        {/* Namuna bloki pozitsiyalardan KEYIN emas, oldin turmaydi:
+            u savat mazmunini emas, savatni KATTALASHTIRISH sababini
+            ko'rsatadi. Shuning uchun ro'yxatdan keyin, jami summadan
+            oldin. */}
         {cart.items.map((item) => (
           <div
             className="alv-cart-item"
@@ -289,6 +294,8 @@ export function CartView({ locale }: { locale: Locale }) {
             </div>
           </div>
         ))}
+
+        <SamplePicker cart={cart} locale={locale} onChange={() => void refresh()} />
       </div>
 
       <aside

@@ -6,6 +6,7 @@ import { DiscountService } from '../discounts/discount.service';
 import { effectivePrice } from '../catalog/pricing.util';
 import { computeTotals } from './cart-totals';
 import type { CartLine } from '../discounts/discount-engine';
+import { DEFAULT_SAMPLE_THRESHOLD, sampleProgress, sampleState } from './sample-rules';
 
 const CART_TTL_DAYS = 30;
 const MAX_QTY_PER_ITEM = 50;
@@ -45,6 +46,17 @@ export interface CartView {
   couponError: string | null;
   appliedDiscounts: Array<{ code: string | null; amount: string }>;
   freeShipping: boolean;
+  /** Namuna tanlash holati — TZ-3. */
+  sample: {
+    unlocked: boolean;
+    /** Ochilishiga yana qancha kerak, tiyinda. */
+    remaining: string;
+    threshold: string;
+    /** 0..1 — interfeys chiziq qilib ko'rsatadi. */
+    progress: number;
+    selectedVariantId: string | null;
+    selectedName: string | null;
+  };
   /** Ogohlantirishlar: qoldiq kamaygan, mahsulot o'chirilgan va h.k. */
   warnings: string[];
 }
@@ -214,6 +226,13 @@ export class CartService {
     const cart = await this.prisma.cart.findUnique({
       where: { id: cartId },
       include: {
+        sampleVariant: {
+          select: {
+            id: true,
+            sku: true,
+            product: { select: { nameUz: true, nameRu: true, isSample: true } },
+          },
+        },
         items: {
           orderBy: { createdAt: 'asc' },
           include: {
@@ -324,6 +343,41 @@ export class CartService {
       shipping: 0n,
     });
 
+    /*
+     * Namuna holati. Osona CHEGIRMADAN KEYINGI summaga qo'llanadi:
+     * aks holda promo-kod bilan ostonadan pastga tushgan mijoz baribir
+     * bepul namuna olardi va chegirma ikki marta berilgandek bo'lardi.
+     */
+    const afterDiscount = totals.subtotal - totals.discountTotal;
+    const state = sampleState({
+      subtotalAfterDiscount: afterDiscount,
+      threshold: DEFAULT_SAMPLE_THRESHOLD,
+      hasSelection: Boolean(cart.sampleVariantId),
+    });
+
+    // Tanlov haqli bo'lmay qolgan bo'lsa — bazadan ham olib tashlaymiz,
+    // aks holda u keyingi ochilishda qaytib kelardi.
+    if (cart.sampleVariantId && !state.keepsSelection) {
+      await this.prisma.cart.update({
+        where: { id: cart.id },
+        data: { sampleVariantId: null },
+      });
+      warnings.push(
+        'Savat summasi kamaygani uchun tanlangan namuna bekor qilindi.',
+      );
+    }
+
+    const sampleBlock = {
+      unlocked: state.unlocked,
+      remaining: state.remaining.toString(),
+      threshold: state.threshold.toString(),
+      progress: sampleProgress(afterDiscount, state.threshold),
+      selectedVariantId: state.keepsSelection ? cart.sampleVariantId : null,
+      selectedName: state.keepsSelection
+        ? (cart.sampleVariant?.product.nameUz ?? null)
+        : null,
+    };
+
     return {
       id: cart.id,
       token: cart.token,
@@ -343,8 +397,89 @@ export class CartService {
         amount: a.amount.toString(),
       })),
       freeShipping: discount.freeShipping,
+      sample: sampleBlock,
       warnings,
     };
+  }
+
+  /* ------------------------------ Namunalar ----------------------------- */
+
+  /**
+   * Tanlash mumkin bo'lgan namunalar.
+   *
+   * Namuna — `isSample` bayrog'i qo'yilgan mahsulot. U katalogda va
+   * qidiruvda chiqmaydi (bu filtr `product.service` da), shu sababdan
+   * uni faqat shu yerdan olish mumkin.
+   */
+  async availableSamples() {
+    const products = await this.prisma.product.findMany({
+      where: { isSample: true, status: 'ACTIVE', deletedAt: null },
+      select: {
+        nameUz: true,
+        nameRu: true,
+        images: { where: { kind: 'MAIN' }, take: 1, select: { url: true, urlWebp: true } },
+        variants: {
+          where: { isActive: true, deletedAt: null },
+          take: 1,
+          select: {
+            id: true,
+            sku: true,
+            inventory: { select: { totalStock: true, reservedStock: true } },
+          },
+        },
+      },
+      orderBy: { nameUz: 'asc' },
+    });
+
+    return products
+      .map((p) => {
+        const v = p.variants[0];
+        if (!v) return null;
+        const available = v.inventory.reduce(
+          (sum, i) => sum + Math.max(i.totalStock - i.reservedStock, 0),
+          0,
+        );
+        return {
+          variantId: v.id,
+          sku: v.sku,
+          nameUz: p.nameUz,
+          nameRu: p.nameRu,
+          imageUrl: p.images[0]?.urlWebp ?? p.images[0]?.url ?? null,
+          available,
+        };
+      })
+      // Tugagan namuna ro'yxatda KO'RSATILMAYDI. Bepul narsani
+      // tanlab, keyin «yo'q ekan» degan xabar olish eng yomon tajriba.
+      .filter((s): s is NonNullable<typeof s> => s !== null && s.available > 0);
+  }
+
+  /**
+   * Namunani tanlash yoki bekor qilish (`variantId = null`).
+   *
+   * Osona tekshiruvi shu yerda ham bajariladi: mijoz ostona ochilgan
+   * paytda tanlab, keyin mahsulotni olib tashlab, so'rovni qayta
+   * yuborishi mumkin edi.
+   */
+  async chooseSample(cartId: string, variantId: string | null) {
+    if (variantId === null) {
+      await this.prisma.cart.update({ where: { id: cartId }, data: { sampleVariantId: null } });
+      return { ok: true as const };
+    }
+
+    const allowed = await this.availableSamples();
+    if (!allowed.some((s) => s.variantId === variantId)) {
+      throw new BadRequestException('Bu namuna hozir mavjud emas');
+    }
+
+    const view = await this.view(cartId);
+    if (!view.sample.unlocked) {
+      throw new BadRequestException(
+        `Namuna ${Number(view.sample.threshold) / 100} so‘mdan yuqori buyurtmada tanlanadi`,
+      );
+    }
+
+    await this.prisma.cart.update({ where: { id: cartId }, data: { sampleVariantId: variantId } });
+    return { ok: true as const };
   }
 
   /** Buyurtma yaratish uchun ichki ko'rinish (servislar orasida ishlatiladi). */
