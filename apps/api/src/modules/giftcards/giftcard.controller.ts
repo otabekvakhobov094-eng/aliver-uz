@@ -4,6 +4,7 @@ import { Throttle } from '@nestjs/throttler';
 import { IsInt, IsOptional, IsString, Length, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Audit, AuthPrincipal, CurrentUser, Public, RequirePermissions } from '../../common/decorators';
+import { GiftCardExpiryService } from './giftcard-expiry.service';
 import { GiftCardService } from './giftcard.service';
 
 class CheckDto {
@@ -70,7 +71,27 @@ export class GiftCardController {
 @ApiTags('admin-gift-cards')
 @Controller('admin/gift-cards')
 export class AdminGiftCardController {
-  constructor(private readonly cards: GiftCardService) {}
+  constructor(
+    private readonly cards: GiftCardService,
+    private readonly expiry: GiftCardExpiryService,
+  ) {}
+
+  /**
+   * Tez orada muddati tugaydigan sertifikatlar.
+   *
+   * Bu pul: muddati tugagan kartada qolgan summa mijoz uchun yo'qoladi,
+   * va u buni faqat kassada bilardi. Admin ro'yxatni oldindan ko'rib,
+   * kerak bo'lsa muddatni uzaytirishi mumkin.
+   */
+  @Get('expiring')
+  @RequirePermissions('discounts.view')
+  @ApiOperation({ summary: 'Muddati tugayotgan sertifikatlar' })
+  expiring(@Query('days') days?: string, @Query('limit') limit?: string) {
+    return this.expiry.expiringSoon({
+      days: days ? Number(days) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+  }
 
   @Get()
   @RequirePermissions('discounts.view')

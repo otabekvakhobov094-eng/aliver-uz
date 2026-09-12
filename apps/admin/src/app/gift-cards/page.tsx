@@ -4,7 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
-import { adminApi, type GiftCardRow, type IssuedGiftCard } from '@/lib/api';
+import {
+  adminApi,
+  type GiftCardExpiringRow,
+  type GiftCardRow,
+  type IssuedGiftCard,
+} from '@/lib/api';
 
 /**
  * Sovg'a sertifikatlari — TZ-3.
@@ -117,6 +122,8 @@ export default function GiftCardsPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
+  const [expiring, setExpiring] = useState<GiftCardExpiringRow[]>([]);
+  const [expiringSum, setExpiringSum] = useState('0');
 
   const tail = (filters as Record<string, string>).tail ?? '';
 
@@ -137,6 +144,29 @@ export default function GiftCardsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /*
+   * Muddati tugayotgan kartalar alohida yuklanadi va ro'yxatdan
+   * YUQORIDA turadi.
+   *
+   * Sabab: qoldig'i bor kartaning muddati tugasa, mijozning puli
+   * yo'qoladi va u buni faqat kassada biladi. Umumiy ro'yxatda bunday
+   * karta 25 tadan biri bo'lib ko'rinmay ketardi.
+   *
+   * Xatosi butun sahifani yiqitmaydi: bu yordamchi ma'lumot, asosiy
+   * ro'yxat esa ishlashda davom etishi kerak.
+   */
+  useEffect(() => {
+    void adminApi
+      .giftCardsExpiring(30)
+      .then((res) => {
+        setExpiring(res.items);
+        setExpiringSum(res.totalRemaining);
+      })
+      .catch(() => {
+        setExpiring([]);
+      });
+  }, []);
 
   const bulkActions: BulkAction[] = useMemo(
     () => [
@@ -192,6 +222,40 @@ export default function GiftCardsPage() {
 
   return (
     <AdminShell title="Sovg‘a sertifikatlari">
+      {expiring.length > 0 ? (
+        <div
+          className="alv-card"
+          style={{
+            padding: 16,
+            marginBottom: 16,
+            borderLeft: '3px solid var(--alv-warn)',
+          }}
+        >
+          <strong style={{ display: 'block', marginBottom: 4 }}>
+            30 kun ichida {expiring.length} ta sertifikat muddati tugaydi —{' '}
+            {formatTiyin(BigInt(expiringSum))}
+          </strong>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--alv-muted)' }}>
+            Mijozga 30 va 7 kun qolganda SMS yuboriladi. Muddatni uzaytirish kerak bo‘lsa —
+            sertifikatni qayta chiqaring.
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.8 }}>
+            {expiring.slice(0, 8).map((c) => (
+              <li key={c.id}>
+                <code>{c.masked}</code> · {formatTiyin(BigInt(c.remaining))} ·{' '}
+                {c.daysLeft} kun qoldi
+                {c.recipientPhone ? ` · ${c.recipientPhone}` : ''}
+              </li>
+            ))}
+          </ul>
+          {expiring.length > 8 ? (
+            <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--alv-muted)' }}>
+              va yana {expiring.length - 8} ta.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {error ? (
         <div
           role="alert"

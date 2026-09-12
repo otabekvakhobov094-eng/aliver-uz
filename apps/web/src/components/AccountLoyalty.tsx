@@ -77,7 +77,7 @@ export function AccountLoyalty({ locale }: { locale: Locale }) {
               margin: '10px 0 0',
               fontSize: 13.5,
               lineHeight: 1.55,
-              color: balance.stage === 'warning' ? 'var(--alv-sale)' : 'var(--alv-ink-2)',
+              color: balance.stage === 'warning' ? 'var(--alv-danger)' : 'var(--alv-ink-2)',
               fontWeight: balance.stage === 'warning' ? 600 : 400,
             }}
           >

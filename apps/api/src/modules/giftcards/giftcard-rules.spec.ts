@@ -1,6 +1,8 @@
 import {
   cardState,
   generateCode,
+  giftCardWarnKey,
+  giftCardWarning,
   hashCode,
   maskCode,
   normaliseCode,
@@ -148,5 +150,67 @@ describe('Buyurtmada ishlatish', () => {
 describe('Kodni ko‘rsatish', () => {
   it('faqat oxirgi to‘rtta belgi ko‘rinadi', () => {
     expect(maskCode('ALV-AB2C-DE3F-GH4J-KL5M')).toBe('ALV-••••-••••-••••-KL5M');
+  });
+});
+
+describe('muddat tugashidan oldin ogohlantirish', () => {
+  const NOW = new Date('2026-09-12T03:00:00Z');
+  const base = { remaining: 500_000_00n, cancelledAt: null, now: NOW };
+
+  it('muddatsiz kartada ogohlantirish yo‘q', () => {
+    expect(giftCardWarning({ ...base, expiresAt: null }).milestone).toBeNull();
+  });
+
+  it('uzoq muddatda ogohlantirish yo‘q', () => {
+    expect(
+      giftCardWarning({ ...base, expiresAt: new Date('2027-01-01') }).milestone,
+    ).toBeNull();
+  });
+
+  it('30 kun ichida — birinchi bosqich', () => {
+    const w = giftCardWarning({ ...base, expiresAt: new Date('2026-10-01T03:00:00Z') });
+    expect(w.milestone).toBe(30);
+    expect(w.daysLeft).toBe(19);
+  });
+
+  it('7 kun ichida — ikkinchi bosqich, ya’ni yangi xabar', () => {
+    const w = giftCardWarning({ ...base, expiresAt: new Date('2026-09-17T03:00:00Z') });
+    expect(w.milestone).toBe(7);
+    expect(w.daysLeft).toBe(5);
+  });
+
+  it('puli qolmagan kartaga ogohlantirish yo‘q', () => {
+    // «Muddati tugayapti» degan xabar bo'sh kartada mijozni chalg'itadi.
+    expect(
+      giftCardWarning({ ...base, remaining: 0n, expiresAt: new Date('2026-09-17') }).milestone,
+    ).toBeNull();
+  });
+
+  it('bekor qilingan kartaga ogohlantirish yo‘q', () => {
+    expect(
+      giftCardWarning({
+        ...base,
+        cancelledAt: new Date('2026-01-01'),
+        expiresAt: new Date('2026-09-17'),
+      }).milestone,
+    ).toBeNull();
+  });
+
+  it('allaqachon tugagan kartaga ogohlantirish yo‘q — kech', () => {
+    expect(
+      giftCardWarning({ ...base, expiresAt: new Date('2026-09-01') }).milestone,
+    ).toBeNull();
+  });
+
+  it('ikki bosqich ikki xil kalit beradi — 30 kunlik xabar 7 kunlikni to‘smaydi', () => {
+    const at = new Date('2026-10-01T00:00:00Z');
+    expect(giftCardWarnKey('card-1', at, 30)).toBe('card-1:2026-10-01:30');
+    expect(giftCardWarnKey('card-1', at, 7)).toBe('card-1:2026-10-01:7');
+  });
+
+  it('muddat uzaytirilsa kalit o‘zgaradi va mijoz yana xabar oladi', () => {
+    expect(giftCardWarnKey('card-1', new Date('2026-10-01'), 30)).not.toBe(
+      giftCardWarnKey('card-1', new Date('2027-10-01'), 30),
+    );
   });
 });

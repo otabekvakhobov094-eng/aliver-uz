@@ -134,3 +134,68 @@ export function maskCode(code: string): string {
   const tail = flat.slice(-4);
   return `ALV-••••-••••-••••-${tail}`;
 }
+
+/* ==========================================================================
+   MUDDAT TUGASHIDAN OLDIN OGOHLANTIRISH
+   ========================================================================== */
+
+/**
+ * Ogohlantirish bosqichlari — muddat tugashiga necha kun qolganda.
+ *
+ * IKKITA, chunki sertifikat sotib olingan PUL. Bitta xabar yetarli
+ * emas: 30 kun odamga xarid rejalashtirishga vaqt beradi, 7 kun esa
+ * unutganlarga oxirgi eslatma. Ballarda bitta ogohlantirish yetarli —
+ * ular bepul berilgan; bu yerda esa mijoz haqiqiy pul to'lagan.
+ *
+ * Kamayish tartibida: birinchi mos keladigan bosqich tanlanadi.
+ */
+export const GIFTCARD_WARN_DAYS = [30, 7] as const;
+
+export interface GiftCardExpiryWarning {
+  /** Qaysi bosqich ishga tushdi. `null` — hozircha ogohlantirish kerak emas. */
+  milestone: number | null;
+  daysLeft: number | null;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Sertifikat bo'yicha ogohlantirish kerakmi.
+ *
+ * Faqat ISHLATSA BO'LADIGAN kartalar uchun: bekor qilingan, allaqachon
+ * tugagan yoki puli qolmagan kartaga «muddati tugayapti» deb yozish
+ * mijozni chalg'itadi va ishonchni yo'qotadi.
+ */
+export function giftCardWarning(params: {
+  expiresAt: Date | null;
+  remaining: Tiyin;
+  cancelledAt: Date | null;
+  now: Date;
+  milestones?: readonly number[];
+}): GiftCardExpiryWarning {
+  const none: GiftCardExpiryWarning = { milestone: null, daysLeft: null };
+  if (!params.expiresAt || params.cancelledAt || params.remaining <= 0n) return none;
+
+  const daysLeft = Math.ceil((params.expiresAt.getTime() - params.now.getTime()) / DAY_MS);
+  if (daysLeft <= 0) return none; // allaqachon tugagan — ogohlantirish kech
+
+  const milestones = params.milestones ?? GIFTCARD_WARN_DAYS;
+  // Kamayish tartibida: 30 kunlik oyna ichida bo'lsa 30, 7 kunlik
+  // oynaga kirgach 7. Har bir bosqich uchun alohida kalit beriladi,
+  // shuning uchun ikkinchi xabar birinchisini bosib o'tmaydi.
+  const ordered = [...milestones].sort((a, b) => a - b);
+  const hit = ordered.find((m) => daysLeft <= m);
+  return hit === undefined ? none : { milestone: hit, daysLeft };
+}
+
+/**
+ * Ogohlantirish takrorlanmasligi uchun kalit.
+ *
+ * Kalitga KARTA, MUDDAT SANASI va BOSQICH kiradi. Sana kalitda
+ * bo'lgani uchun admin muddatni uzaytirsa yangi davr boshlanadi va
+ * mijoz yana xabar oladi; bosqich kalitda bo'lgani uchun 30 kunlik
+ * xabar 7 kunlik xabarni to'sib qo'ymaydi.
+ */
+export function giftCardWarnKey(cardId: string, at: Date, milestone: number): string {
+  return `${cardId}:${at.toISOString().slice(0, 10)}:${milestone}`;
+}

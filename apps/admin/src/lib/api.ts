@@ -485,6 +485,17 @@ export interface GiftCardRow {
   createdAt: string;
 }
 
+export interface GiftCardExpiringRow {
+  id: string;
+  masked: string;
+  remaining: string;
+  initialAmount: string;
+  recipientName: string | null;
+  recipientPhone: string | null;
+  expiresAt: string | null;
+  daysLeft: number | null;
+}
+
 export interface IssuedGiftCard {
   id: string;
   /** FAQAT shu javobda. Keyin hech qayerdan ko'rib bo'lmaydi. */
@@ -969,6 +980,12 @@ export const adminApi = {
       `/admin/gift-cards?${qs.toString()}`,
     );
   },
+
+  /** Muddati tugayotgan sertifikatlar — qoldig'i bor kartalar. */
+  giftCardsExpiring: (days?: number) =>
+    request<{ days: number; totalRemaining: string; items: GiftCardExpiringRow[] }>(
+      `/admin/gift-cards/expiring${days ? `?days=${days}` : ''}`,
+    ),
 
   issueGiftCard: (body: {
     amountSum: number;
