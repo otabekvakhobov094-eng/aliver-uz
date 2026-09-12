@@ -49,7 +49,21 @@ function emptyForm(section: Section): FormData {
   return result;
 }
 
+/**
+ * Menyudagi «Bannerlar» va «Blog» yozuvlari `/content#banners` va
+ * `/content#blog` ga olib boradi. Sahifa hash ni o'qimasa, ikkala
+ * havola ham «Sahifalar» bo'limini ochadi va foydalanuvchi menyu
+ * ishlamayapti deb o'ylaydi — aynan shunday bo'lgan edi.
+ */
+function sectionFromHash(): Section {
+  if (typeof window === 'undefined') return 'pages';
+  const h = window.location.hash.replace('#', '');
+  return (Object.keys(labels) as Section[]).includes(h as Section) ? (h as Section) : 'pages';
+}
+
 export default function ContentPage() {
+  // Server va mijoz birinchi chizishda bir xil bo'lishi shart, shuning
+  // uchun hash useEffect da o'qiladi — initial state da emas.
   const [active, setActive] = useState<Section>('pages');
   const [items, setItems] = useState<CmsRecord[]>([]);
   const [editing, setEditing] = useState<CmsRecord | null | undefined>(undefined);
@@ -65,7 +79,24 @@ export default function ContentPage() {
   }, []);
   useEffect(() => { void load(active); }, [active, load]);
 
+  // Menyudan `#banners` bilan kelinganda va sahifada turib boshqa
+  // hash ga o'tilganda ham bo'lim almashadi.
+  useEffect(() => {
+    const apply = () => setActive(sectionFromHash());
+    apply();
+    window.addEventListener('hashchange', apply);
+    return () => window.removeEventListener('hashchange', apply);
+  }, []);
+
   const title = useMemo(() => editing?.id ? 'Yozuvni tahrirlash' : 'Yangi yozuv', [editing]);
+  /** Tab bosilganda hash ham yangilanadi — havola ulashsa bo'ladi. */
+  function selectSection(section: Section) {
+    setActive(section);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', section === 'pages' ? '#' : `#${section}`);
+    }
+  }
+
   function openCreate() { setEditing(null); setForm(emptyForm(active)); setError(''); }
   function openEdit(item: CmsRecord) {
     const value = emptyForm(active);
@@ -97,7 +128,7 @@ export default function ContentPage() {
   return <AdminShell title="Kontent va SEO">
     <p style={{ color: 'var(--alv-muted)', marginTop: -10, lineHeight: 1.6 }}>Ikki tildagi CMS kontenti, banner muddatlari va SEO redirectlari bitta markazda boshqariladi.</p>
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '22px 0' }}>
-      {(Object.keys(labels) as Section[]).map((key) => <button key={key} onClick={() => { setActive(key); setEditing(undefined); }} className={`alv-btn ${active === key ? 'alv-btn--primary' : 'alv-btn--outline'}`}>{labels[key]}</button>)}
+      {(Object.keys(labels) as Section[]).map((key) => <button key={key} onClick={() => { selectSection(key); setEditing(undefined); }} className={`alv-btn ${active === key ? 'alv-btn--primary' : 'alv-btn--outline'}`}>{labels[key]}</button>)}
       <span style={{ marginLeft: 'auto' }}><Button onClick={openCreate}>Yangi qo‘shish</Button></span>
     </div>
     {error ? <p role="alert" style={{ color: '#b42318' }}>{error}</p> : null}
