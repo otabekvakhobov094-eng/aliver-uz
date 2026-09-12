@@ -215,7 +215,21 @@ async function seedSettings(): Promise<void> {
     ['store.timezone', 'Asia/Tashkent'],
     ['store.locales', ['UZ', 'RU']],
     ['store.defaultLocale', 'UZ'],
-    ['store.phone', '+998 71 200 00 00'],
+    /*
+     * TELEFON VA STIR BO'SH.
+     *
+     * Bu ataylab. Ilgari seed `+998 71 200 00 00` va `[SIZNING STIR]`
+     * yozardi — ikkalasi ham bo'sh emas, ya'ni sayt ularni haqiqiy
+     * ma'lumot deb ko'rsatardi. Birinchisi o'ylab topilgan raqam:
+     * mijoz unga qo'ng'iroq qilib, do'konga tegishli bo'lmagan
+     * odamga tushardi. Ikkinchisi «Yuridik ma'lumotlar»
+     * kartochkasida STIR o'rniga kvadrat qavs bo'lib chiqardi.
+     *
+     * Bo'sh qiymatda sayt bu bloklarni UMUMAN ko'rsatmaydi —
+     * noto'g'ri ma'lumotdan ko'ra ma'lumotsiz ishonchli.
+     * Xodim ularni adminka → Sozlamalar bo'limida to'ldiradi.
+     */
+    ['store.phone', ''],
     // Saytdagi «Aloqa» sahifasi AYNAN shu qiymatlarni ko'rsatadi.
     // Ilgari ular sahifa kodida yozilgan edi va adminda o'zgartirilsa
     // ham saytda o'zgarmasdi — sozlama bor, lekin hech narsani
@@ -226,7 +240,7 @@ async function seedSettings(): Promise<void> {
     ['store.addressUz', ''],
     ['store.addressRu', ''],
     ['store.legalName', 'MCHJ «ALIVER UZ»'],
-    ['store.tin', '[SIZNING STIR]'],
+    ['store.tin', ''],
     // Ombor rezervi muddati — ekspertiza A-6
     ['inventory.reservationTtlMinutes', 30],
     ['inventory.lowStockThreshold', 10],
@@ -259,10 +273,25 @@ async function seedSettings(): Promise<void> {
     // Operatorlar kanaliga qoldiq ogohlantirishi shu chegaradan pastda.
     ['notify.lowStockThreshold', 5],
   ];
+  /*
+   * SOZLAMA FAQAT YO'Q BO'LSA YARATILADI.
+   *
+   * Ilgari bu yerda `update: { value }` turardi, ya'ni seed har
+   * ishga tushganda barcha sozlamalarni boshlang'ich qiymatga
+   * QAYTARARDI. Seed esa `startCommand` da — Render'ning bepul
+   * instansi uxlab uyg'onganda ham ishlaydi. Natijada xodim
+   * adminda telefon raqamini, ish vaqtini yoki qaytarish muddatini
+   * kiritib qo'yardi, bir necha soatdan keyin esa ular yana
+   * boshlang'ich qiymatga qaytgan bo'lardi. Hech qanday xato yo'q,
+   * hech qanday jurnal yozuvi yo'q — xodim buni «saqlanmadi
+   * shekilli» deb tushunardi.
+   *
+   * Yangi sozlama qo'shilsa u baribir yaratiladi: `create` ishlaydi.
+   */
   for (const [key, value] of settings) {
     await prisma.setting.upsert({
       where: { key },
-      update: { value: value as never },
+      update: {},
       create: { key, value: value as never },
     });
   }
@@ -307,8 +336,19 @@ async function main(): Promise<void> {
   await seedLegalPages();
   await seedContent(prisma);
 
-  // Demo katalog faqat ishlab chiqish/staging uchun.
-  if (process.env.SEED_DEMO_CATALOG !== 'false' && process.env.APP_ENV !== 'production') {
+  /*
+   * DEMO KATALOG — FAQAT SO'RALGANDA.
+   *
+   * Ilgari shart teskari edi: «production bo'lmasa — sol». Staging
+   * esa `APP_ENV=development` bilan ishlaydi va u yerda ALIVER ning
+   * HAQIQIY 556 ta mahsuloti turadi. Ya'ni demo katalog haqiqiy
+   * katalog ustiga qo'shilardi, demo kategoriyalari esa haqiqiy
+   * kategoriyalar bilan bir xil slug'ga ega bo'lgani uchun
+   * ularning nomi va tartibini qayta yozardi.
+   *
+   * Endi demo ATAYLAB yoqiladi: `SEED_DEMO_CATALOG=true`.
+   */
+  if (process.env.SEED_DEMO_CATALOG === 'true' && process.env.APP_ENV !== 'production') {
     await seedCatalog(prisma);
   } else {
     console.log('  demo katalog: o‘tkazib yuborildi');

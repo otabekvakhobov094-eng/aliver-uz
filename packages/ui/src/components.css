@@ -980,10 +980,21 @@
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Nom ostidan chiqadigan yupqa chiziq — bosilishi mumkinligini aytadi. */
+/*
+ * Nom ostidan chiqadigan yupqa chiziq — bosilishi mumkinligini aytadi.
+ *
+ * `display` BU YERDA O'ZGARTIRILMAYDI. Ilgari bu qoida
+ * `display: inline-block` qo'yardi va yuqoridagi uch qatorlik
+ * cheklovni (`-webkit-box` + `-webkit-line-clamp`) JIMGINA bekor
+ * qilardi: cheklov kodda turardi, brauzerda esa ishlamasdi va uzun
+ * nom to'qqiz qatorga cho'zilardi. Telefonda ikkita ustun ikki
+ * barobar farq qilib ko'rinardi.
+ *
+ * Chiziq uchun faqat `position: relative` kerak — u `-webkit-box`
+ * bilan ham ishlaydi.
+ */
 .alv-pcard__name {
   position: relative;
-  display: inline-block;
 }
 .alv-pcard__name::after {
   content: '';

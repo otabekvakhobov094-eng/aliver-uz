@@ -394,7 +394,16 @@ export async function seedContent(prisma: PrismaClient): Promise<void> {
   for (const p of PAGES) {
     await prisma.page.upsert({
       where: { slug: p.slug },
-      update: { titleUz: p.titleUz, titleRu: p.titleRu, bodyUz: p.bodyUz, bodyRu: p.bodyRu },
+      /*
+       * MAVJUD SAHIFAGA TEGILMAYDI.
+       *
+       * Ilgari sarlavha va matn har seedda qayta yozilardi. Seed
+       * esa har ishga tushishda ketadi — ya'ni yurist bergan
+       * ommaviy oferta matnini adminka orqali kiritgan xodim uni
+       * keyingi qayta ishga tushishda YO'QOTARDI. Aynan huquqiy
+       * matn uchun bu eng yomon xatti-harakat.
+       */
+      update: {},
       create: { ...p, isPublished: true },
     });
   }
@@ -433,7 +442,8 @@ export async function seedContent(prisma: PrismaClient): Promise<void> {
     const publishedAt = new Date(Date.now() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
     await prisma.blogPost.upsert({
       where: { slug: post.slug },
-      update: { titleUz: post.uz, titleRu: post.ru, bodyUz: post.bodyUz, bodyRu: post.bodyRu },
+      // Adminda tahrirlangan maqola seedda qayta yozilmaydi.
+      update: {},
       create: {
         slug: post.slug,
         titleUz: post.uz,

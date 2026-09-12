@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "npm run check:prisma && npm run check:nav && npm run check:chrome && npm run check:hooks && npm run check:icu && npm run check:api && npm run check:slugs && npm run check:i18n && npm run check:scripts && npm run typecheck",
+    "lint": "npm run check:prisma && npm run check:nav && npm run check:chrome && npm run check:hooks && npm run check:icu && npm run check:css && npm run check:api && npm run check:slugs && npm run check:i18n && npm run check:scripts && npm run typecheck",
     "check:prisma": "node scripts/check-prisma-fields.mjs",
     "prisma:stub": "node scripts/generate-prisma-stub.mjs",
     "prisma:stub:install": "node scripts/prisma-stub-install.mjs",
@@ -20,6 +20,7 @@
     "check:chrome": "node scripts/check-page-chrome.mjs",
     "check:hooks": "node scripts/check-hook-order.mjs",
     "check:icu": "node scripts/check-icu-format.mjs",
+    "check:css": "node scripts/check-css-conflicts.mjs",
     "check:layout": "node scripts/check-layout-overflow.mjs",
     "check:scripts": "node --test \"scripts/*.test.mjs\"",
     "typecheck": "turbo run typecheck",
