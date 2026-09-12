@@ -460,14 +460,21 @@ export async function seedContent(prisma: PrismaClient): Promise<void> {
   }
   console.log(`  blog maqolalari: ${POSTS.length} ta`);
 
-  // Banner'da `slug` yo'q — takrorlanmaslik uchun sarlavha bo'yicha
-  // qidiramiz. Mavjud banner TEGILMAYDI: marketing uni o'zgartirgan
-  // bo'lishi mumkin.
-  for (const [i, promo] of PROMOS.entries()) {
-    const existing = await prisma.banner.findFirst({
-      where: { placement: 'PROMO', titleUz: promo.titleUz },
-    });
-    if (existing) continue;
+  /*
+   * BANNER BOR BO'LSA — SEED UMUMAN ARALASHMAYDI.
+   *
+   * Ilgari har bir banner SARLAVHASI bo'yicha qidirilardi. Sarlavha
+   * o'zgargan kunda («25% chegirma — Wine Lip Tint» yolg'on va'da
+   * bo'lgani uchun almashtirildi) seed eskisini topolmay qoldi va
+   * YANGISINI yaratdi: bosh sahifada bitta aksiya ikki marta, biri
+   * eski yolg'on matn bilan chiqib turdi. Xato bermadi — shunchaki
+   * saytda ikkita banner paydo bo'ldi.
+   *
+   * Bu bannerlar boshlang'ich namuna, xolos. Do'konda banner paydo
+   * bo'lgandan keyin ularni qo'shishning ma'nosi yo'q.
+   */
+  const promoCount = await prisma.banner.count({ where: { placement: 'PROMO' } });
+  for (const [i, promo] of promoCount > 0 ? [] : [...PROMOS.entries()]) {
     await prisma.banner.create({
       data: {
         placement: 'PROMO',
@@ -483,7 +490,11 @@ export async function seedContent(prisma: PrismaClient): Promise<void> {
       },
     });
   }
-  console.log(`  aksiya bannerlari: ${PROMOS.length} ta`);
+  console.log(
+    promoCount > 0
+      ? `  aksiya bannerlari: bazada ${promoCount} ta bor, tegilmadi`
+      : `  aksiya bannerlari: ${PROMOS.length} ta yaratildi`,
+  );
 
   await seedMenu(prisma, 'HEADER', HEADER_MENU);
   await seedMenu(prisma, 'FOOTER', FOOTER_MENU);
