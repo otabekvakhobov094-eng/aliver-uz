@@ -1,6 +1,6 @@
 # ALIVER.UZ — keyingi qadamlar
 
-Sana: 2026-09-12 · Commit: `474ec13`
+Sana: 2026-09-12 · Commit: oxirgi bundle
 
 Bu hujjat bitta savolga javob beradi: **siz nima qilishingiz kerak.**
 Kod tomondagi ishlar tugagan va commit qilingan.
@@ -11,7 +11,7 @@ Kod tomondagi ishlar tugagan va commit qilingan.
 
 ```
 cd C:\Users\VOBEX\aliver-uz
-git fetch aliver-uz-<versiya>.bundle "refs/heads/*:refs/remotes/bundle/*"
+git fetch aliver-uz-oxirgi.bundle "refs/heads/*:refs/remotes/bundle/*"
 git reset --hard bundle/main
 git push origin main
 ```
@@ -109,6 +109,8 @@ buning sababini logda aniq yozadi.
 
 ## Nima tuzatildi (oxirgi tekshiruvda)
 
+Ko'rinadigan qism:
+
 - Dashboardda `to&apos;langan` deb chiqayotgan buzuq matn.
 - Xato ekranining o'zi telefonda ekrandan chiqib ketardi —
   «Qayta urinish» tugmasi ko'rinmasdi.
@@ -118,6 +120,29 @@ buning sababini logda aniq yozadi.
 - Audit jurnalida «qayerdan» ustuni hamma uchun `::1` ko'rsatardi.
 - Adminka dashboardida sinov rejimi ogohlantirishi (yangi).
 - Ruscha yon menyuda uzun nom kesilardi.
+- Bosh sahifada bitta aksiya ikki marta chiqardi, biri hali ham
+  «25% chegirma» degan bajarilmaydigan va'da bilan.
+
+Pul bilan bog'liq qism (kod tekshiruvida topildi):
+
+- **Ballar qaytarilmasdi.** Buyurtma bekor qilinganda sarflangan
+  ball yo'qolardi; to'liq qaytarilgan buyurtma uchun berilgan ball
+  esa mijozda qolardi. Kod yozilgan, lekin hech qayerdan
+  chaqirilmagan edi.
+- **Fiskal chek ko'proq summa e'lon qilardi.** Ball bilan qoplangan
+  qism chekda ko'rinmasdi: kartadan 1 000 000 yechilsa, chekda
+  2 000 000 turardi va QQS ham o'shandan hisoblanardi.
+- **Savat sahifasi 500 qaytarishi mumkin edi.** Ikki chegirma bitta
+  arzon qatorga tushganda chegirma qator narxidan oshib ketardi.
+- **Ball ikki marta sarflanishi mumkin edi** (ikkita varaq bir
+  vaqtda buyurtma bersa).
+- **Bekor qilingan buyurtma «to'landi» bo'lib qolishi mumkin edi** —
+  pul olingan, tovar boshqa mijozga sotilgan.
+- **To'lov abadiy «ishlanmoqda» holatida qolib ketishi mumkin edi**
+  (deploy paytida webhook uzilsa).
+
+Bularning har biriga test yozildi; ikkitasi eski kodda sinab
+ko'rildi va aynan o'sha xatoni topdi.
 
 Mashina tekshiruvlari: `npm run lint` — 12 ta tekshiruv.
 Mobil ko'rinish: `npm run check:layout:admin` va `npm run check:layout`
