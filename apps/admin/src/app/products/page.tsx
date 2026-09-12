@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -70,7 +71,19 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
           />
         )}
         <div style={{ minWidth: 0 }}>
-          <strong style={{ display: 'block', overflowWrap: 'break-word' }}>{p.nameUz}</strong>
+          {/* Nom — tahrirlash sahifasiga havola. Ilgari ro'yxat "o'lik"
+              edi: mahsulotni ochishning yo'li yo'q edi. */}
+          <Link
+            href={`/products/${p.id}`}
+            style={{
+              display: 'block',
+              fontWeight: 700,
+              color: 'var(--alv-brand)',
+              overflowWrap: 'break-word',
+            }}
+          >
+            {p.nameUz}
+          </Link>
           <span style={{ color: 'var(--alv-muted)', fontSize: 13 }}>/{p.slug}</span>
         </div>
       </div>
@@ -220,9 +233,33 @@ export default function ProductsPage() {
         </div>
       ) : null}
 
-      <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
-        Jami {total} ta mahsulot
-      </p>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 12,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          margin: '0 0 14px',
+        }}
+      >
+        <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14 }}>
+          Jami {total} ta mahsulot
+        </p>
+        <Link
+          href="/products/yangi"
+          style={{
+            padding: '9px 18px',
+            borderRadius: 10,
+            background: 'var(--alv-ink)',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 14,
+          }}
+        >
+          + Yangi mahsulot
+        </Link>
+      </div>
 
       <DataList<AdminProduct>
         storageKey="products"

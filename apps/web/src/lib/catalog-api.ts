@@ -83,6 +83,13 @@ export interface ProductDetail {
   benefitsRu: string | null;
   ingredientsUz: string;
   ingredientsRu: string;
+  /**
+   * Uchta asosiy tarkib — TZ-3, 2.3. API dan JSON bo'lib keladi, shakli
+   * kafolatlanmaydi, shuning uchun `unknown` va komponent ichida tekshiriladi.
+   */
+  keyIngredients: unknown;
+  claimUz: string | null;
+  claimRu: string | null;
   howToUseUz: string | null;
   howToUseRu: string | null;
   warningsUz: string;

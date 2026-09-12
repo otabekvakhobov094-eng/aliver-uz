@@ -280,6 +280,37 @@ export class UpsertVariantDto {
 
 /* ============================ Mahsulot ============================ */
 
+/**
+ * Bitta "asosiy tarkib" — TZ-3, 2.3.
+ *
+ * Nomi va vazifasi ALOHIDA maydon, bitta matn emas. Sababi: mijoz INCI
+ * ro'yxatini baholay olmaydi, unga «Pantenol — teri to'sig'ini
+ * mustahkamlaydi» kerak. Ikkita maydon bo'lgani uchun frontend nomni
+ * qalin, vazifasini oddiy shrift bilan chiza oladi va keyinchalik
+ * tarkib bo'yicha filtr qilish ham mumkin bo'ladi.
+ */
+export class KeyIngredientDto {
+  @ApiProperty({ example: 'Pantenol' })
+  @IsString()
+  @Length(1, 120)
+  nameUz!: string;
+
+  @ApiProperty({ example: 'Пантенол' })
+  @IsString()
+  @Length(1, 120)
+  nameRu!: string;
+
+  @ApiProperty({ example: 'teri to‘sig‘ini mustahkamlaydi' })
+  @IsString()
+  @Length(1, 240)
+  roleUz!: string;
+
+  @ApiProperty({ example: 'укрепляет барьер кожи' })
+  @IsString()
+  @Length(1, 240)
+  roleRu!: string;
+}
+
 export class UpsertProductDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -316,6 +347,32 @@ export class UpsertProductDto {
   @IsString()
   @Length(2, 4000)
   ingredientsRu!: string;
+
+  /**
+   * Uchtadan ko'p bo'lsa "asosiy" degani ma'nosini yo'qotadi va oddiy
+   * ro'yxatga aylanadi — shuning uchun cheklov DTO darajasida, frontendda
+   * `.slice()` bilan yashirib qo'yishga tashlab qo'yilmagan.
+   */
+  @ApiPropertyOptional({ type: [KeyIngredientDto], maxItems: 3 })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(3, { message: 'Ko‘pi bilan 3 ta asosiy tarkib kiritiladi' })
+  @ValidateNested({ each: true })
+  @Type(() => KeyIngredientDto)
+  keyIngredients?: KeyIngredientDto[];
+
+  /** Isbot yoki tadqiqot natijasi: «100% quruqlik kamayganini tasdiqladi». */
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 300)
+  claimUz?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(0, 300)
+  claimRu?: string;
 
   @ApiProperty({ description: 'Ogohlantirishlar — majburiy' })
   @IsString()

@@ -230,6 +230,10 @@ export class ProductService {
       benefitsRu: product.benefitsRu,
       ingredientsUz: product.ingredientsUz,
       ingredientsRu: product.ingredientsRu,
+      // Uchta asosiy tarkib va isbot qatori — TZ-3, 2.3.
+      keyIngredients: (product as { keyIngredients?: unknown }).keyIngredients ?? null,
+      claimUz: (product as { claimUz?: string | null }).claimUz ?? null,
+      claimRu: (product as { claimRu?: string | null }).claimRu ?? null,
       howToUseUz: product.howToUseUz,
       howToUseRu: product.howToUseRu,
       warningsUz: product.warningsUz,
@@ -750,6 +754,13 @@ export class ProductService {
       benefitsRu: dto.benefitsRu ?? null,
       ingredientsUz: dto.ingredientsUz,
       ingredientsRu: dto.ingredientsRu,
+      // Bo'sh massiv bilan `null` ataylab farqlanmaydi: ikkalasi ham
+      // "asosiy tarkib ko'rsatilmagan" degani va frontend bir xil ishlaydi.
+      keyIngredients: (dto.keyIngredients && dto.keyIngredients.length > 0
+        ? dto.keyIngredients
+        : null) as never,
+      claimUz: dto.claimUz?.trim() || null,
+      claimRu: dto.claimRu?.trim() || null,
       howToUseUz: dto.howToUseUz ?? null,
       howToUseRu: dto.howToUseRu ?? null,
       warningsUz: dto.warningsUz,

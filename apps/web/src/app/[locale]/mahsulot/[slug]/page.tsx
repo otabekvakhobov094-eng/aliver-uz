@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Rating } from '@aliver/ui';
 import { catalogApi, pick } from '@/lib/catalog-api';
 import { ProductBuyBox } from '@/components/ProductBuyBox';
+import { KeyIngredients } from '@/components/KeyIngredients';
 import { ProductTabs } from '@/components/ProductTabs';
 import { ProductCardView } from '@/components/ProductCard';
 import { SiteHeader } from '@/components/SiteHeader';
@@ -220,6 +221,16 @@ export default async function ProductPage({
           </div>
         </div>
 
+        {/* Tarkibning uch qatlami tablardan OLDIN keladi: tablar ichida
+            turgan ma'lumot ochilmaguncha ko'rinmaydi, bu esa aynan
+            konversiyaga ta'sir qiladigan qismni yashirib qo'yadi. */}
+        <KeyIngredients
+          locale={locale}
+          keyIngredients={product.keyIngredients}
+          claim={ru ? product.claimRu : product.claimUz}
+          fullList={ru ? product.ingredientsRu : product.ingredientsUz}
+        />
+
         <div style={{ marginTop: 56 }}>
           <ProductTabs
             tabs={[
@@ -232,11 +243,6 @@ export default async function ProductPage({
                 key: 'benefits',
                 label: ru ? 'Польза' : 'Foydasi',
                 body: ru ? product.benefitsRu : product.benefitsUz,
-              },
-              {
-                key: 'ingredients',
-                label: ru ? 'Состав' : 'Tarkibi',
-                body: ru ? product.ingredientsRu : product.ingredientsUz,
               },
               {
                 key: 'how',

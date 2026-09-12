@@ -524,8 +524,21 @@ model Product {
 
   benefitsUz    String?
   benefitsRu    String?
+  /// To'liq INCI ro'yxati — mijoz uni BAHOLAY OLMAYDI, shuning uchun u
+  /// mahsulot sahifasida alohida yig'iladigan blokda turadi.
   ingredientsUz String?
   ingredientsRu String?
+  /// Uchta asosiy tarkib, har biri oddiy tilda vazifasi bilan:
+  /// [{ "nameUz": "Pantenol", "nameRu": "Пантенол",
+  ///     "roleUz": "teri to'sig'ini mustahkamlaydi",
+  ///     "roleRu": "укрепляет барьер кожи" }, ...]
+  /// Baymard tadqiqoti buni go'zallik sohasida konversiyaning asosiy
+  /// omili deb ko'rsatgan: mijoz INCI ni o'qiy olmaydi va shu sababdan
+  /// sotib olishdan voz kechadi. TZ-3, 2.3.
+  keyIngredients Json?
+  /// Isbot yoki tadqiqot natijasi: "100% quruqlik kamayganini tasdiqladi".
+  claimUz String?
+  claimRu String?
   howToUseUz    String?
   howToUseRu    String?
   warningsUz    String?

@@ -187,6 +187,88 @@ export interface AdminProduct {
   updatedAt: string;
 }
 
+/** Mahsulot formasidagi bitta variant. */
+export interface AdminVariantInput {
+  id?: string;
+  sku: string;
+  barcode?: string | null;
+  options?: Record<string, string>;
+  /** So'mda, matn — forma inputidan kelganidek. Backend tiyinga aylantiradi. */
+  price: string;
+  oldPrice?: string | null;
+  costPrice?: string | null;
+  weightGrams?: number | null;
+  volumeMl?: number | null;
+  isActive?: boolean;
+}
+
+export interface AdminKeyIngredient {
+  nameUz: string;
+  nameRu: string;
+  roleUz: string;
+  roleRu: string;
+}
+
+/** `GET /admin/catalog/products/:id` javobi — Prisma yozuvi to'liq qaytadi. */
+export interface AdminProductDetail {
+  id: string;
+  slug: string;
+  brandId: string | null;
+  nameUz: string;
+  nameRu: string;
+  nameEn: string | null;
+  shortDescUz: string | null;
+  shortDescRu: string | null;
+  descUz: string | null;
+  descRu: string | null;
+  benefitsUz: string | null;
+  benefitsRu: string | null;
+  ingredientsUz: string;
+  ingredientsRu: string;
+  keyIngredients: AdminKeyIngredient[] | null;
+  claimUz: string | null;
+  claimRu: string | null;
+  howToUseUz: string | null;
+  howToUseRu: string | null;
+  warningsUz: string;
+  warningsRu: string;
+  countryOfOrigin: string | null;
+  manufacturer: string | null;
+  shelfLifeMonths: number | null;
+  ikpuCode: string;
+  vatRate: number;
+  unitCode: string;
+  status: string;
+  isFeatured: boolean;
+  seoTitleUz: string | null;
+  seoTitleRu: string | null;
+  seoDescUz: string | null;
+  seoDescRu: string | null;
+  variants: Array<{
+    id: string;
+    sku: string;
+    barcode: string | null;
+    options: Record<string, string> | null;
+    price: string;
+    oldPrice: string | null;
+    costPrice: string | null;
+    weightGrams: number | null;
+    volumeMl: number | null;
+    isActive: boolean;
+  }>;
+  images: Array<{ id: string; url: string; altUz: string | null; kind: string }>;
+  categories: Array<{ categoryId: string }>;
+  collections: Array<{ collectionId: string }>;
+  tags: Array<{ tag: { slug: string } }>;
+}
+
+export interface AdminBrand {
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+}
+
 export interface AdminCategory {
   id: string;
   slug: string;
@@ -624,6 +706,26 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ ids, status }),
     }),
+
+  productDetail: (id: string) =>
+    request<AdminProductDetail>(`/admin/catalog/products/${id}`),
+
+  createProduct: (body: unknown) =>
+    request<AdminProductDetail>('/admin/catalog/products', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateProduct: (id: string, body: unknown) =>
+    request<AdminProductDetail>(`/admin/catalog/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  deleteProduct: (id: string) =>
+    request<{ ok: true }>(`/admin/catalog/products/${id}`, { method: 'DELETE' }),
+
+  brands: () => request<AdminBrand[]>('/admin/catalog/brands'),
 
   categories: () => request<AdminCategory[]>('/admin/catalog/categories'),
 

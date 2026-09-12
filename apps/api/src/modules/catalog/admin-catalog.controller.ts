@@ -37,6 +37,25 @@ export class AdminCatalogController {
     private readonly prisma: PrismaService,
   ) {}
 
+  /* ------------------------------ Brendlar ------------------------------ */
+
+  /**
+   * Brendlar ro'yxati. Mahsulot formasidagi tanlov uchun kerak — ilgari
+   * hech qanday endpoint yo'q edi va admin brendni umuman biriktira
+   * olmasdi, garchi ma'lumotlar bazasida `brandId` bo'lsa ham.
+   *
+   * Ro'yxat kichik (o'nlab), shuning uchun sahifalash qo'yilmadi.
+   */
+  @Get('brands')
+  @ApiOperation({ summary: 'Brendlar ro‘yxati' })
+  @RequirePermissions('products.view')
+  brands() {
+    return this.prisma.brand.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, slug: true, name: true, logoUrl: true },
+    });
+  }
+
   /* ---------------------------- Kategoriyalar ---------------------------- */
 
   @Get('categories')
