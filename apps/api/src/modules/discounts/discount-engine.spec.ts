@@ -362,3 +362,58 @@ describe('chegirma taqsimoti — regressiya', () => {
     }
   });
 });
+
+describe('qator chegirmasi qator summasidan oshmaydi', () => {
+  /*
+   * Bu holat savat sahifasini 500 ga aylantirardi.
+   *
+   * Har bir qoida alohida o'z bazasidan oshmaydi, umumiy chegara esa
+   * SAVAT summasining foizi — ikkalasi ham bitta ARZON qatorni
+   * himoya qilmaydi. Ikkita qoida ustma-ust tushganda arzon qator
+   * o'z narxidan ko'proq chegirma olardi, `computeTotals` esa oddiy
+   * `Error` tashlardi va uni hech kim ushlamasdi.
+   */
+  const cheap = line({ variantId: 'v-cheap', productId: 'p-cheap', lineTotal: 1_000_000n });
+  const pricey = line({ variantId: 'v-rich', productId: 'p-rich', lineTotal: 9_000_000n });
+
+  const cartWide = rule({
+    id: 'd-cart',
+    code: 'CART30',
+    scope: 'CART',
+    type: 'PERCENT',
+    value: 30,
+    stackable: true,
+    priority: 10,
+  });
+  const onCheap = rule({
+    id: 'd-item',
+    code: 'CHEAP80',
+    scope: 'PRODUCT',
+    type: 'PERCENT',
+    value: 80,
+    stackable: true,
+    priority: 20,
+    targetProductIds: ['p-cheap'],
+  });
+
+  const res = applyDiscounts([cheap, pricey], [cartWide, onCheap], {
+    allowStacking: true,
+    maxTotalPercent: 40,
+    now: NOW,
+  });
+
+  it('hech bir qator o‘z summasidan ko‘p chegirma olmaydi', () => {
+    expect(res.perLine[0]!).toBeLessThanOrEqual(cheap.lineTotal);
+    expect(res.perLine[1]!).toBeLessThanOrEqual(pricey.lineTotal);
+  });
+
+  it('umumiy summa qator yig‘indisiga teng', () => {
+    const sum = res.perLine.reduce((a, b) => a + b, 0n);
+    expect(sum).toBe(res.discountTotal);
+  });
+
+  it('qo‘llangan qoidalar yig‘indisi umumiy summadan oshmaydi', () => {
+    const reported = res.applied.reduce((a, b) => a + b.amount, 0n);
+    expect(reported).toBeLessThanOrEqual(res.discountTotal);
+  });
+});

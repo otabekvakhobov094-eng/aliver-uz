@@ -90,9 +90,18 @@ export class FiscalService {
       include: {
         items: { orderBy: { createdAt: 'asc' } },
         payments: { take: 1, orderBy: { createdAt: 'desc' } },
+        // Ball bilan qoplangan qism chekda ko'rinishi SHART: aks holda
+        // chek mijozdan olinmagan pulni olingan deb e'lon qiladi.
+        loyaltyEntries: { where: { kind: 'REDEEM' } },
       },
     });
     if (!order) throw new NotFoundException('Buyurtma topilmadi');
+
+    // Chiqim manfiy yoziladi — chekka musbat summa kerak.
+    const loyaltyAmount = (order.loyaltyEntries ?? []).reduce(
+      (sum: bigint, e: { amount: bigint }) => sum + (e.amount < 0n ? -e.amount : e.amount),
+      0n,
+    );
 
     const shippingIkpu = await this.setting<string>('fiscal.shippingIkpu', DEFAULT_SHIPPING_IKPU);
     const shippingVat = await this.setting<number>('fiscal.shippingVatRate', 12);
@@ -118,6 +127,7 @@ export class FiscalService {
         shippingTotal: order.shippingTotal as bigint,
         shippingIkpu,
         shippingVatRate: shippingVat,
+        loyaltyAmount,
       });
     } catch (e) {
       // Chekni qurib bo'lmasa (masalan IKPU yo'q) — yozuv baribir

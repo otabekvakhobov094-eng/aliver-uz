@@ -283,13 +283,13 @@ export function applyDiscounts(
   // Chegara ishlagan bo'lsa, har bir chegirmaning "qo'llangan summasi" ham
   // qisqartiriladi. Aks holda `sum(applied)` haqiqiy chegirmadan katta
   // bo'lib qolardi va hisobotlar (DiscountUsage.amount) noto'g'ri chiqardi.
-  const reported =
-    total === uncapped || uncapped === 0n
+  const scaleReported = (to: bigint) =>
+    to === uncapped || uncapped === 0n
       ? applied
       : (() => {
           const scaled = allocateDiscount(
             applied.map((a) => a.amount),
-            total,
+            to,
           );
           return applied.map((a, i) => ({ ...a, amount: scaled[i] ?? 0n }));
         })();
@@ -299,12 +299,43 @@ export function applyDiscounts(
    * proporsional qisqartiriladi — aks holda `sum(perLine)` haqiqiy
    * chegirmadan katta bo'lib qolardi.
    */
-  const finalPerLine = total === uncapped ? perLine : allocateDiscount(perLine, total);
+  const spread = total === uncapped ? perLine : allocateDiscount(perLine, total);
+
+  /*
+   * QATOR CHEGIRMASI QATOR SUMMASIDAN KATTA BO'LA OLMAYDI.
+   *
+   * Har bir qoida alohida o'z bazasidan oshmaydi, umumiy chegara esa
+   * SAVAT summasining foizi — ikkalasi ham bitta qatorni himoya
+   * qilmaydi. Qoidalar bir-birining ustiga qo'yilsa (`allowStacking`),
+   * arzon qatorga ikkita chegirma tushib, uning narxidan oshib
+   * ketishi mumkin edi.
+   *
+   * Bu jimgina xato emas — yomonroq: `computeTotals` oddiy `Error`
+   * tashlaydi va u hech qayerda ushlanmaydi, ya'ni SAVAT SAHIFASI
+   * va buyurtma berish 500 qaytaradi. Aybdor mahsulot savatda
+   * turgan har bir mijoz uchun — admin qoidani o'chirmaguncha.
+   *
+   * Ortiqchasi shunchaki qirqiladi: qator narxidan ko'p chegirma
+   * berish baribir ma'nosiz, umumiy summa esa shunga yarasha
+   * kamayadi.
+   */
+  const finalPerLine = spread.map((value, i) => {
+    const lineTotal = lines[i]?.lineTotal ?? 0n;
+    return value > lineTotal ? lineTotal : value;
+  });
+  const clampedTotal = finalPerLine.reduce((sum, v) => sum + v, 0n);
+
+  if (clampedTotal < total) {
+    total = clampedTotal;
+  }
 
   return {
     perLine: finalPerLine,
     discountTotal: total,
-    applied: reported,
+    // Hisobot summasi qirqishdan KEYINGI umumiy summaga qarab
+    // hisoblanadi: aks holda `DiscountUsage.amount` yig'indisi
+    // haqiqatda berilgan chegirmadan katta bo'lib qolardi.
+    applied: scaleReported(total),
     freeShipping,
     cappedByLimit,
   };

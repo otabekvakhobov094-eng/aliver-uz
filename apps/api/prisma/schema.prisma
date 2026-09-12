@@ -1260,8 +1260,17 @@ model WebhookEvent {
   error       String?
   createdAt   DateTime @default(now())
 
+  /// Ishlov berish uchun "ijara" olingan vaqt.
+  ///
+  /// `processedAt` yo'q, `claimedAt` esa eski bo'lsa — ishlov bergan
+  /// jarayon o'lgan (deploy, OOM). Shunday yozuvni keyingi urinish
+  /// qayta egallaydi. Bunsiz to'lov abadiy "ishlanmoqda" bo'lib
+  /// qolardi: mijozdan pul yechilgan, buyurtma esa to'lanmagan.
+  claimedAt DateTime @default(now())
+
   @@unique([provider, externalId, method])
   @@index([provider, createdAt])
+  @@index([processedAt, claimedAt])
   @@map("webhook_events")
 }
 

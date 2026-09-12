@@ -194,10 +194,51 @@ export class LoyaltyService {
    * chaqiriladi — `tx` shuning uchun parametr.
    */
   async redeem(
-    tx: { loyaltyEntry: { create: (args: unknown) => Promise<unknown> } },
+    tx: {
+      loyaltyEntry: { create: (args: unknown) => Promise<unknown> };
+      $queryRaw: (query: TemplateStringsArray, ...values: unknown[]) => Promise<unknown>;
+    },
     params: { customerId: string; orderId: string; points: number; amount: bigint },
   ) {
     if (params.points <= 0) return;
+
+    /*
+     * BALANS AYNAN SHU YERDA, TRANZAKSIYA ICHIDA QAYTA TEKSHIRILADI.
+     *
+     * Ilgari tekshiruv faqat `quote` da edi — u esa tranzaksiyadan
+     * TASHQARIDA, buyurtma yaratilishidan oldin chaqiriladi. Ikki
+     * so'rov bir vaqtda kelsa (ikkita varaq, ilovaning qayta
+     * urinishi, ikki marta bosilgan tugma) ikkalasi ham o'sha
+     * balansni ko'rardi va ikkalasi ham chiqim yozardi: 100 balli
+     * mijoz 200 ball sarflab, balansi −100 bo'lardi. `(orderId, kind)`
+     * unikal indeksi bunga to'sqinlik qilmaydi — buyurtmalar boshqa.
+     *
+     * `FOR UPDATE` mijozning mavjud qatorlarini qulflaydi: ikkinchi
+     * tranzaksiya birinchisi tugaguncha kutadi va keyin YANGI
+     * yig'indini ko'radi. Qator umuman bo'lmasa balans nol — u holda
+     * quyidagi shart baribir rad etadi.
+     */
+    // Ikki so'rov: PostgreSQL `FOR UPDATE` ni agregat bilan birga
+    // ishlatishga ruxsat bermaydi. Avval qatorlar qulflanadi,
+    // keyin yig'indi olinadi — qulf olingandan keyingi holat bo'yicha.
+    await tx.$queryRaw`
+      SELECT id FROM loyalty_entries
+      WHERE "customerId" = ${params.customerId}::uuid
+      FOR UPDATE
+    `;
+    const rows = (await tx.$queryRaw`
+      SELECT COALESCE(SUM(points), 0)::int AS balance
+      FROM loyalty_entries
+      WHERE "customerId" = ${params.customerId}::uuid
+    `) as Array<{ balance: number }>;
+    const balance = rows[0]?.balance ?? 0;
+
+    if (balance < params.points) {
+      throw new BadRequestException(
+        `Ball yetarli emas: balansda ${balance} ta, so‘ralgan ${params.points} ta`,
+      );
+    }
+
     await tx.loyaltyEntry.create({
       data: {
         customerId: params.customerId,

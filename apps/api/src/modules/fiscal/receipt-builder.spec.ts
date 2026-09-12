@@ -160,3 +160,62 @@ describe('qaytarish cheki', () => {
     ).toThrow(FiscalBuildError);
   });
 });
+
+describe('bonus ball chekda', () => {
+  /*
+   * Ball buyurtma sarlavhasida saqlanadi, pozitsiyalarda emas.
+   * Shuning uchun chek MIJOZDAN OLINMAGAN pulni olingan deb
+   * ko'rsatardi: 2 000 000 tiyinlik savatda 100 ball sarflansa,
+   * kartadan 1 000 000 yechiladi, chekda esa 2 000 000 turardi —
+   * QQS ham o'sha katta summadan hisoblanardi.
+   */
+  const line = item({ quantity: 1, unitPrice: 2_000_000n });
+
+  it('chek summasi haqiqatda olingan pulga teng', () => {
+    const r = buildReceipt({ ...base, items: [line], loyaltyAmount: 1_000_000n });
+    expect(r.ReceivedCard).toBe(1_000_000);
+  });
+
+  it('ballsiz chek o‘zgarmaydi', () => {
+    const r = buildReceipt({ ...base, items: [line] });
+    expect(r.ReceivedCard).toBe(2_000_000);
+  });
+
+  it('QQS qolgan summadan hisoblanadi', () => {
+    const withPoints = buildReceipt({ ...base, items: [line], loyaltyAmount: 1_000_000n });
+    const without = buildReceipt({ ...base, items: [line] });
+    expect(withPoints.Items[0]!.VAT).toBeLessThan(without.Items[0]!.VAT);
+  });
+
+  it('bir nechta pozitsiyaga proporsional tushadi va yig‘indi saqlanadi', () => {
+    const r = buildReceipt({
+      ...base,
+      items: [
+        item({ quantity: 1, unitPrice: 1_000_000n, barcode: '1' }),
+        item({ quantity: 1, unitPrice: 3_000_000n, barcode: '2' }),
+      ],
+      loyaltyAmount: 1_000_000n,
+    });
+    expect(r.ReceivedCard).toBe(3_000_000);
+    const discounts = r.Items.reduce((s, it) => s + it.Discount, 0);
+    expect(discounts).toBe(1_000_000);
+  });
+
+  it('yetkazib berish pozitsiyasiga ball tushmaydi', () => {
+    const r = buildReceipt({
+      ...base,
+      items: [line],
+      shippingTotal: 500_000n,
+      loyaltyAmount: 1_000_000n,
+    });
+    const shipping = r.Items[r.Items.length - 1]!;
+    expect(shipping.Name).toContain('Yetkazib berish');
+    expect(shipping.Discount).toBe(0);
+    expect(r.ReceivedCard).toBe(1_500_000);
+  });
+
+  it('chekda yordamchi maydon qolmaydi', () => {
+    const r = buildReceipt({ ...base, items: [line], loyaltyAmount: 500_000n });
+    expect(Object.keys(r.Items[0]!)).not.toContain('_gross');
+  });
+});

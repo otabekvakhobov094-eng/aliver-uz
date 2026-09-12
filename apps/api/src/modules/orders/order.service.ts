@@ -902,6 +902,22 @@ export class OrderService {
         // Jo'natilgandan keyin bekor qilinsa, tovar omborga qaytariladi.
         await this.inventory.releaseForOrder(order.id, 'CANCELLED');
         await this.discounts.revokeUsage(order.id);
+        /*
+         * BALLAR HAM QAYTARILADI.
+         *
+         * Bu qator YO'Q edi. Mijoz 100 ball sarflab buyurtma bergan,
+         * buyurtma bekor bo'lgan (o'zi bekor qilgan, operator bekor
+         * qilgan yoki rezerv muddati o'tgan) — tovar omborga
+         * qaytarilgan, kupon qaytarilgan, ballar esa YO'QOLGAN.
+         * Ya'ni mijoz olmagan tovari uchun ball to'lagan.
+         *
+         * Teskarisi ham shu yerda hal bo'ladi: to'langan buyurtma
+         * bekor qilinsa, berilgan ball qaytarib olinadi.
+         *
+         * `reverseForOrder` idempotent (orderId+kind unikal), ya'ni
+         * takroriy chaqiruv ikkinchi marta yozmaydi.
+         */
+        await this.loyalty.reverseForOrder(order.id);
       }
       if (to === 'DELIVERED') {
         // Naqd to'lov aynan shu paytda tushadi.

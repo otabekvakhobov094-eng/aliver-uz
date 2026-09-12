@@ -21,6 +21,16 @@ import { sanitizePayload } from './webhook.util';
 import type { ProviderCode } from './payment-gateway';
 
 /**
+ * Webhook ijarasining muhlati.
+ *
+ * Bir webhookka ishlov berish eng uzun holatda bir necha soniya
+ * oladi (`markPaid` ketma-ket bir nechta so'rov qiladi). Ikki daqiqa
+ * — sog'lom jarayon uchun juda ko'p, o'lgan jarayonni kutish uchun
+ * esa juda kam emas: provayder shu vaqt ichida baribir qayta
+ * urinadi.
+ */
+const WEBHOOK_LEASE_MS = 2 * 60_000;
+/**
  * Webhook hodisasini "band qilish" natijasi.
  *
  *  - `fresh`     — birinchi marta, ishlov berish kerak;
@@ -645,6 +655,32 @@ export class PaymentService {
     // Qaytarish cheki — QQS ni qaytarish uchun majburiy.
     await this.fiscal.enqueueRefund(payment.orderId, payment.id, params.amount, params.returnId);
 
+    /*
+     * TO'LIQ qaytarishda ballar ham qaytariladi.
+     *
+     * Bu chaqiruv YO'Q edi: mijoz butun buyurtmani qaytarib, pulini
+     * olib, ustiga xarid uchun berilgan ballarni ham saqlab qolardi.
+     * Teskarisi ham: ball sarflab olingan buyurtma qaytarilganda
+     * sarflangan ball yo'qolardi.
+     *
+     * QISMAN qaytarishda tegilmaydi: `reverseForOrder` butun
+     * buyurtmani qaytaradi, qisman qaytarishda esa buyurtmaning bir
+     * qismi mijozda qoladi. Qisman qaytarishni ball bo'yicha
+     * bo'lish alohida qoida talab qiladi va uni o'ylab topish
+     * emas, kelishib olish kerak.
+     *
+     * Xato butun qaytarishni buzmaydi: pul allaqachon qaytarilgan.
+     */
+    if (to === 'REFUNDED') {
+      try {
+        await this.loyalty.reverseForOrder(payment.orderId);
+      } catch (e) {
+        this.logger.error(
+          `Qaytarish ${payment.id}: ballar qaytarilmadi — ${(e as Error).message}`,
+        );
+      }
+    }
+
     // Qisman qaytarish bir necha marta bo'ladi — har biri alohida xabar.
     // Kalit sifatida qaytarishdan KEYINGI umumiy summa ishlatiladi:
     // u har safar boshqacha va takroriy so'rovda o'zgarmaydi.
@@ -753,7 +789,39 @@ export class PaymentService {
     // urinsin, o'shanda tayyor javobni oladi.
     if (!existing) return { status: 'in_flight', id: null, previousResponse: null };
     if (existing.processedAt === null) {
-      return { status: 'in_flight', id: existing.id, previousResponse: null };
+      /*
+       * EGASIZ QOLGAN YOZUVNI QAYTA EGALLASH.
+       *
+       * Ilgari bu yerda shartsiz `in_flight` qaytarilardi. Ishlov
+       * bergan jarayon o'sha paytda o'lsa (deploy, OOM, qayta ishga
+       * tushirish), yozuv `processedAt = null` bo'lib QOLIB KETARDI
+       * va uni tozalaydigan hech narsa yo'q edi. Natijada Click yoki
+       * Payme ning HAR BIR keyingi urinishi «hozir ishlanmoqda»
+       * javobini olardi — to'lov esa abadiy `WAITING` da qolardi.
+       * Mijozdan pul yechilgan, buyurtma to'lanmagan; tuzatishning
+       * yagona yo'li bazadan qatorni qo'lda o'chirish edi.
+       *
+       * Ijara muhlati o'tgan bo'lsa, yozuv qayta egallanadi.
+       * Egallash SHARTLI yangilash orqali: ikkita qayta urinish bir
+       * vaqtda kelsa, faqat bittasi g'olib chiqadi.
+       */
+      const cutoff = new Date(Date.now() - WEBHOOK_LEASE_MS);
+      if (existing.claimedAt > cutoff) {
+        return { status: 'in_flight', id: existing.id, previousResponse: null };
+      }
+
+      const retaken = await this.prisma.webhookEvent.updateMany({
+        where: { id: existing.id, processedAt: null, claimedAt: { lt: cutoff } },
+        data: { claimedAt: new Date() },
+      });
+      if (retaken.count !== 1) {
+        return { status: 'in_flight', id: existing.id, previousResponse: null };
+      }
+
+      this.logger.warn(
+        `Webhook ${params.provider}/${params.externalId}: oldingi ishlov tugamagan, qayta boshlanmoqda`,
+      );
+      return { status: 'fresh', id: existing.id, previousResponse: null };
     }
 
     return { status: 'done', id: existing.id, previousResponse: existing.response ?? null };

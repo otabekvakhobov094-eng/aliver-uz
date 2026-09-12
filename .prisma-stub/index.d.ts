@@ -1573,6 +1573,7 @@ declare module '@prisma/client' {
     processedAt?: Date | string | null | undefined | { set?: Date | string | null };
     error?: string | null | undefined | { set?: string | null };
     createdAt?: Date | string | undefined | { set?: Date | string };
+    claimedAt?: Date | string | undefined | { set?: Date | string };
   }
   export interface WebhookEventRow {
     [key: string]: any;
@@ -1592,6 +1593,7 @@ declare module '@prisma/client' {
     processedAt: Date | null;
     error: string | null;
     createdAt: Date;
+    claimedAt: Date;
   }
   export interface PaymentLogData {
     id?: string | undefined | { set?: string };

@@ -1,4 +1,4 @@
-import { type Tiyin, vatFromGross } from '../../common/money';
+import { allocateDiscount, type Tiyin, vatFromGross } from '../../common/money';
 
 /**
  * Fiskal chek pozitsiyasi — O'zbekiston OFD lari kutadigan ko'rinishda.
@@ -77,6 +77,22 @@ export interface BuildReceiptParams {
   shippingTotal: Tiyin;
   shippingIkpu?: string | null;
   shippingVatRate?: number;
+  /**
+   * Bonus ball bilan qoplangan summa, tiyin.
+   *
+   * Bu maydon YO'Q edi va chek mijozdan olinmagan pulni olingan deb
+   * ko'rsatardi. Ball buyurtma sarlavhasida saqlanadi, pozitsiyalarda
+   * emas: 2 000 000 tiyinlik savatda 100 ball sarflansa, kartadan
+   * 1 000 000 yechiladi, chekda esa 2 000 000 deb yozilardi — QQS ham
+   * o'sha katta summadan hisoblanardi. Ya'ni har bir ballik buyurtma
+   * soliq organiga haqiqatdan ko'proq summa e'lon qilardi va to'lov
+   * bilan chek hech qachon teng chiqmasdi.
+   *
+   * Ball MAHSULOT summasiga tushadi (yetkazishga emas — buyurtma
+   * hisobida ham shunday) va pozitsiyalar bo'yicha proporsional
+   * taqsimlanadi.
+   */
+  loyaltyAmount?: Tiyin;
   type?: 'SALE' | 'REFUND';
 }
 
@@ -137,8 +153,31 @@ export function buildReceipt(params: BuildReceiptParams): FiscalReceiptPayload {
       VATPercent: i.vatRate,
       Discount: Number(i.discountAmount),
       Other: 0,
-    };
+      // Taqsimlashda kerak; chekka chiqmaydi.
+      _gross: gross,
+    } as FiscalItem & { _gross: Tiyin };
   });
+
+  // Ball bilan qoplangan qism pozitsiyalarga tushadi — aks holda chek
+  // mijozdan olinmagan pulni olingan deb ko'rsatadi.
+  const loyalty = params.loyaltyAmount ?? 0n;
+  if (loyalty > 0n) {
+    const goods = items as Array<FiscalItem & { _gross: Tiyin }>;
+    const share = allocateDiscount(
+      goods.map((it) => it._gross),
+      loyalty,
+    );
+    goods.forEach((it, k) => {
+      const part = share[k] ?? 0n;
+      const capped = part > it._gross ? it._gross : part;
+      const grossAfter = it._gross - capped;
+      it.Discount = Number(BigInt(it.Discount) + capped);
+      it.VAT = Number(vatFromGross(grossAfter, it.VATPercent));
+      it._gross = grossAfter;
+    });
+  }
+
+  for (const it of items as Array<FiscalItem & { _gross?: Tiyin }>) delete it._gross;
 
   // Yetkazib berish ham xizmat — u ham chekka tushishi kerak.
   if (params.shippingTotal > 0n) {
