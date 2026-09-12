@@ -3,6 +3,7 @@ import { AliverLogo } from '@aliver/ui';
 import type { Locale } from '@/i18n/messages';
 import { contentApi } from '@/lib/content-api';
 import { DEFAULT_FOOTER_MENU } from '@/lib/default-menu';
+import { getStoreSettings, telHref, telegramHandle } from '@/lib/store-settings';
 import { PaymentBadges } from './PaymentBadges';
 import styles from './SiteFooter.module.css';
 
@@ -20,8 +21,9 @@ import styles from './SiteFooter.module.css';
  * kelib, admin sahifani nashr qilgan kuni havola O'ZI paydo bo'ladi.
  */
 export async function SiteFooter({ locale }: { locale: Locale }) {
-  const fetched = await contentApi.menu('FOOTER');
+  const [fetched, store] = await Promise.all([contentApi.menu('FOOTER'), getStoreSettings()]);
   const links = fetched.length > 0 ? fetched : DEFAULT_FOOTER_MENU;
+  const tg = store.telegram ? telegramHandle(store.telegram) : null;
 
   return (
     <footer className={styles.footer}>
@@ -47,11 +49,34 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           ))}
         </nav>
 
+        {/*
+          Aloqa footerda ham turadi va u ham ADMINDAN keladi.
+          Mijoz telefon raqamini qidirib «Aloqa» sahifasini ochishi
+          shart emas — bu har bir sahifadan bir bosishni olib tashlaydi.
+        */}
+        {store.phone || tg ? (
+          <div className={styles.contacts}>
+            {store.phone ? (
+              <a href={telHref(store.phone)}>{store.phone}</a>
+            ) : null}
+            {tg ? (
+              <a href={tg.href} rel="noopener noreferrer" target="_blank">
+                {tg.handle}
+              </a>
+            ) : null}
+            {store.workHours ? (
+              <span>
+                {locale === 'ru' ? 'Ежедневно' : 'Har kuni'} {store.workHours}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
         <PaymentBadges locale={locale} />
 
         <div className={styles.line} />
         <div className={styles.copyright}>
-          © 2026 ALIVER.UZ •{' '}
+          © 2026 {store.name} •{' '}
           {locale === 'ru' ? 'Официальный магазин в Узбекистане' : 'O‘zbekistondagi rasmiy do‘kon'}
         </div>
       </div>

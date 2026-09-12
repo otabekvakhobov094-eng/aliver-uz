@@ -216,6 +216,15 @@ async function seedSettings(): Promise<void> {
     ['store.locales', ['UZ', 'RU']],
     ['store.defaultLocale', 'UZ'],
     ['store.phone', '+998 71 200 00 00'],
+    // Saytdagi «Aloqa» sahifasi AYNAN shu qiymatlarni ko'rsatadi.
+    // Ilgari ular sahifa kodida yozilgan edi va adminda o'zgartirilsa
+    // ham saytda o'zgarmasdi — sozlama bor, lekin hech narsani
+    // boshqarmaydigan holat.
+    ['store.telegram', '@aliver_uz'],
+    ['store.email', 'info@aliver.uz'],
+    ['store.workHours', '9:00–20:00'],
+    ['store.addressUz', ''],
+    ['store.addressRu', ''],
     ['store.legalName', 'MCHJ «ALIVER UZ»'],
     ['store.tin', '[SIZNING STIR]'],
     // Ombor rezervi muddati — ekspertiza A-6

@@ -33,6 +33,32 @@
 .links a:hover {
   color: #fff;
 }
+/*
+ * Aloqa qatori.
+ *
+ * `flex-wrap` shart: telefon, Telegram va ish vaqti telefonda bitta
+ * qatorga sig'maydi va o'ralmasa footer chetga chiqib ketardi.
+ */
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
+  margin-bottom: 22px;
+  font-size: 14px;
+}
+.contacts a {
+  color: #fff;
+  font-weight: 600;
+}
+.contacts a:hover {
+  text-decoration: underline;
+}
+.contacts span {
+  color: #b6a9be;
+  font-size: 13px;
+}
+
 .line {
   height: 1px;
   margin-bottom: 16px;

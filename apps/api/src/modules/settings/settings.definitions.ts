@@ -28,8 +28,24 @@ export interface SettingDef {
   max?: number;
   /** O'lchov birligi: "kun", "daqiqa", "%". */
   unit?: string;
-  /** Faqat SUPER_ADMIN o'zgartira oladigan nozik sozlama. */
+  /**
+   * Faqat SUPER_ADMIN O'ZGARTIRA oladigan sozlama.
+   *
+   * Bu KO'RSATISH bilan bog'liq emas. STIR shunga misol: uni har
+   * qanday xodim o'zgartira olmasligi kerak, lekin u fiskal chekda
+   * ham, saytda ham ochiq turadi. Ikkita tushunchani bitta maydonga
+   * yig'ish aynan shu yerda xatoga olib boradi.
+   */
   sensitive?: boolean;
+  /**
+   * Saytda KO'RINADIGAN sozlama.
+   *
+   * Bu maydon ataylab OQ RO'YXAT: sozlama ochiq API ga faqat shu yerda
+   * `true` deb belgilangandagina chiqadi. Teskarisi (nozik bo'lmaganini
+   * ochiq deb hisoblash) xavfli — yangi kalit qo'shilganda u jimgina
+   * saytga chiqib ketardi.
+   */
+  publicOnSite?: boolean;
 }
 
 export const SETTING_GROUPS: Array<{ key: string; label: string; help?: string }> = [
@@ -46,13 +62,14 @@ export const SETTING_GROUPS: Array<{ key: string; label: string; help?: string }
 
 export const SETTING_DEFS: SettingDef[] = [
   // ------------------------------- Do'kon -------------------------------
-  { key: 'store.name', group: 'store', label: 'Do‘kon nomi', type: 'string' },
+  { key: 'store.name', group: 'store', label: 'Do‘kon nomi', type: 'string', publicOnSite: true },
   {
     key: 'store.legalName',
     group: 'store',
     label: 'Yuridik nom',
-    help: 'Hujjatlarda va fiskal chekda ko‘rinadi',
+    help: 'Hujjatlarda, fiskal chekda va saytdagi «Aloqa» sahifasida ko‘rinadi',
     type: 'string',
+    publicOnSite: true,
   },
   {
     key: 'store.tin',
@@ -61,8 +78,58 @@ export const SETTING_DEFS: SettingDef[] = [
     help: 'Soliq to‘lovchining identifikatsiya raqami — fiskal chek uchun shart',
     type: 'string',
     sensitive: true,
+    // Saytda ham ko'rsatiladi: O'zbekiston bozorida onlayn do'konga
+    // ishonchning eng oddiy belgisi — mijoz kim bilan ish ko'rayotganini
+    // bilishi. O'zgartirishga esa faqat Super Admin haqli.
+    publicOnSite: true,
   },
-  { key: 'store.phone', group: 'store', label: 'Telefon', type: 'string' },
+  {
+    key: 'store.phone',
+    group: 'store',
+    label: 'Telefon',
+    help: 'Saytdagi «Aloqa» sahifasida va footerda ko‘rinadi',
+    type: 'string',
+    publicOnSite: true,
+  },
+  {
+    key: 'store.telegram',
+    group: 'store',
+    label: 'Telegram',
+    help: '@ bilan yoki usiz. Saytda havola bo‘lib chiqadi.',
+    type: 'string',
+    publicOnSite: true,
+  },
+  {
+    key: 'store.email',
+    group: 'store',
+    label: 'E-pochta',
+    help: 'Hamkorlik va rasmiy murojaatlar uchun',
+    type: 'string',
+    publicOnSite: true,
+  },
+  {
+    key: 'store.workHours',
+    group: 'store',
+    label: 'Ish vaqti',
+    help: 'Masalan: 9:00–20:00. Telefon ostida ko‘rsatiladi.',
+    type: 'string',
+    publicOnSite: true,
+  },
+  {
+    key: 'store.addressUz',
+    group: 'store',
+    label: 'Manzil (o‘zbekcha)',
+    help: 'Bo‘sh qoldirilsa saytda manzil bloki umuman ko‘rinmaydi',
+    type: 'string',
+    publicOnSite: true,
+  },
+  {
+    key: 'store.addressRu',
+    group: 'store',
+    label: 'Manzil (ruscha)',
+    type: 'string',
+    publicOnSite: true,
+  },
   {
     key: 'store.currency',
     group: 'store',
@@ -309,3 +376,15 @@ export function validateSetting(
     }
   }
 }
+
+/**
+ * Saytga chiqadigan kalitlar.
+ *
+ * Ro'yxat ta'riflardan HISOBLANADI, qo'lda yozilmaydi: ikkita ro'yxat
+ * bo'lganda ular albatta bir-biridan uzoqlashadi va natija jimgina
+ * noto'g'ri bo'ladi — yo sozlama saytga chiqmaydi, yo chiqmasligi
+ * kerak bo'lgani chiqib ketadi.
+ */
+export const PUBLIC_SETTING_KEYS: string[] = SETTING_DEFS.filter((d) => d.publicOnSite).map(
+  (d) => d.key,
+);
