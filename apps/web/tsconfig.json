@@ -22,7 +22,12 @@
         "./src/*"
       ]
     },
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": [
+      "node",
+      "jest",
+      "@testing-library/jest-dom"
+    ]
   },
   "include": [
     "next-env.d.ts",

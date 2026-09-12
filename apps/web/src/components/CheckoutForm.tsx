@@ -15,6 +15,11 @@ import {
 } from '@/lib/shop-api';
 import type { Locale } from '@/i18n/messages';
 import { toSum, trackAddPaymentInfo, trackInitiateCheckout, trackLead } from '@/lib/pixel';
+import {
+  blockerMessage,
+  checkoutBlockers,
+  type CheckoutFormState,
+} from '@/lib/checkout-rules';
 
 const money = (v: string, locale: Locale) => formatPrice(v, locale === 'ru' ? 'RU' : 'UZ');
 
@@ -143,16 +148,29 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
   const blockingItems = cart.items.filter((i) => i.exceedsStock);
   const hasBlocking = blockingItems.length > 0;
 
-  const canSubmit =
-    !hasBlocking &&
-    !submitting &&
-    phone.replace(/\D/g, '').length >= 9 &&
-    firstName.trim().length >= 2 &&
-    Boolean(regionId) &&
-    Boolean(methodCode) &&
-    (!needsAddress || addressLine.trim().length >= 5) &&
-    accept &&
-    (!codNeedsOtp || otpCode.length >= 4);
+  /*
+   * Shart ALOHIDA faylda va sinaladi. Ilgari u shu yerda sakkizta
+   * `&&` bo'lib turardi: uni o'qish mumkin, lekin sinash mumkin emas
+   * edi — va bu yerdagi xato jimgina savdoni to'xtatadi.
+   */
+  const formState: CheckoutFormState = {
+    phone,
+    firstName,
+    regionId,
+    methodCode,
+    addressLine,
+    needsAddress,
+    needsOtp: codNeedsOtp,
+    otpCode,
+    accept,
+    hasBlockingItems: hasBlocking,
+    submitting,
+  };
+  const blockers = checkoutBlockers(formState);
+  const canSubmit = blockers.length === 0;
+  // Mijoz nima yetishmayotganini KO'RISHI kerak. Faol bo'lmagan tugma
+  // sababini aytmaydi va odam formani boshidan qayta o'qib chiqadi.
+  const blockerHint = blockerMessage(blockers[0], locale === 'ru' ? 'ru' : 'uz');
 
   /*
    * «Rasmiylashtirish boshlandi» — savat ma'lumoti KELGANDAN keyin.
@@ -713,6 +731,25 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
           >
             {error}
           </div>
+        ) : null}
+
+        {/*
+          Faol bo'lmagan tugma sababini aytmaydi. Mijoz formani
+          boshidan qayta o'qib chiqadi va ko'pincha topolmaydi —
+          ayniqsa telefondan, maydonlar ekranga sig'maganda. Shuning
+          uchun birinchi yetishmayotgan narsa ochiq yoziladi.
+        */}
+        {blockerHint ? (
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13.5,
+              color: 'var(--alv-ink-2)',
+              textAlign: 'center',
+            }}
+          >
+            {blockerHint}
+          </p>
         ) : null}
 
         <Button type="submit" variant="primary" size="lg" disabled={!canSubmit} fullWidth>
