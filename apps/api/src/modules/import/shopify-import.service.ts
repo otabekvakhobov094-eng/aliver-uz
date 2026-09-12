@@ -323,7 +323,16 @@ export class ShopifyImportService {
       ikpuCode: ctx.defaultIkpu,
       vatRate: 12,
       unitCode: '796',
-      status: active ? 'ACTIVE' : 'DRAFT',
+      /*
+       * `as const` SHART.
+       *
+       * `const data = { status: active ? 'ACTIVE' : 'DRAFT' }` da
+       * TypeScript turni `string` gacha kengaytiradi, Prisma esa
+       * `ProductStatus` enumini kutadi. Lokal typecheck buni ko'rmadi,
+       * chunki u stub bilan ishlaydi — xato faqat Render'dagi build'da
+       * chiqdi.
+       */
+      status: active ? ('ACTIVE' as const) : ('DRAFT' as const),
       publishedAt: active ? new Date(product.published_at ?? Date.now()) : null,
       minPrice: prices.length ? prices.reduce((a, b) => (a < b ? a : b)) : 0n,
       maxPrice: prices.length ? prices.reduce((a, b) => (a > b ? a : b)) : 0n,
@@ -385,7 +394,8 @@ export class ShopifyImportService {
                 image.variant_ids?.length === 1
                   ? (variantIds.get(String(image.variant_ids[0])) ?? null)
                   : null,
-              kind: index === 0 ? 'MAIN' : 'GALLERY',
+              // Yuqoridagi sabab: `MediaKind` enumi, `string` emas.
+              kind: index === 0 ? ('MAIN' as const) : ('GALLERY' as const),
               url: image.src,
               width: image.width || null,
               height: image.height || null,
