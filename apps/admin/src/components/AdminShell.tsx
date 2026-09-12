@@ -5,7 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { adminApi } from '@/lib/api';
 import { navSections, visibleNav, type NavItem } from '@/lib/nav';
+import { cachedSession, clearSession, loadSession } from '@/lib/session-cache';
 import { NavIcon } from './NavIcon';
+import { LinkPending, NavPendingProvider, NavProgress } from './NavPending';
 
 /**
  * Admin panel qobig'i.
@@ -38,13 +40,21 @@ export function AdminShell({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [items, setItems] = useState<NavItem[]>([]);
-  const [role, setRole] = useState('');
+  /*
+   * Boshlang'ich qiymat KESHDAN olinadi. Shuning uchun menyudan
+   * bosilgan ikkinchi sahifada qobiq umuman yo'qolmaydi — ilgari
+   * har bosishda butun interfeys «Yuklanmoqda…» ga almashardi.
+   */
+  const first = cachedSession();
+  const [items, setItems] = useState<NavItem[]>(() =>
+    first ? visibleNav(first.permissions, first.role) : [],
+  );
+  const [role, setRole] = useState(first?.role ?? '');
   const [who, setWho] = useState<{ name: string | null; email: string | null }>({
-    name: null,
-    email: null,
+    name: first?.fullName ?? null,
+    email: first?.email ?? null,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!first);
   const [open, setOpen] = useState(false);
 
   // Sahifa almashganda mobil menyu yopiladi: aks holda bosgandan keyin
@@ -54,15 +64,24 @@ export function AdminShell({
   }, [pathname]);
 
   useEffect(() => {
-    adminApi
-      .permissions()
+    let alive = true;
+    loadSession()
       .then((res) => {
+        if (!alive) return;
         setRole(res.role);
         setWho({ name: res.fullName, email: res.email });
         setItems(visibleNav(res.permissions, res.role));
       })
-      .catch(() => router.push('/login'))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        clearSession();
+        router.push('/login');
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, [router]);
 
   if (loading) {
@@ -77,7 +96,9 @@ export function AdminShell({
   const sections = navSections(items);
 
   return (
+    <NavPendingProvider>
     <div className={`alv-adm${open ? ' alv-adm--open' : ''}`}>
+      <NavProgress />
       {/*
         Yuqori qator — butun kenglikda va qorong'i.
         U panelni saytdan darhol ajratadi: xodim qaysi muhitda
@@ -109,6 +130,7 @@ export function AdminShell({
             type="button"
             className="alv-adm__exit"
             onClick={() => {
+              clearSession();
               void adminApi
                 .logout()
                 .catch(() => undefined)
@@ -150,6 +172,7 @@ export function AdminShell({
                     >
                       <NavIcon name={item.icon} />
                       <span className="alv-nav__label">{item.label}</span>
+                      <LinkPending />
                       {!item.ready ? (
                         <span className="alv-nav__soon" title="Bu bo‘lim hali yozilmagan">
                           tez orada
@@ -178,9 +201,17 @@ export function AdminShell({
             {actions ? <div className="alv-adm__actions">{actions}</div> : null}
           </div>
 
-          {children}
+          {/*
+            `key` — sahifa almashganda mazmun QAYTA chiziladi va
+            silliq paydo bo'ladi. Ilgari eski sahifa yangisiga sakrab
+            almashardi.
+          */}
+          <div key={pathname} className="alv-adm__page">
+            {children}
+          </div>
         </main>
       </div>
     </div>
+    </NavPendingProvider>
   );
 }

@@ -407,7 +407,10 @@ export class ProductService {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? 30;
 
-    const where: Record<string, unknown> = { deletedAt: null };
+    const onlyDeleted = query.deleted === '1' || query.deleted === 'true';
+    const where: Record<string, unknown> = onlyDeleted
+      ? { deletedAt: { not: null } }
+      : { deletedAt: null };
     if (query.status) where.status = query.status;
     if (query.categoryId) where.categories = { some: { categoryId: query.categoryId } };
     if (query.q) {
@@ -435,6 +438,7 @@ export class ProductService {
           hasSale: true,
           inStock: true,
           updatedAt: true,
+          deletedAt: true,
           images: { where: { kind: 'MAIN' }, take: 1, select: { url: true, urlWebp: true } },
           _count: { select: { variants: true } },
         },
@@ -457,6 +461,7 @@ export class ProductService {
         variantsCount: r._count.variants,
         imageUrl: r.images[0]?.urlWebp ?? r.images[0]?.url ?? null,
         updatedAt: r.updatedAt,
+        deletedAt: r.deletedAt,
       })),
       total,
       page,

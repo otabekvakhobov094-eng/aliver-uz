@@ -162,6 +162,13 @@ export default function ProductsPage() {
   const [items, setItems] = useState<AdminProduct[]>([]);
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<Record<string, unknown>>({ q: '', status: '' });
+  /*
+   * O'chirilganlar ro'yxati ALOHIDA: ro'yxat ularni doim yashirardi,
+   * tiklash yo'li esa serverda bor edi — ya'ni bitta noto'g'ri bosishda
+   * mahsulot adminkadan butunlay yo'qolardi.
+   */
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [restoring, setRestoring] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,7 +179,11 @@ export default function ProductsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await adminApi.products({ q: q || undefined, status: status || undefined });
+      const res = await adminApi.products({
+        q: q || undefined,
+        status: showDeleted ? undefined : status || undefined,
+        deleted: showDeleted || undefined,
+      });
       setItems(res.items);
       setTotal(res.total);
     } catch (e) {
@@ -180,7 +191,60 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [q, status]);
+  }, [q, status, showDeleted]);
+
+  /**
+   * O'chirilganlar ro'yxati boshqa ustunlar bilan ko'rsatiladi: narx
+   * va ombor bu yerda ma'nosiz, kerak bo'lgani — qachon o'chirilgani
+   * va tiklash tugmasi.
+   */
+  const DELETED_COLUMNS = useMemo<Array<DataColumn<AdminProduct>>>(
+    () => [
+      COLUMNS[0]!,
+      {
+        key: 'deletedAt',
+        label: 'O‘chirilgan',
+        render: (p) => (
+          <span style={{ color: 'var(--alv-muted)', whiteSpace: 'nowrap' }}>
+            {fmtDate(p.deletedAt ?? null)}
+          </span>
+        ),
+      },
+      {
+        key: 'restore',
+        label: '',
+        align: 'right',
+        locked: true,
+        render: (p) => (
+          <button
+            type="button"
+            disabled={restoring === p.id}
+            onClick={() => {
+              setRestoring(p.id);
+              adminApi
+                .restoreProduct(p.id)
+                .then(() => load())
+                .catch((e: Error) => setError(e.message))
+                .finally(() => setRestoring(null));
+            }}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: '1px solid var(--alv-line)',
+              background: 'transparent',
+              color: 'var(--alv-ink)',
+              cursor: restoring === p.id ? 'wait' : 'pointer',
+              fontSize: 13,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {restoring === p.id ? 'Tiklanmoqda…' : 'Tiklash'}
+          </button>
+        ),
+      },
+    ],
+    [restoring, load],
+  );
 
   useEffect(() => {
     // Qidiruvda har bosilgan harf uchun so'rov yubormaslik.
@@ -264,7 +328,7 @@ export default function ProductsPage() {
 
       <DataList<AdminProduct>
         storageKey="products"
-        columns={COLUMNS}
+        columns={showDeleted ? DELETED_COLUMNS : COLUMNS}
         rows={items}
         rowKey={(p) => p.id}
         filters={filters}
@@ -272,7 +336,10 @@ export default function ProductsPage() {
         loading={loading}
         bulkActions={bulkActions}
         onDone={load}
-        onClearFilters={() => setFilters({ q: '', status: '' })}
+        onClearFilters={() => {
+          setFilters({ q: '', status: '' });
+          setShowDeleted(false);
+        }}
         emptyTitle="Hali mahsulot qo‘shilmagan"
         emptyHint="Excel orqali import qiling yoki qo‘lda yarating."
         noResultsTitle="Bu so‘rovga mos mahsulot topilmadi"
@@ -290,6 +357,7 @@ export default function ProductsPage() {
               value={status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               aria-label="Holat bo‘yicha filtr"
+              disabled={showDeleted}
               style={input}
             >
               {STATUS_FILTERS.map((s) => (
@@ -298,6 +366,23 @@ export default function ProductsPage() {
                 </option>
               ))}
             </select>
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 13.5,
+                color: 'var(--alv-muted)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showDeleted}
+                onChange={(e) => setShowDeleted(e.target.checked)}
+              />
+              O‘chirilganlar
+            </label>
           </div>
         }
       />

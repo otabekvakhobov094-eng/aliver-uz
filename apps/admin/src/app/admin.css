@@ -40,6 +40,11 @@
   --adm-top: #1a1a1a;
   --adm-top-ink: #e3e3e3;
 
+  /* Yagona «harakat» rangi: o'tish chizig'i va fokus halqasi uchun.
+     Shopify va Shoplazza da ham aynan shu vazifada ko'k turadi —
+     u holat rangi (yashil/sariq/qizil) bilan aralashmaydi. */
+  --adm-accent: #2c6ecb;
+
   --adm-ok: #0c6b58;
   --adm-ok-soft: #e3f5f0;
   --adm-warn: #8a6116;
@@ -636,5 +641,106 @@ textarea:focus-visible {
   .alv-set__row {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   O'TISHLAR
+   ---------------------------------------------------------------
+   Panel «silliq ochilmaydi» degan e'tiroz ikki sababdan edi:
+
+     1. har bosishda butun qobiq «Yuklanmoqda…» ga almashardi —
+        buni `session-cache.ts` hal qildi;
+     2. mazmun esa sakrab paydo bo'lardi va bosilgan-bosilmagani
+        bilinmasdi.
+
+   Quyidagisi ikkinchi qismi: bosilganda tepada chiziq, bandning
+   yonida aylanma, yangi sahifa esa 160 ms ichida silliq chiqadi.
+   Harakat kamaytirilgan bo'lsa — hammasi o'chadi.
+   --------------------------------------------------------------- */
+
+.alv-adm__progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  z-index: 60;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+.alv-adm__progress::after {
+  content: '';
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: 0 2px 2px 0;
+  background: var(--adm-accent, #2c6ecb);
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.alv-adm__progress[data-on='1']::after {
+  opacity: 1;
+  animation: adm-progress 900ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes adm-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+
+.alv-nav__spin {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  margin-left: auto;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: adm-spin 640ms linear infinite;
+}
+
+.alv-adm__page {
+  animation: adm-page-in 160ms ease-out both;
+}
+@keyframes adm-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Bosilganda javob darrov ko'rinsin. */
+.alv-nav__item {
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.alv-adm__exit,
+.alv-adm__burger {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alv-adm__page,
+  .alv-adm__progress::after,
+  .alv-nav__spin {
+    animation: none;
+  }
+  .alv-adm__page {
+    opacity: 1;
+    transform: none;
   }
 }

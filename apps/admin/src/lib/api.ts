@@ -236,6 +236,15 @@ export interface AdminCollection {
   productCount?: number;
 }
 
+/** Kolleksiya tarkibidagi bitta mahsulot. */
+export interface AdminCollectionProduct {
+  id: string;
+  slug: string;
+  nameUz: string;
+  status: string;
+  imageUrl: string | null;
+}
+
 export interface AdminDiscount {
   id: string;
   code: string | null;
@@ -476,6 +485,8 @@ export interface AdminProduct {
   variantsCount: number;
   imageUrl: string | null;
   updatedAt: string;
+  /** To'ldirilgan bo'lsa — mahsulot o'chirilgan va tiklanishi mumkin. */
+  deletedAt?: string | null;
 }
 
 /** Mahsulot formasidagi bitta variant. */
@@ -1046,11 +1057,12 @@ export const adminApi = {
     }>('/admin/permissions'),
   logout: () => request('/admin/auth/logout', { method: 'POST' }),
 
-  products: (params: { q?: string; status?: string; page?: number }) => {
+  products: (params: { q?: string; status?: string; page?: number; deleted?: boolean }) => {
     const qs = new URLSearchParams();
     if (params.q) qs.set('q', params.q);
     if (params.status) qs.set('status', params.status);
     if (params.page) qs.set('page', String(params.page));
+    if (params.deleted) qs.set('deleted', '1');
     return request<{ items: AdminProduct[]; total: number; page: number; perPage: number }>(
       `/admin/catalog/products?${qs.toString()}`,
     );
@@ -1076,6 +1088,10 @@ export const adminApi = {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
+
+  /** O'chirilgan mahsulotni qaytaradi — qoralama holatida. */
+  restoreProduct: (id: string) =>
+    request<{ id: string }>(`/admin/catalog/products/${id}/restore`, { method: 'POST' }),
 
   deleteProduct: (id: string) =>
     request<{ ok: true }>(`/admin/catalog/products/${id}`, { method: 'DELETE' }),
@@ -1754,6 +1770,13 @@ export const adminApi = {
    * yaratish ham, o'chirish ham mumkin emasdi.
    */
   collections: () => request<AdminCollection[]>('/admin/catalog/collections'),
+  collectionProducts: (id: string) =>
+    request<AdminCollectionProduct[]>(`/admin/catalog/collections/${id}/products`),
+  setCollectionProducts: (id: string, productIds: string[]) =>
+    request<{ count: number }>(`/admin/catalog/collections/${id}/products`, {
+      method: 'PUT',
+      body: JSON.stringify({ productIds }),
+    }),
   createCollection: (body: Record<string, unknown>) =>
     request<AdminCollection>('/admin/catalog/collections', {
       method: 'POST',

@@ -99,13 +99,13 @@ export class AdminController {
     };
   }
 
-  @Get('audit-logs')
-  @RequirePermissions('audit.view')
-  auditLogs() {
-    return this.prisma.auditLog.findMany({
-      take: 100,
-      orderBy: { createdAt: 'desc' },
-      include: { admin: { select: { id: true, fullName: true, email: true } } },
-    });
-  }
+  /*
+   * `GET /admin/audit-logs` OLIB TASHLANDI.
+   *
+   * U `admin/audit` moduli yozilgunga qadar qilingan vaqtinchalik yo'l
+   * edi: filtri ham, sahifalashi ham yo'q, oxirgi 100 ta yozuvni
+   * qaytarardi. Adminka uni hech qachon chaqirmagan — ya'ni ikkinchi,
+   * qo'riqlanmagan eshik bo'lib turgan. Audit jurnali `admin/audit`
+   * da: `?` filtrlari, sahifalash va yozuv bo'yicha tarix bilan.
+   */
 }

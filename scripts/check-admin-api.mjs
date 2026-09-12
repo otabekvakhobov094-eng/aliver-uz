@@ -103,7 +103,12 @@ function readLiteral(text, start) {
 }
 
 const calls = [];
-for (const m of client.matchAll(/request<[^>]*>\(\s*(['`])/g)) {
+/*
+ * Tur ko'rsatkichi MAJBURIY emas: `request('/admin/me')` ham chaqiruv.
+ * Ilgari regex `request<...>(` ni talab qilardi va turi yozilmagan
+ * chaqiruvlar tekshiruvdan butunlay chetda qolardi.
+ */
+for (const m of client.matchAll(/\brequest(?:<[\s\S]*?>)?\(\s*(['`])/g)) {
   calls.push(readLiteral(client, (m.index ?? 0) + m[0].length - 1));
 }
 // To'g'ridan-to'g'ri `fetch(`${apiBase()}/admin/...`)`
@@ -190,6 +195,58 @@ if (problems.length > 0) {
     `\nJami ${problems.length} ta. Bunday xato faqat bo‘limni ochganda ko‘rinadi.`,
   );
   process.exit(1);
+}
+
+/* ---------- teskari yo'nalish ---------- */
+
+/*
+ * Serverda bor, lekin adminka HECH QACHON chaqirmaydigan `admin/…`
+ * yo'llari.
+ *
+ * NEGA. Aynan shunday bo'shliq sessiyani 15 daqiqada o'ldirgan edi:
+ * server refresh tokenini berardi, saqlardi — va uni ishlatadigan
+ * yo'l hech kim tomonidan chaqirilmasdi. Bunday «unutilgan imkoniyat»
+ * na typecheck, na testda ko'rinadi.
+ *
+ * Bu RO'YXAT, xato emas: ba'zi yo'llar ataylab skript yoki webhook
+ * uchun turadi. Shuning uchun natijani buzmaydi.
+ */
+const callPatterns = [...checked];
+const calledByAdmin = (route) => {
+  const have = route.split('/');
+  return callPatterns.some(
+    (p) =>
+      p.split('/').length === have.length &&
+      p.split('/').every((seg, i) => seg === have[i] || seg === '*' || have[i] === '*'),
+  );
+};
+
+/**
+ * Adminka ataylab chaqirmaydigan yo'llar — sababi bilan.
+ *
+ * Ro'yxatga qo'shish SABAB YOZISHNI talab qiladi: aks holda bu
+ * tekshiruv «hammasini ro'yxatga qo'shib qo'yamiz» ga aylanadi va
+ * unutilgan imkoniyatni ko'rsatmay qo'yadi.
+ */
+const SCRIPT_ONLY = new Map([
+  ['/admin/auth/refresh', 'brauzer 401 dan keyin o‘zi chaqiradi, `request` orqali emas'],
+  ['/admin/uzum/sync/push', 'Uzum yozish API si ulanmagan — kalit va hujjat kelgach'],
+  ['/admin/audit/record/*', 'yozuv tarixi — mahsulot/buyurtma sahifasiga qo‘shiladi'],
+  ['/admin/catalog/products/*/recompute', 'texnik amal: narx va qidiruv maydonlarini qayta hisoblash'],
+  ['/admin/fiscal/receipts/*', 'bitta chek tafsiloti — ro‘yxatdagi ma’lumot hozircha yetarli'],
+  ['/admin/import/products/history', 'import tarixi ekrani hali yozilmagan'],
+  ['/admin/payments/*/webhooks', 'to‘lov webhook jurnali ekrani hali yozilmagan'],
+]);
+const orphans = [...serverRoutes]
+  .filter((r) => r.startsWith('/admin/'))
+  .filter((r) => !SCRIPT_ONLY.has(r))
+  .filter((r) => !calledByAdmin(r))
+  .sort();
+
+if (orphans.length > 0) {
+  console.log(`Adminka chaqirmaydigan server yo‘llari (${orphans.length} ta):`);
+  for (const r of orphans) console.log(`  · ${r}`);
+  console.log('  Yo bo‘lim yozilmagan, yo yo‘l ortiqcha.');
 }
 
 console.log(

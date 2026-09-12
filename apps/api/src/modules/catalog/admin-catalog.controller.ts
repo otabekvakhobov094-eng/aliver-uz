@@ -195,6 +195,12 @@ export class AdminCatalogController {
     return this.collections.remove(id);
   }
 
+  @Get('collections/:id/products')
+  @RequirePermissions('collections.view')
+  collectionProducts(@Param('id', ParseUUIDPipe) id: string) {
+    return this.collections.products(id);
+  }
+
   @Put('collections/:id/products')
   @RequirePermissions('collections.update')
   @Audit('collections', 'set_products')

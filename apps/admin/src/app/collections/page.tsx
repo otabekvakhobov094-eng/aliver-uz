@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
+import { CollectionProducts } from '@/components/CollectionProducts';
 import { adminApi, type AdminCollection } from '@/lib/api';
 
 /**
@@ -28,6 +29,7 @@ export default function CollectionsPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<AdminCollection | null>(null);
 
   const load = useCallback(async () => {
     setError('');
@@ -185,6 +187,17 @@ export default function CollectionsPage() {
         </form>
       ) : null}
 
+      {editing ? (
+        <CollectionProducts
+          collection={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setNotice('Kolleksiya tarkibi saqlandi');
+            void load();
+          }}
+        />
+      ) : null}
+
       <div className="alv-card" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', minWidth: 620, borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
@@ -245,6 +258,22 @@ export default function CollectionsPage() {
                     whiteSpace: 'nowrap',
                   }}
                 >
+                  <button
+                    type="button"
+                    onClick={() => setEditing(editing?.id === c.id ? null : c)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 8,
+                      border: '1px solid var(--alv-line)',
+                      background: 'transparent',
+                      color: 'var(--alv-ink)',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      marginRight: 8,
+                    }}
+                  >
+                    Tarkibi
+                  </button>
                   <button
                     type="button"
                     onClick={() =>

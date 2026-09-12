@@ -87,6 +87,46 @@ export class CollectionService {
     });
   }
 
+  /**
+   * Kolleksiya tarkibi — tartibi bilan.
+   *
+   * `setProducts` tarkibni TO'LIQ almashtiradi, ya'ni tahrirlash uchun
+   * avval hozirgi ro'yxatni bilish shart. Bu yo'l yo'q edi — shuning
+   * uchun adminkada kolleksiyaga mahsulot qo'shib ham bo'lmasdi:
+   * kolleksiya yaratilardi va bo'sh qolardi, sayt esa uni bo'sh
+   * sahifa qilib ko'rsatardi.
+   */
+  async products(collectionId: string) {
+    const collection = await this.prisma.collection.findFirst({
+      where: { id: collectionId, deletedAt: null },
+    });
+    if (!collection) throw new NotFoundException('Kolleksiya topilmadi');
+
+    const rows = await this.prisma.collectionProduct.findMany({
+      where: { collectionId, product: { deletedAt: null } },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        product: {
+          select: {
+            id: true,
+            slug: true,
+            nameUz: true,
+            status: true,
+            images: { where: { kind: 'MAIN' }, take: 1, select: { url: true, urlWebp: true } },
+          },
+        },
+      },
+    });
+
+    return rows.map((r) => ({
+      id: r.product.id,
+      slug: r.product.slug,
+      nameUz: r.product.nameUz,
+      status: r.product.status,
+      imageUrl: r.product.images[0]?.urlWebp ?? r.product.images[0]?.url ?? null,
+    }));
+  }
+
   /** Kolleksiya tarkibini to'liq almashtiradi (admin panelda drag-and-drop tartibi bilan). */
   async setProducts(collectionId: string, productIds: string[]) {
     await this.prisma.$transaction([

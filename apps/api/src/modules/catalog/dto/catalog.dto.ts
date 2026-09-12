@@ -494,6 +494,16 @@ export class AdminProductQueryDto {
   @ApiPropertyOptional() @IsOptional() @IsString() status?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() categoryId?: string;
 
+  /**
+   * `1` bo'lsa — FAQAT o'chirilganlar.
+   *
+   * Ro'yxat o'chirilganlarni doim yashirardi, tiklash yo'li esa bor
+   * edi: ya'ni adminkada o'chirilgan mahsulotni qaytarish IMKONSIZ
+   * bo'lib qolgandi. Savdo xodimi bitta noto'g'ri bosishda mahsulotni
+   * butunlay yo'qotardi.
+   */
+  @ApiPropertyOptional() @IsOptional() @IsString() deleted?: string;
+
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
   @Type(() => Number)
