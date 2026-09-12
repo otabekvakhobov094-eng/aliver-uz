@@ -91,7 +91,7 @@ interface Shaped {
   ageBand: string | null;
   source: string;
   externalAuthor: string | null;
-  customer: { fullName: string | null } | null;
+  customer: { firstName: string | null; lastName: string | null } | null;
 }
 
 @ApiTags('reviews')
@@ -143,7 +143,11 @@ export class PublicReviewsController {
         ageBand: true,
         source: true,
         externalAuthor: true,
-        customer: { select: { fullName: true } },
+        // Customer'da `fullName` YO'Q — `firstName` va `lastName` bor.
+        // Bu xatoni lokal typecheck ushlamagan edi, chunki u Prisma
+        // stubi bilan ishlaydi va stubda hamma maydon mavjud deb
+        // hisoblanadi. Render'dagi build esa haqiqiy klient bilan.
+        customer: { select: { firstName: true, lastName: true } },
       },
       orderBy: { createdAt: 'desc' },
       // Chegara: sharh soni mingga yetganda ham bitta so'rov bazani
@@ -216,7 +220,11 @@ export class PublicReviewsController {
         // birga teri turi va yosh ko'rsatilsa, bu odamni aniqlashga
         // yaqinlashadi.
         // Uzum sharhida bizda mijoz yo'q — muallif nomi manbadan keladi.
-        author: maskName(r.customer?.fullName ?? r.externalAuthor ?? null),
+        author: maskName(
+          r.customer
+            ? [r.customer.firstName, r.customer.lastName].filter(Boolean).join(' ')
+            : (r.externalAuthor ?? null),
+        ),
       })),
     };
   }
@@ -251,7 +259,10 @@ export class PublicReviewsController {
         customerId: user.sub,
         status: 'DELIVERED',
         deletedAt: null,
-        items: { some: { productId: product.id } },
+        // OrderItem'da `productId` YO'Q: u variantga bog'langan va
+        // mahsulot variant orqali topiladi. Buyurtmadagi qolgan
+        // maydonlar (nom, SKU, IKPU) NUSXA — ular o'zgarmasligi kerak.
+        items: { some: { variant: { productId: product.id } } },
       },
       select: { id: true },
       orderBy: { placedAt: 'desc' },

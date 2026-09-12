@@ -40,7 +40,10 @@ export class ReviewsController {
     moderatedAt: true,
     createdAt: true,
     product: { select: { id: true, slug: true, nameUz: true } },
-    customer: { select: { id: true, fullName: true, phone: true } },
+    // `fullName` Customer'da YO'Q. Bu yerda TypeScript uni ushlamagan,
+    // chunki `shape` oddiy obyekt sifatida chiqariladi — lekin so'rov
+    // ishlaganda Prisma ISH VAQTIDA xato berardi.
+    customer: { select: { id: true, firstName: true, lastName: true, phone: true } },
   };
 
   @Get()

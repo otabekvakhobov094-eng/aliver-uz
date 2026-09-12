@@ -48,6 +48,11 @@ jobs:
       - run: npm run db:generate
       - name: Migratsiyalarni qo'llash
         run: npm run -w @aliver/api prisma:deploy
+      # Prisma so'rovlarini sxema bilan solishtirish. Bu tekshiruv
+      # `prisma generate` dan OLDIN ham ishlaydi va typecheck ushlay
+      # olmaydigan sinfdagi xatoni topadi — deploy bir marta aynan
+      # shu sababdan yiqilgan edi.
+      - run: npm run check:prisma
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
