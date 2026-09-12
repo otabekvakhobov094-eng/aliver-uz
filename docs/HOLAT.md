@@ -1,209 +1,206 @@
-# Loyiha holati va keyingi qadamlar
+# ALIVER.UZ — nima qilindi, nima qolди
 
-> Oxirgi yangilanish: 2026-09-11, commit `5766780`.
+**Sana:** 2026-09-12 · **Oxirgi commit:** `b99c0f7` · **Muhit:** Render staging
 
----
-
-## ⚠️ Eng muhimi: tuzatishlar hali DEPLOY BO'LMAGAN
-
-GitHub'dagi `main` hamon `cf0da2b` da turibdi — bu men ishni boshlagan
-paytdagi commit. **Oltita commit hali repoga tushmagan**, shuning uchun
-Render eski kodni qurmoqda.
-
-Ya'ni "admin panel ishlamayapti, savat ishlamayapti" — bu **kutilgan
-natija**: tuzatishlar hali saytda yo'q.
-
-### Nima uchun push bo'lmadi
-
-Men olti marta urindim, har safar bir xil javob:
-
-```
-access denied by the git proxy: otabekvakhobov094-eng/aliver-uz
-is not in this session's authorized repository set
-```
-
-`git clone` (o'qish) ishlaydi, `git push` (yozish) esa yo'q. Bu men hal
-qila oladigan narsa emas.
-
-### Qanday qo'llash kerak
-
-Patch **toza qo'llanishini tekshirdim** — reponing yangi nusxasiga
-qo'yib ko'rdim, oltala commit xatosiz tushdi.
-
-```bash
-cd <aliver-uz papkangiz>
-git pull                                   # eng yangi holatni oling
-git am aliver-6-commits.patch              # oltala commit qo'llanadi
-git push origin main                       # Render avtomatik deploy qiladi
-```
-
-**Render panelida hech narsa o'zgartirish SHART EMAS.** Dastlab kod
-yangi `API_ORIGIN` o'zgaruvchisini talab qilardi; buni tuzatdim —
-hozirgi `NEXT_PUBLIC_API_URL` qiymatidan o'zi aniqlab oladi. Buni
-`API_ORIGIN` ataylab o'chirilgan holda sinab ko'rdim: login ishladi.
+Bu hujjat kodga qarab yozildi, eski hujjatdan ko'chirilmadi. Har bir
+raqam shu kungi holatdan olingan.
 
 ---
 
-## 1. Nima bajarildi
+## 1. Bir qarashda
 
-### 1.1. Admin login (tuzatildi, sinaldi)
-
-Sabab **ikkita** edi va ikkalasi ham jimgina ishlaydi — server cookie
-yuboradi, brauzer rad etadi, hech kim xato ko'rmaydi:
-
-1. `COOKIE_DOMAIN` standart qiymati `localhost` edi. Render'da u
-   o'rnatilmagani uchun `…onrender.com` javobida `Domain=localhost`
-   ketardi va brauzer cookie'ni butunlay tashlardi.
-2. Admin va API turli subdomenlarda — brauzer uchun turli saytlar.
-   Repodagi `SameSite=None` tuzatishi shuning uchun yordam bermagan:
-   u cookie'ni uchinchi tomon cookie'siga aylantiradi, Safari esa uni
-   doim bloklaydi. `.onrender.com` Public Suffix List da, ya'ni umumiy
-   domen orqali hal qilib ham bo'lmaydi.
-
-**Yechim:** brauzer endi API ga to'g'ridan-to'g'ri bormaydi — o'z
-domenidagi `/api` ga so'rov yuboradi, Next.js uni serverda uzatadi.
-Cookie birinchi tomon cookie'si bo'ladi.
-
-**Tekshirildi:** admin ilovasi qurib ishga tushirildi, login cookie'ni
-saqladi, keyingi so'rov `200`, cookiesiz `401`.
-
-### 1.2. Pul yo'qotadigan oltita nuqson (tuzatildi)
-
-| № | Nuqson | Nima bo'lardi |
-|---|---|---|
-| 1 | `markPaid` buyurtma holatini tekshirmasdi | Bekor qilingan buyurtmaga pul o'tardi: tovar boshqasiga sotilgan, chek esa berilgan |
-| 2 | Bekor qilish to'langan holatni bosib ketardi | To'lovlarda "pul keldi", buyurtmalarda "to'lanmagan" |
-| 3 | Chegirma noto'g'ri qatorga tushardi | Qaytarishda ortiqcha to'lanardi, fiskal chekdagi QQS noto'g'ri |
-| 4 | Bepul yetkazish kuponni o'ldirardi | Kupon "qabul qilindi" deb ko'rinardi, chegirma nol bo'lardi |
-| 5 | Click webhook xatosi yozuvni osib qo'yardi | Buyurtmani umuman to'lab bo'lmay qolardi |
-| 6 | Naqd to'lovda UUID to'qnashuvi | Buyurtma yetkazilgan, puli yozilmagan, chek yo'q |
-
-Eng xavflisi 1-si: Payme tranzaksiyasi 12 soat yashaydi, rezerv esa 30
-daqiqa. 14:00 buyurtma → 14:31 cron bekor qiladi → 14:33 mijoz kodni
-tasdiqlaydi → pul olinadi.
-
-### 1.3. Sotib olish yo'lidagi to'qqizta nuqson (tuzatildi)
-
-| № | Nuqson | Nima bo'lardi |
-|---|---|---|
-| 1 | Xato chegarasi yo'q edi | Har qanday API xatosi oq sahifa berardi |
-| 2 | Savat yuklanmasa "Savat bo'sh" derdi | Mijoz tovarlari yo'qolgan deb ketardi |
-| 3 | Checkoutda oferta havolalari 404 | Bosilsa forma butunlay o'chardi |
-| 4 | Checkout qoldiq ogohlantirishini yashirardi | Tugma faol, har bosishda 409 |
-| 5 | Checkout "savat bo'sh" deb yonib ketardi | Mijoz yaratilgan buyurtmadan chiqib ketishi mumkin edi |
-| 6 | Desktopda saralash tugmasi yo'q edi | Faqat manzilni qo'lda tahrirlab |
-| 7 | Variant almashganda miqdor qolardi | "10 ta qo'shildi" deb ko'rsatardi, aslida 2 ta |
-| 8 | Narx filtri "Tozalash" dan keyin qolardi | Mijoz filtr ishlayapti deb o'ylardi |
-| 9 | "3" deb qidirilsa butun katalog chiqardi | Hammasi natija sifatida ko'rsatilardi |
-
-### 1.4. Dizayn (bosh sahifa)
-
-- Brend ranglaridagi jonli shader foni — kutubxonasiz, sahifa atigi
-  **3 kB** oshdi (Three.js bo'lsa 150–600 kB bo'lardi).
-- Harakat tizimi: skroll bilan ochilish, kartochkalarda 3D qiyalik,
-  yaltirash, tugmalarda ko'tarilish.
-- Animatsion logotip.
-- Yuborgan mahsulot suratingiz: **1.8 MB → 91 KB**, chap cheti
-  animatsion fonga singib ketadi.
-- Telefonda sarlavha kesilishi tuzatildi (360/390/768 px da sinaldi).
-
-Animatsiya **zarar keltirmaydigan** qilib yozilgan: harakat kamaytirilgan
-bo'lsa, trafik tejash yoqilgan bo'lsa yoki 2g bo'lsa umuman ishga
-tushmaydi; ekrandan chiqsa va boshqa ilovaga o'tilsa to'xtaydi; haqiqiy
-kadr vaqtini o'lchaydi va 40 FPS dan past bo'lsa o'zini o'chiradi.
-
-**Testlar:** API `350`, admin `8`, UI `4` — hammasi o'tadi. Uchala
-ilova production build xatosiz.
-
----
-
-## 2. Nima qoldi
-
-### 2.1. Darhol — siz bajarasiz
-
-- [ ] **Patchni qo'llab, push qiling** (yuqoridagi buyruqlar).
-- [ ] Deploy tugagach admin panelga kiring.
-- [ ] Noto'g'ri parol kiritib ko'ring — endi "Email yoki parol
-      noto'g'ri" deb yozishi kerak, jimgina qaytarmasligi.
-- [ ] Savatga tovar qo'shib, checkoutgacha o'tib ko'ring.
-- [ ] Telefonda bosh sahifani oching.
-
-Shundan keyingina qolgan ishlarni tekshirib bo'ladi.
-
-### 2.2. Dizayn — qolgan sahifalar
-
-Hozir faqat **bosh sahifa** yangilandi:
-
-- [ ] Katalog va filtr paneli
-- [ ] Mahsulot sahifasi
-- [ ] Savat va checkout
-- [ ] Kategoriyalar, blog, FAQ
-- [ ] Kabinet
-
-### 2.3. 5-bosqich — savdo oqimini jonli sinash
-
-Kod bo'yicha topilgan nuqsonlar tuzatildi, lekin **haqiqiy saytda**
-sinash hali qilinmadi:
-
-- [ ] Qidiruv: lotin/kirill, imlo xatosi
-- [ ] Filtr va saralash barcha kombinatsiyalarda
-- [ ] Savat: miqdor, kupon, qoldiqdan oshish
-- [ ] Checkout: manzil, yetkazish narxi, OTP
-- [ ] Buyurtma: rezerv, holat, kuzatuv
-
-### 2.4. Reliz
-
-- [ ] Stage-8 vositalarini haqiqiy serverda sinash
-  (`npm run test:e2e`, `test:load` — repoda bor, men ishlata olmadim:
-  jonli server va kalitlar kerak)
-- [ ] Zaxira nusxa tartibini yo'lga qo'yish
-- [ ] Production muhiti
-
----
-
-## 3. Bizga bog'liq bo'lmagan to'siqlar
-
-Kod tayyor, faqat ma'lumot kutilmoqda. Bularsiz sayt **haqiqiy savdo
-qila olmaydi**:
-
-| № | Nima kerak | Kim beradi | Nimani to'sib turibdi |
-|---|---|---|---|
-| 1 | OFD shartnomasi va tokeni | Buxgalter | Fiskal cheksiz savdo — qonunbuzarlik |
-| 2 | Click merchant kalitlari | Moliya | Onlayn to'lov |
-| 3 | Payme merchant kalitlari | Moliya | Onlayn to'lov |
-| 4 | eSKIZ / Play Mobile shartnomasi | Marketing | SMS: OTP va buyurtma xabarlari |
-| 5 | Ommaviy oferta va maxfiylik matni | Yurist | Yuridik sahifalar nashr qilinmaydi |
-| 6 | Mahsulotlar uchun IKPU kodlari | Buxgalter | IKPU siz mahsulot import qilinmaydi |
-| 7 | STIR, yuridik nom, manzil | Buxgalter | Chek va footer rekvizitlari |
-| 8 | Rasmiy logotip fayli (SVG/PNG) | Marketing | Hozir matnli logo ishlatilmoqda |
-
-> 8-band haqida: `aliver.com` dan logotipni yuklab olishga urindim,
-> tarmoq siyosati bloklandi. Faylni xuddi hero suratini yuborganingizdek
-> yuborsangiz, bir fayl almashtirish bilan qo'yaman.
-
----
-
-## 4. Xavfsizlik: staging hozir ochiq
-
-`render.yaml` da API uchun `APP_ENV=development` turibdi. Natijada:
-
-1. `/api/docs` (Swagger) ommaga ochiq.
-2. `/api/payments/mock/confirm` ochiq — buyurtma id'sini bilgan **har
-   kim** uni "to'langan" deb belgilay oladi.
-
-Haqiqiy mijozlarga ko'rsatishdan **oldin** yopilishi kerak: staging'ni
-parol/IP bilan cheklang yoki `APP_ENV=staging` qilib sandbox kalitlarini
-kiriting.
-
----
-
-## 5. Muhit
-
-| Xizmat | Manzil |
+| | Soni |
 |---|---|
-| Web | `https://aliver-uz-web-stage.onrender.com` |
-| Admin | `https://aliver-uz-admin-stage.onrender.com` |
-| API | `https://aliver-uz-api-stage.onrender.com` |
-| Repo | `github.com/otabekvakhobov094-eng/aliver-uz` |
+| Admin panel sahifalari | 30 |
+| Sayt sahifalari | 26 |
+| API modullari | 29 |
+| API endpointlari | 197 |
+| Ma'lumotlar bazasi modellari | 58 |
+| Avtomatik testlar | 365 (API) + 2 (admin) |
+| Katalogdagi mahsulotlar | 556 (aliver.com dan import qilingan) |
 
-Deploy: GitHub `main` ga push → Render avtomatik quradi.
+Staging ishlab turibdi: `aliver-uz-api-stage.onrender.com/api/health` →
+`{"status":"ok","database":"up","redis":"up"}`.
+
+---
+
+## 2. Nima qilingan va ishlaydi
+
+### Savdoning asosiy oqimi
+
+Katalog, qidiruv, filtrlar, mahsulot sahifasi, savat, checkout,
+buyurtma yaratish, to'lov kutish ekrani, buyurtma kuzatuvi, qaytarish
+so'rovi — hammasi ulangan va ishlaydi. Checkout uch xil to'lovni taklif
+qiladi: Click, Payme va yetkazilganda naqd (naqd uchun SMS tasdiqlash
+bilan).
+
+Pul hamma joyda **tiyinda va BigInt** bilan hisoblanadi. Bu ataylab: suzuvchi
+nuqtali son bilan 189 000 so'mning 12% QQS i vaqt o'tib bir tiyinga
+adashadi va u xato hisobotda emas, chekda chiqadi.
+
+### Admin panel
+
+Buyurtmalar, mahsulotlar, mijozlar, to'lovlar, qaytarishlar, ombor,
+chegirmalar, sharhlar, fiskal cheklar, moslashtirish (reconcile),
+kontent (sahifalar, blog, bannerlar, FAQ, redirectlar), B2B lidlar,
+hisobotlar, adminlar, rollar, audit log, yetkazish, bildirishnomalar,
+sozlamalar — 30 ta sahifa, hammasi haqiqiy API ga ulangan.
+
+Ro'yxatlar uchun bitta umumiy platforma yozildi: saqlangan ko'rinishlar,
+ustunlarni yashirish va tartiblash, ommaviy amallar, skelet yuklanish va
+ikki xil bo'sh holat («hali yo'q» va «filtrga mos kelmadi» — bular
+boshqa-boshqa muammo). Buyurtmalar, Mahsulotlar, Mijozlar, To'lovlar va
+Qaytarishlar shu platformaga o'tkazildi.
+
+Mahsulot yaratish va tahrirlash sahifasi **bugun qo'shildi**. Undan
+oldin adminkada faqat ro'yxat bor edi va mahsulotni kiritishning yagona
+yo'li Excel import edi.
+
+Rollar va huquqlar: modul × amal matritsasi, SUPER_ADMIN ni o'zgartirib
+bo'lmaydi, oxirgi faol super-adminni o'chirishga yo'l qo'yilmaydi,
+parol tiklanganda barcha sessiyalar bekor qilinadi.
+
+### Mahsulot ma'lumoti
+
+Uch qatlamli tarkib — uchta asosiy tarkib oddiy tilda vazifasi bilan,
+keyin isbot qatori, so'ng to'liq INCI yig'iladigan blokda. Maydonlar
+bazada, API da, sayt tomonida va admin formasida tayyor.
+
+Mahsulot kartochkasida bir qatorli izoh, variantlar soni va ombor
+qoldig'i aniq son bilan ko'rsatiladi.
+
+### Infratuzilma
+
+Monorepo (npm workspaces + Turborepo), Docker Compose, CI: lint →
+typecheck → test → build → migratsiya → seed → smoke → yuklama testi.
+VPS ga joylashtirish hujjati va fayllari tayyor. Render staging blueprint
+ishlayapti va avtomatik deploy qilyapti.
+
+Admin login **o'z domenidagi `/api` proxy** orqali ishlaydi: so'rov
+cross-site emas, cookie birinchi tomon cookie si bo'ladi. Bu ilgari
+login ochilmayotganining sababi edi.
+
+---
+
+## 3. Yarim qilingan — ishlaydi, lekin to'liq emas
+
+**Rasm yuklash.** API tayyor (`POST /media/products/:id`,
+`DELETE`), adminkada esa yuklash oynasi yo'q. Hozir rasm faqat import
+orqali kiradi. Bu mahsulot tahrirlash sahifasi bilan bir xil turdagi
+bo'shliq edi — API bor, forma yo'q.
+
+**Kategoriyalar.** Adminkada faqat daraxt ko'rinadi. Yaratish,
+tahrirlash va o'chirish API da bor, sahifada yo'q.
+
+**Brendlar.** Ro'yxat endpointi bugun qo'shildi (mahsulot formasi uchun
+kerak edi), lekin yangi brend qo'shish sahifasi yo'q.
+
+**Hisobotlar.** To'rtta raqam, top mahsulotlar va UTM atributsiyasi bor.
+Sana oralig'i bo'yicha filtr, eksport va xato holati yo'q — API yiqilsa
+sahifa cheksiz «Yuklanmoqda…» da qoladi.
+
+**Ombor va Fiskal cheklar ro'yxatlari** hali yangi platformaga
+o'tkazilmagan. Avval ularning ommaviy amallari loyihalanishi kerak, aks
+holda ko'chirishdan foyda chiqmaydi.
+
+**Saqlangan ko'rinishlar** brauzerda saqlanadi. Serverga o'tkazish
+xodimlar o'rtasida ulashish bilan birga qilinishi kerak.
+
+**E2E testi** faqat sahifalar ochilishini tekshiradi. **Buyurtma berish
+oqimi uchun avtomatik test yo'q** — savatga qo'shish, checkout, to'lov,
+ombor rezervi, chek. Bu tizimdagi eng muhim tekshirilmagan yo'l.
+
+---
+
+## 4. Umuman qilinmagan
+
+**Uzum to'lovi.** TZ-3 da so'ralgan edi, kodda yo'q — hozir faqat Click,
+Payme va naqd. Baza enum'iga ham qo'shilmagan.
+
+**Kuryer integratsiyasi.** Yetkazish hisob-kitobi va jo'natma holati bor,
+lekin kuryer kompaniyasi bilan API ulanishi yo'q. Bazada `carrier` oddiy
+matn maydoni: `"own" | "bts" | "fargo" | "yandex" | "uzpost"`. EMU, BTS
+va pochta API lari ulanmagan.
+
+**TZ-3 dagi beauty imkoniyatlari:** soya va teri turi tanlagichi,
+savatda namuna tanlash, sharh mualliflari bo'yicha filtr («menga
+o'xshaganlar»), natija bo'yicha fasetlar, filtr uchun SEO sahifalari
+(`/f/...`), sodiqlik dasturi, sovg'a sertifikati. Hech biri boshlanmagan.
+
+**Sayt va admin uchun testlar** deyarli yo'q (admin: 2 ta, sayt: 0 ta).
+
+---
+
+## 5. Bizga bog'liq bo'lmagan — sizdan kutilayotgani
+
+Bular kod emas. Ular bo'lmasa do'kon ishga tushmaydi, va ular odatda
+eng oxirida esga tushib, butun katalogni qayta to'ldirishga majbur
+qiladi.
+
+**IKPU (MXIK) kodlari — eng kritik.** Har bir mahsulot uchun. Kod
+avtomatik yaratilmaydi, uni buxgalter yoki yetkazib beruvchi beradi.
+Busiz fiskal chek chiqmaydi, ya'ni qonuniy savdo bo'lmaydi. Adminkada
+maydon tayyor va bo'sh qolganlari ajratib ko'rsatiladi — lekin
+ma'lumotning o'zi yo'q. **556 ta mahsulot uchun kerak.**
+
+**To'lov shartnomalari va kalitlari** — Click, Payme, Uzum. Har biri
+uchun merchant hisobi, kalit va sinov muhiti. Kod tayyor,
+`PAYMENTS_MODE=mock` da turibdi.
+
+**Kuryer shartnomasi.** EMU birinchi tanlov — u qisman yetkazishni
+qo'llaydi, bu kosmetika savatiga mos. API hujjatini shartnoma
+bosqichida so'rang. **Naqd pulni qaytarish jadvali va komissiyani yozma
+kelishing** — u bevosita pul aylanishiga ta'sir qiladi.
+
+**Yagona QR** — 2026-yil 1-iyuldan majburiy, allaqachon kuchda.
+Ekvayring banki orqali olinadi.
+
+**Mahsulot suratlari** — har biri uchun kamida 4 ta, bir xil sharoitda.
+Hozirgi rasmlar yetkazib beruvchi uslubida va soni 1 dan 23 tagacha
+farq qiladi.
+
+**Mahsulot matnlari** — uchta asosiy tarkib vazifasi bilan, qo'llash,
+ogohlantirish. Maydonlar tayyor, matn yo'q.
+
+**Yuridik rekvizitlar** — MCHJ nomi, STIR, manzil.
+
+**Brend tarixi.** aliver.com o'z sahifalarida uchta bir-biriga zid
+versiyani aytadi: «2012, AQSh», «2013, Xitoy» va 7 yillik yubiley.
+Bitta rasmiy versiyani tanlash kerak — men sanani ataylab yozmadim.
+
+---
+
+## 6. Yaqin muddat — e'tibor bering
+
+Render'dagi **bepul PostgreSQL yaratilganidan 30 kun keyin tugaydi va
+zaxira nusxa bermaydi.** Baza 11-sentabrda yaratilgan, ya'ni **oktyabr
+boshida** 556 ta mahsulotli katalog bilan birga o'chadi.
+
+Shu muddatdan oldin ikki yo'ldan biri tanlanishi kerak: VPS ga o'tish
+(`docs/VPS.md` da hammasi tayyor) yoki Render'da pullik planga chiqish.
+
+---
+
+## 7. Tavsiya etilgan tartib
+
+**Birinchi — IKPU kodlari.** Kritik yo'lda va kech aniqlansa eng
+qimmatga tushadi. Buxgalterga bugun so'rov yuboring.
+
+**Ikkinchi — to'lov va kuryer shartnomalari.** Ular tashqi tomonga
+bog'liq, ya'ni kutish vaqti bor. Erta boshlansa qolgan ish bilan
+parallel ketadi.
+
+**Uchinchi — bazani ko'chirish**, oktyabrdan oldin.
+
+**To'rtinchi — kontent:** suratlar va mahsulot matnlari. Bu dasturchi
+ishi emas, shuning uchun boshqa ishlar bilan parallel bajariladi.
+
+**Beshinchi — buyurtma oqimi uchun E2E test.** Haqiqiy to'lov kalitlari
+ulanishidan oldin bo'lgani ma'qul.
+
+**Oltinchi** — rasm yuklash, kategoriya tahrirlash, hisobot filtrlari.
+
+**Yettinchi** — TZ-3 dagi beauty imkoniyatlari va Uzum to'lovi.
+
+Do'konni ishga tushirish uchun birinchi to'rttasi yetarli. Qolgani
+ishlab turgan do'kon ustiga qo'shiladi.
