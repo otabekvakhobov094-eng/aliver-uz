@@ -184,6 +184,36 @@ enum DiscountScope {
   COLLECTION
 }
 
+/// Mijozning teri turi — sharh atributlari va «menga o'xshaganlar» filtri uchun.
+///
+/// Baymard tadqiqoti go'zallik sohasida aniq ko'rsatgan: sharhning
+/// foydaliligi uni YOZGAN odam mijozga qanchalik o'xshashligiga bog'liq.
+/// «5 yulduz, zo'r» degan sharh quruq terili odamga hech narsa bermaydi;
+/// «quruq teri, 35+, qishda ham yetarli namlaydi» esa qaror qildiradi.
+enum SkinType {
+  NORMAL
+  DRY
+  OILY
+  COMBINATION
+  SENSITIVE
+}
+
+enum HairType {
+  STRAIGHT
+  WAVY
+  CURLY
+  COILY
+}
+
+/// Yosh oralig'i. Aniq yosh SO'RALMAYDI — u shaxsiy ma'lumot va
+/// sharh ostida ko'rsatilganda mijozni aniqlashga yaqinlashtiradi.
+enum AgeBand {
+  UNDER_25
+  FROM_25_TO_34
+  FROM_35_TO_44
+  OVER_45
+}
+
 enum ReviewStatus {
   PENDING
   APPROVED
@@ -324,6 +354,14 @@ model Customer {
   firstName String?
   lastName  String?
   status    CustomerStatus @default(ACTIVE)
+
+  /// Mijoz profili — sharh yozganda atributlar SHU YERDAN oldindan
+  /// to'ldiriladi, lekin sharhga nusxa bo'lib ketadi. Ixtiyoriy: hech
+  /// kim buni to'ldirishga majbur emas va bo'sh qolsa filtr shunchaki
+  /// bu sharhni hisobga olmaydi.
+  skinType SkinType?
+  hairType HairType?
+  ageBand  AgeBand?
   locale    Locale         @default(UZ)
   /// Mijoz botga /start yozib telefonini ulasa — bildirishnomalar Telegramga ham ketadi. [5-etap]
   telegramChatId String?   @unique
@@ -1382,6 +1420,16 @@ model Review {
 
   rating     Int // 1..5
   body       String?
+
+  /// Sharh muallifining atributlari — NUSXA sifatida saqlanadi.
+  ///
+  /// Ataylab `Customer` ga havola qilinmaydi: mijoz keyinchalik teri
+  /// turini o'zgartirsa, ESKI sharh o'sha paytdagi holatni aks ettirishi
+  /// kerak. Aks holda «quruq teri uchun zo'r» degan sharh bir kunda
+  /// «yog'li teri uchun zo'r» ga aylanib qolardi.
+  skinType   SkinType?
+  hairType   HairType?
+  ageBand    AgeBand?
   mediaUrls  String[] @default([])
   status     ReviewStatus @default(PENDING)
   isVerified Boolean      @default(false) // yetkazilgan buyurtma egasi [B-13]
@@ -1394,6 +1442,8 @@ model Review {
 
   @@unique([productId, customerId, orderId])
   @@index([productId, status])
+  // «Menga o'xshaganlar» filtri aynan shu uch maydon bo'yicha qidiradi.
+  @@index([productId, status, skinType])
   @@map("reviews")
 }
 

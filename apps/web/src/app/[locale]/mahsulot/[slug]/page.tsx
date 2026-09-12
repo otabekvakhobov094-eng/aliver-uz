@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Rating } from '@aliver/ui';
 import { catalogApi, pick } from '@/lib/catalog-api';
 import { ProductBuyBox } from '@/components/ProductBuyBox';
+import { ProductReviews } from '@/components/ProductReviews';
 import { KeyIngredients } from '@/components/KeyIngredients';
 import { ProductTabs } from '@/components/ProductTabs';
 import { ProductCardView } from '@/components/ProductCard';
@@ -230,6 +231,11 @@ export default async function ProductPage({
           claim={ru ? product.claimRu : product.claimUz}
           fullList={ru ? product.ingredientsRu : product.ingredientsUz}
         />
+
+        {/* Sharhlar tablardan KEYIN emas, oldin — chunki ular xarid
+            qaroriga tavsifdan ko'ra kuchliroq ta'sir qiladi va tab
+            ostida yashiringani ularni ko'rinmas qilib qo'yardi. */}
+        <ProductReviews slug={product.slug} locale={locale} />
 
         <div style={{ marginTop: 56 }}>
           <ProductTabs
