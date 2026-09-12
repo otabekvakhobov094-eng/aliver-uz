@@ -4,7 +4,8 @@ import { Type } from 'class-transformer';
 import { IsIn, IsOptional, IsString, Length } from 'class-validator';
 import { Audit, AuthPrincipal, CurrentUser, RequirePermissions } from '../../common/decorators';
 import { ShipmentService } from './shipment.service';
-import { CARRIERS, CARRIER_LABEL, SHIPMENT_TRANSITIONS } from './shipment-state';
+import { CarrierRegistry } from './carriers/carrier-registry';
+import { CARRIERS, SHIPMENT_TRANSITIONS } from './shipment-state';
 
 class AssignShipmentDto {
   @IsIn(CARRIERS as unknown as string[])
@@ -26,16 +27,27 @@ class ChangeShipmentStatusDto {
 @ApiTags('admin-shipments')
 @Controller('admin/shipments')
 export class ShipmentsController {
-  constructor(private readonly shipments: ShipmentService) {}
+  constructor(
+    private readonly shipments: ShipmentService,
+    private readonly registry: CarrierRegistry,
+  ) {}
 
   @Get('carriers')
   @RequirePermissions('orders.view')
   @ApiOperation({ summary: 'Tashuvchilar ro‘yxati va holat o‘tishlari' })
   carriers() {
+    // Reyestr har bir pochta uchun TAYYORLIGINI ham aytadi: qaysi biri
+    // bugun jo'natma yarata oladi va qaysi biri shartnoma kutyapti.
+    // Ilgari ro'yxat faqat nomlarni berardi va operator ulanmagan
+    // pochtani tanlab, xatoni faqat saqlashda ko'rardi.
     return {
-      carriers: (CARRIERS as unknown as string[]).map((code) => ({
-        code,
-        label: CARRIER_LABEL[code as keyof typeof CARRIER_LABEL],
+      carriers: this.registry.overview().map((c) => ({
+        code: c.code,
+        label: c.nameUz,
+        labelRu: c.nameRu,
+        ready: c.ready,
+        reason: c.reason,
+        supportsPartial: c.supportsPartial,
       })),
       transitions: SHIPMENT_TRANSITIONS,
     };

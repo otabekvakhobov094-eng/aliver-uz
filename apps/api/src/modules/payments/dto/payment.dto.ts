@@ -8,12 +8,12 @@ export class StartPaymentDto {
   orderId!: string;
 
   @ApiPropertyOptional({
-    enum: ['CLICK', 'PAYME'],
+    enum: ['CLICK', 'PAYME', 'UZUM'],
     description: 'Ko‘rsatilmasa buyurtmadagi usul ishlatiladi',
   })
   @IsOptional()
-  @IsIn(['CLICK', 'PAYME'])
-  provider?: 'CLICK' | 'PAYME';
+  @IsIn(['CLICK', 'PAYME', 'UZUM'])
+  provider?: 'CLICK' | 'PAYME' | 'UZUM';
 }
 
 export class MockConfirmDto {
@@ -71,8 +71,8 @@ export class ReconcileQueryDto {
   @IsString()
   dateTo!: string;
 
-  @ApiPropertyOptional({ enum: ['CLICK', 'PAYME', 'CASH_ON_DELIVERY'] })
+  @ApiPropertyOptional({ enum: ['CLICK', 'PAYME', 'UZUM', 'CASH_ON_DELIVERY'] })
   @IsOptional()
-  @IsIn(['CLICK', 'PAYME', 'CASH_ON_DELIVERY'])
-  provider?: 'CLICK' | 'PAYME' | 'CASH_ON_DELIVERY';
+  @IsIn(['CLICK', 'PAYME', 'UZUM', 'CASH_ON_DELIVERY'])
+  provider?: 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
 }

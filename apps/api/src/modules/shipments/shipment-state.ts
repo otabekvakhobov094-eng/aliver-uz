@@ -1,3 +1,9 @@
+import {
+  CARRIER_CODES,
+  CARRIER_LABEL as CARRIER_NAME,
+  type CarrierCode,
+} from './carriers/carrier';
+
 /**
  * Jo'natma holatlari va ular buyurtma holatiga qanday ta'sir qilishi.
  *
@@ -60,17 +66,16 @@ export function assertShipmentTransition(from: ShipmentStatus, to: ShipmentStatu
  */
 export const SHIPPABLE_ORDER_STATUSES = ['CONFIRMED', 'PROCESSING', 'PACKING', 'READY', 'SHIPPED'];
 
-/** Tashuvchilar. "own" — o'z kuryerimiz. */
-export const CARRIERS = ['own', 'bts', 'fargo', 'yandex', 'uzpost'] as const;
-export type Carrier = (typeof CARRIERS)[number];
+/**
+ * Tashuvchilar. Ro'yxat `carriers/carrier.ts` dan keladi — u yagona
+ * manba. Ilgari shu yerda alohida ro'yxat turardi va unda EMU yo'q edi.
+ */
+export const CARRIERS = CARRIER_CODES;
+export type Carrier = CarrierCode;
 
-export const CARRIER_LABEL: Record<Carrier, string> = {
-  own: 'O‘z kuryerimiz',
-  bts: 'BTS Express',
-  fargo: 'Fargo',
-  yandex: 'Yandex Delivery',
-  uzpost: 'Uzbekiston Pochtasi',
-};
+export const CARRIER_LABEL: Record<Carrier, string> = Object.fromEntries(
+  CARRIER_CODES.map((code) => [code, CARRIER_NAME[code].uz]),
+) as Record<Carrier, string>;
 
 /**
  * Tashuvchining kuzatuv havolasi. Bo'lmasa `null` —

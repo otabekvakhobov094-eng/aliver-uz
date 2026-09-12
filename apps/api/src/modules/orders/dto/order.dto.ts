@@ -57,9 +57,9 @@ export class CreateOrderDto {
   @Length(2, 40)
   deliveryMethodCode!: string;
 
-  @ApiProperty({ enum: ['CLICK', 'PAYME', 'CASH_ON_DELIVERY'] })
-  @IsIn(['CLICK', 'PAYME', 'CASH_ON_DELIVERY'])
-  paymentProvider!: 'CLICK' | 'PAYME' | 'CASH_ON_DELIVERY';
+  @ApiProperty({ enum: ['CLICK', 'PAYME', 'UZUM', 'CASH_ON_DELIVERY'] })
+  @IsIn(['CLICK', 'PAYME', 'UZUM', 'CASH_ON_DELIVERY'])
+  paymentProvider!: 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
 
   @ApiPropertyOptional({ description: 'Naqd to‘lov uchun SMS-kod (sozlamaga qarab majburiy)' })
   @IsOptional()

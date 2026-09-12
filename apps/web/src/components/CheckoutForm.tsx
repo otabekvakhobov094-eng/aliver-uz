@@ -16,7 +16,7 @@ import type { Locale } from '@/i18n/messages';
 
 const money = (v: string, locale: Locale) => formatPrice(v, locale === 'ru' ? 'RU' : 'UZ');
 
-type Payment = 'CLICK' | 'PAYME' | 'CASH_ON_DELIVERY';
+type Payment = 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
 
 /**
  * Checkout.
@@ -431,6 +431,7 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
               [
                 { v: 'CLICK', uz: 'Click', ru: 'Click' },
                 { v: 'PAYME', uz: 'Payme', ru: 'Payme' },
+                { v: 'UZUM', uz: 'Uzum', ru: 'Uzum' },
                 {
                   v: 'CASH_ON_DELIVERY',
                   uz: 'Yetkazilganda naqd',

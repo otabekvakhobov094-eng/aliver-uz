@@ -7,6 +7,18 @@ import { ShopError, shopApi } from '@/lib/shop-api';
 import type { Locale } from '@/i18n/messages';
 
 /**
+ * Provayder nomi. Ilgari bu yerda `provider === 'PAYME' ? 'Payme' : 'Click'`
+ * turardi — ya'ni uchinchi provayder qo'shilishi bilan Uzum «Click» deb
+ * ko'rinardi va buni hech qanday tur tekshiruvi ushlamasdi.
+ */
+const PROVIDER_NAME: Record<string, string> = {
+  CLICK: 'Click',
+  PAYME: 'Payme',
+  UZUM: 'Uzum',
+  CASH_ON_DELIVERY: 'Naqd',
+};
+
+/**
  * MAKET to'lov sahifasi.
  *
  * Click va Payme kalitlari kelmaguncha mijoz shu sahifaga tushadi.
@@ -85,7 +97,7 @@ export function MockPaymentPage({ locale }: { locale: Locale }) {
           textAlign: 'center',
         }}
       >
-        {provider === 'PAYME' ? 'Payme' : 'Click'}
+        {PROVIDER_NAME[provider] ?? provider}
       </h1>
 
       <p style={{ margin: 0, fontSize: 13.5, color: 'var(--alv-ink-2)', lineHeight: 1.6 }}>

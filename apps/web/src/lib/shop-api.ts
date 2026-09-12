@@ -139,7 +139,7 @@ export interface CreateOrderInput {
   addressLine: string;
   landmark?: string;
   deliveryMethodCode: string;
-  paymentProvider: 'CLICK' | 'PAYME' | 'CASH_ON_DELIVERY';
+  paymentProvider: 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
   otpCode?: string;
   comment?: string;
   acceptOffer: boolean;
@@ -188,7 +188,7 @@ export interface PaymentLink {
   url: string | null;
   /** true — provayder kalitlari hali yo'q, maket sahifasi ochiladi. */
   mock: boolean;
-  provider: 'CLICK' | 'PAYME' | 'CASH_ON_DELIVERY';
+  provider: 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
 }
 
 export interface PaymentStatusView {
@@ -382,7 +382,7 @@ export const shopApi = {
     call<unknown>(`/orders/${id}/cancel`, { method: 'POST', body: JSON.stringify({ comment }) }),
 
   /** To'lovga o'tish havolasini oladi. */
-  startPayment: (orderId: Uuid, provider?: 'CLICK' | 'PAYME') =>
+  startPayment: (orderId: Uuid, provider?: 'CLICK' | 'PAYME' | 'UZUM') =>
     call<PaymentLink>('/payments/start', {
       method: 'POST',
       body: JSON.stringify({ orderId, ...(provider ? { provider } : {}) }),

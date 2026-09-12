@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClickGateway } from './providers/click.gateway';
 import { PaymeGateway } from './providers/payme.gateway';
+import { UzumGateway } from './providers/uzum.gateway';
 import { CodGateway } from './providers/cod.gateway';
 import type { PaymentGateway, ProviderCode } from './payment-gateway';
 
@@ -14,10 +15,11 @@ import type { PaymentGateway, ProviderCode } from './payment-gateway';
 export class PaymentRegistry {
   private readonly map: Map<ProviderCode, PaymentGateway>;
 
-  constructor(click: ClickGateway, payme: PaymeGateway, cod: CodGateway) {
+  constructor(click: ClickGateway, payme: PaymeGateway, uzum: UzumGateway, cod: CodGateway) {
     this.map = new Map<ProviderCode, PaymentGateway>([
       [click.code, click],
       [payme.code, payme],
+      [uzum.code, uzum],
       [cod.code, cod],
     ]);
   }

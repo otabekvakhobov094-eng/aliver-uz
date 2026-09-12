@@ -31,6 +31,7 @@ export const PAYMENT_STATUS_LABEL: Record<string, string> = {
 export const PAYMENT_PROVIDER_LABEL: Record<string, string> = {
   CLICK: 'Click',
   PAYME: 'Payme',
+  UZUM: 'Uzum',
   CASH_ON_DELIVERY: 'Naqd',
 };
 

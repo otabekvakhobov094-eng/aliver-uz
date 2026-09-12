@@ -742,7 +742,8 @@ export class PaymentService {
   /** Provayder kodini enum ga aylantiradi. */
   static providerOf(value: string): ProviderCode {
     const upper = value.toUpperCase();
-    if (upper === 'CLICK' || upper === 'PAYME' || upper === 'CASH_ON_DELIVERY') return upper;
+    if (upper === 'CLICK' || upper === 'PAYME' || upper === 'UZUM' || upper === 'CASH_ON_DELIVERY')
+      return upper;
     throw new BadRequestException(`Noma’lum to‘lov provayderi: ${value}`);
   }
 }

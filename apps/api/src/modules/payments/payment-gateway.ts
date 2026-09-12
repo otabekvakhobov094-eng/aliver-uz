@@ -1,6 +1,6 @@
 import type { Tiyin } from '../../common/money';
 
-export type ProviderCode = 'CLICK' | 'PAYME' | 'CASH_ON_DELIVERY';
+export type ProviderCode = 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
 
 /**
  * To'lov havolasi — mijoz shu manzilga yuboriladi.
@@ -56,8 +56,9 @@ export interface PaymentGateway {
 export const PROVIDER_LABEL: Record<ProviderCode, { uz: string; ru: string }> = {
   CLICK: { uz: 'Click', ru: 'Click' },
   PAYME: { uz: 'Payme', ru: 'Payme' },
+  UZUM: { uz: 'Uzum', ru: 'Uzum' },
   CASH_ON_DELIVERY: { uz: 'Yetkazilganda naqd', ru: 'Наличными при получении' },
 };
 
 /** Onlayn to'lov — rezerv muddati faqat shularda ishlaydi. */
-export const ONLINE_PROVIDERS: ProviderCode[] = ['CLICK', 'PAYME'];
+export const ONLINE_PROVIDERS: ProviderCode[] = ['CLICK', 'PAYME', 'UZUM'];

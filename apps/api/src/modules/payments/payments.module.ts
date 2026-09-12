@@ -6,6 +6,7 @@ import { PaymentRegistry } from './payment-registry';
 import { ReconcileService } from './reconcile.service';
 import { ClickGateway } from './providers/click.gateway';
 import { PaymeGateway } from './providers/payme.gateway';
+import { UzumGateway } from './providers/uzum.gateway';
 import { CodGateway } from './providers/cod.gateway';
 import { ClickController } from './click.controller';
 import { PaymeController } from './payme.controller';
@@ -21,6 +22,7 @@ import { AdminPaymentsController } from './admin-payments.controller';
     ReconcileService,
     ClickGateway,
     PaymeGateway,
+    UzumGateway,
     CodGateway,
   ],
   exports: [PaymentService, PaymentRegistry],
