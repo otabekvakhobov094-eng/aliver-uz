@@ -1,0 +1,262 @@
+/* ============================================================
+   Bosh sahifaning qo'shimcha bloklari — aliver.com dagidek.
+
+   Sovg'a to'plamlari, blog va hamkorlik bo'limlari ilgari saytda bor
+   edi, lekin bosh sahifada ULARGA YO'L YO'Q edi: mijoz ularni faqat
+   URL ni bilgan holda topa olardi.
+   ============================================================ */
+
+/* ------------------------------------------------- sovg'a to'plamlari */
+
+.gifts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 0;
+  border-radius: var(--alv-radius-xl, 24px);
+  overflow: hidden;
+  background: var(--alv-grad-blush);
+}
+
+.giftsCopy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(32px, 5vw, 60px);
+}
+
+.giftsCopy h2 {
+  margin: 10px 0 0;
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(28px, 3.4vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/*
+ * Bu blok pushti fonda turadi va u asosiy fondan quyuqroq. `--alv-ink-2`
+ * u yerda ham 8.19:1 — bemalol o'tadi. Lekin kichikroq va och matn
+ * uchun `--alv-muted` YARAMAYDI (4.28), shuning uchun tint uchun
+ * mo'ljallangan token ishlatiladi.
+ */
+.giftsCopy p {
+  margin: 16px 0 26px;
+  max-width: 40ch;
+  color: var(--alv-ink-2);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/*
+ * O'ng tomonda uchta quti — sovg'a to'plami tasviri.
+ *
+ * Ular SVG yoki surat emas, oddiy bloklar: sovg'a to'plamlarining
+ * haqiqiy suratlari hali yo'q va bo'sh joy qoldirgandan ko'ra shakl
+ * qo'ygan yaxshi. Surat kelganda shu joy almashtiriladi.
+ */
+.giftsArt {
+  position: relative;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.box {
+  position: absolute;
+  border-radius: 18px;
+  background: linear-gradient(150deg, #fff, #f3cdd9);
+  box-shadow: 0 24px 50px rgba(94, 44, 63, 0.18);
+  /* Har biri boshqa tezlikda suzadi — qatlam hissi shundan. */
+  animation: alvFloat 7s ease-in-out infinite alternate;
+}
+.box:nth-child(1) {
+  width: 34%;
+  aspect-ratio: 3 / 4;
+  transform: translate(-58%, 6%) rotate(-8deg);
+}
+.box:nth-child(2) {
+  width: 40%;
+  aspect-ratio: 1;
+  transform: translate(6%, -12%) rotate(5deg);
+  animation-delay: -2.4s;
+  background: linear-gradient(150deg, #fff, #e9b7c8);
+}
+.box:nth-child(3) {
+  width: 28%;
+  aspect-ratio: 4 / 5;
+  transform: translate(64%, 22%) rotate(11deg);
+  animation-delay: -4.8s;
+  background: linear-gradient(150deg, #fffaf6, #efd2b8);
+}
+@keyframes alvFloat {
+  to {
+    translate: 0 -14px;
+  }
+}
+
+.ribbon {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.5), transparent 70%);
+}
+
+/* ------------------------------------------------------------- blog */
+
+.postGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.post {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--alv-surface);
+  border: 1px solid var(--alv-line);
+  color: inherit;
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.32s;
+}
+.post:hover {
+  color: inherit;
+  transform: translateY(-5px);
+  box-shadow: 0 20px 44px rgba(52, 28, 39, 0.14);
+}
+
+.postCover {
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(145deg, #fbe6ec, #e9bccb);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.postBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px 22px;
+}
+/* Kartochka oq yuzada — asosiy `--alv-muted` bu yerda to'g'ri. */
+.postDate {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--alv-muted);
+}
+.postBody h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.postBody p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--alv-ink-2);
+}
+
+/* --------------------------------------------------------- hamkorlik */
+
+.partner {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  padding: clamp(30px, 4.5vw, 54px);
+  border-radius: var(--alv-radius-xl, 24px);
+  background: linear-gradient(125deg, #1e1519 0%, #3b2029 55%, #6d2f45 100%);
+  color: #fff;
+}
+.partner::before {
+  content: '';
+  position: absolute;
+  inset: -50% -25%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.13), transparent 70%);
+  animation: alvPartnerSheen 18s ease-in-out infinite alternate;
+}
+@keyframes alvPartnerSheen {
+  from {
+    transform: translate3d(-16%, -10%, 0);
+  }
+  to {
+    transform: translate3d(18%, 12%, 0);
+  }
+}
+.partner > * {
+  position: relative;
+}
+.partner h2 {
+  margin: 10px 0 0;
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+.partner p {
+  margin: 14px 0 0;
+  max-width: 46ch;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.partnerFacts {
+  display: grid;
+  gap: 14px;
+}
+.fact {
+  display: grid;
+  gap: 2px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(255, 255, 255, 0.28);
+}
+.fact strong {
+  font-size: 19px;
+  font-weight: 650;
+}
+.fact span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ----------------------------------------------------------- ekranlar */
+
+@media (prefers-reduced-motion: reduce) {
+  .box,
+  .partner::before {
+    animation: none;
+  }
+  .post {
+    transition: none;
+  }
+  .post:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .gifts,
+  .partner {
+    grid-template-columns: 1fr;
+  }
+  .giftsArt {
+    min-height: 260px;
+    order: -1;
+  }
+  .partner {
+    gap: 26px;
+  }
+}

@@ -9,6 +9,7 @@ import { HeroCanvas } from '@/components/HeroCanvas';
 import { Reveal } from '@aliver/ui';
 import styles from './home.module.css';
 import hero_ from './hero.module.css';
+import blocks from './blocks.module.css';
 
 export const revalidate = 120;
 
@@ -22,11 +23,13 @@ const FALLBACK = [
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
-  const [categories, best, fresh, banners] = await Promise.all([
+  const [categories, best, fresh, banners, posts] = await Promise.all([
     catalogApi.categories().catch(() => []),
     catalogApi.products({ collection: 'best-sellers', perPage: 4 }).catch(() => ({ items: [] })),
     catalogApi.products({ sort: 'newest', perPage: 4 }).catch(() => ({ items: [] })),
     contentApi.banners('HERO').catch(() => []),
+    // Blog bloki uchun. Xato bo'lsa blok shunchaki chizilmaydi.
+    contentApi.posts().catch(() => []),
   ]);
   const hero = banners[0];
   const title = (locale === 'ru' ? hero?.titleRu : hero?.titleUz) ?? (locale === 'ru' ? 'Красота, которая начинается с заботы' : 'Go‘zallik — g‘amxo‘rlikdan boshlanadi');
@@ -126,6 +129,126 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <Link className={`${styles.lightAction} alv-lift`} href={`/${locale}/kabinet/ballar`}>
             {locale === 'ru' ? 'Мои баллы' : 'Ballarim'} <span aria-hidden>→</span>
           </Link>
+        </div>
+      </Reveal>
+
+      {/*
+        Sovg'a to'plamlari — aliver.com dagi «Gifts & Sets».
+
+        Bo'lim saytda bor edi, lekin bosh sahifada unga YO'L YO'Q edi:
+        mijoz uni faqat URL ni bilgan holda topa olardi.
+      */}
+      <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
+        <div className={blocks.gifts}>
+          <div className={blocks.giftsCopy}>
+            {/*
+              Sahifadagi `eyebrow` rangi (#b84b6b) pushti fonda 3.81:1 —
+              AA dan past. Shuning uchun bu yerda tint uchun
+              mo'ljallangan token: 4.98:1.
+            */}
+            <p className={styles.eyebrow} style={{ color: 'var(--alv-brand-on-tint)' }}>
+              {locale === 'ru' ? 'Готовые наборы' : 'Tayyor to‘plamlar'}
+            </p>
+            <h2>
+              {locale === 'ru' ? 'Подарок, который не нужно выбирать' : 'Tanlab o‘tirmaydigan sovg‘a'}
+            </h2>
+            <p>
+              {locale === 'ru'
+                ? 'Собранные наборы для волос, лица и тела — в подарочной упаковке. При заказе от 300 000 сум добавим пробник.'
+                : 'Soch, yuz va tana uchun yig‘ilgan to‘plamlar — sovg‘a qutisida. 300 000 so‘mdan yuqori buyurtmaga namuna qo‘shamiz.'}
+            </p>
+            <Link
+              className={`${styles.primaryAction} alv-lift`}
+              href={`/${locale}/katalog?collection=sovga-toplamlari`}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              {locale === 'ru' ? 'Смотреть наборы' : 'To‘plamlarni ko‘rish'} <span aria-hidden>↗</span>
+            </Link>
+          </div>
+          <div className={blocks.giftsArt} aria-hidden>
+            <span className={blocks.box} />
+            <span className={blocks.box} />
+            <span className={blocks.box} />
+            <span className={blocks.ribbon} />
+          </div>
+        </div>
+      </Reveal>
+
+      {/* Blog — aliver.com da alohida bo'lim, bizda bosh sahifada yo'q edi. */}
+      {posts.length > 0 ? (
+        <Reveal as="section" className={`${styles.shell} ${styles.section}`}>
+          <Heading
+            kicker={locale === 'ru' ? 'Журнал' : 'Jurnal'}
+            title={locale === 'ru' ? 'Как ухаживать за собой' : 'O‘zingizni qanday parvarishlash'}
+            href={`/${locale}/blog`}
+            link={locale === 'ru' ? 'Весь блог' : 'Butun blog'}
+          />
+          <div className={blocks.postGrid}>
+            {posts.slice(0, 3).map((post) => (
+              <Link key={post.slug} href={`/${locale}/blog/${post.slug}`} className={blocks.post}>
+                <div
+                  className={blocks.postCover}
+                  style={post.coverUrl ? { backgroundImage: `url(${post.coverUrl})` } : undefined}
+                />
+                <div className={blocks.postBody}>
+                  {post.publishedAt ? (
+                    <span className={blocks.postDate}>
+                      {new Date(post.publishedAt).toLocaleDateString(
+                        locale === 'ru' ? 'ru-RU' : 'uz-UZ',
+                        { day: '2-digit', month: 'long' },
+                      )}
+                    </span>
+                  ) : null}
+                  <h3>{locale === 'ru' ? post.titleRu : post.titleUz}</h3>
+                  {post.excerptUz || post.excerptRu ? (
+                    <p>{locale === 'ru' ? post.excerptRu : post.excerptUz}</p>
+                  ) : null}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Reveal>
+      ) : null}
+
+      {/* Hamkorlik — aliver.com dagi «Become Our Distributors». */}
+      <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
+        <div className={blocks.partner}>
+          <div>
+            <p className={styles.eyebrow} style={{ color: '#ffd3df' }}>
+              {locale === 'ru' ? 'Оптом и в розницу' : 'Ulgurji va chakana'}
+            </p>
+            <h2>
+              {locale === 'ru' ? 'Станьте дистрибьютором ALIVER' : 'ALIVER distribyutori bo‘ling'}
+            </h2>
+            <p>
+              {locale === 'ru'
+                ? 'Салонам, магазинам и мастерам — официальные поставки, оптовые цены и поддержка по ассортименту. Заявка занимает минуту.'
+                : 'Salon, do‘kon va ustalar uchun — rasmiy ta’minot, ulgurji narxlar va assortiment bo‘yicha qo‘llab-quvvatlash. Ariza bir daqiqa vaqt oladi.'}
+            </p>
+            <div style={{ marginTop: 26 }}>
+              <Link className={`${styles.lightAction} alv-lift`} href={`/${locale}/hamkorlik`}>
+                {locale === 'ru' ? 'Оставить заявку' : 'Ariza qoldirish'} <span aria-hidden>→</span>
+              </Link>
+            </div>
+          </div>
+          <div className={blocks.partnerFacts}>
+            <div className={blocks.fact}>
+              <strong>{locale === 'ru' ? 'Официально' : 'Rasmiy'}</strong>
+              <span>
+                {locale === 'ru' ? 'Прямые поставки с чеком' : 'To‘g‘ridan-to‘g‘ri, chek bilan'}
+              </span>
+            </div>
+            <div className={blocks.fact}>
+              <strong>{locale === 'ru' ? 'Вся страна' : 'Butun respublika'}</strong>
+              <span>
+                {locale === 'ru' ? 'Доставка в любой регион' : 'Har qanday hududga yetkazish'}
+              </span>
+            </div>
+            <div className={blocks.fact}>
+              <strong>{locale === 'ru' ? 'Click • Payme • Uzum' : 'Click • Payme • Uzum'}</strong>
+              <span>{locale === 'ru' ? 'И оплата по счёту' : 'Va hisob-faktura bo‘yicha'}</span>
+            </div>
+          </div>
         </div>
       </Reveal>
 

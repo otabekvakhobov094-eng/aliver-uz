@@ -16,6 +16,38 @@
   --alv-surface: #ffffff;
   --alv-surface-2: #fdeff5;
   --alv-surface-3: #fff3e9;
+  /*
+   * Kosmetika uchun qo'shimcha yuzalar.
+   *
+   * Rang tanlovi mavzuga qarab: pushti-rumino («blush») va shampan
+   * («champagne») — ayollar kosmetikasi qadog'ida eng ko'p uchraydigan
+   * ikki tus. Ular FON uchun, matn uchun emas: ikkalasi ham juda och
+   * va ularda matn o'qilmaydi. Matn har doim `--alv-ink` bilan.
+   */
+  --alv-blush: #fdf0f4;
+  --alv-blush-2: #f7dbe4;
+  --alv-champagne: #f6ecdf;
+  --alv-champagne-2: #ecd9c2;
+  /* Bosh sahifa va bo'lim fonlari uchun tayyor gradientlar. */
+  --alv-grad-blush: linear-gradient(140deg, #fdf0f4 0%, #f8dee7 100%);
+  --alv-grad-warm: linear-gradient(140deg, #fffaf6 0%, #f6e6d8 100%);
+  --alv-grad-deep: linear-gradient(125deg, #1e1519 0%, #3b2029 55%, #6d2f45 100%);
+
+  /*
+   * QUYUQROQ FON UCHUN matn ranglari.
+   *
+   * Kontrast har doim ELEMENT ORTIDAGI haqiqiy fonga nisbatan
+   * o'lchanadi. `--alv-muted` va `--alv-brand` asosiy fonda (#fff9fc)
+   * AA dan o'tadi — 4.57 va 4.68 — lekin yangi blush va champagne
+   * yuzalarida 4.28 va 4.39 ga tushadi, ya'ni YIQILADI.
+   *
+   * Shuning uchun shu yuzalarda ishlatiladigan alohida ikki token.
+   * Eng quyuq yuzada (#ecd9c2) o'lchangan:
+   *   --alv-muted-on-tint  4.68:1
+   *   --alv-brand-on-tint  4.98:1
+   */
+  --alv-muted-on-tint: #665a70;
+  --alv-brand-on-tint: #b0164d;
 
   /* Brend */
   --alv-brand: #d42a64; /* 4.68:1 — avvalgi #e4175c 4.42:1, ya'ni AA dan past */
