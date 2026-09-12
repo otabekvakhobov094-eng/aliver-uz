@@ -35,6 +35,18 @@ const CATEGORIES: CategorySeed[] = [
   },
   { slug: 'makiyaj', uz: 'Makiyaj', ru: 'Макияж', children: [{ slug: 'lab-boyogi', uz: 'Lab bo‘yog‘i', ru: 'Помада' }] },
   { slug: 'tana-parvarishi', uz: 'Tana parvarishi', ru: 'Уход за телом' },
+  // Sarlavha menyusida «Tirnoq» bo'limi bor edi, kategoriyasi esa yo'q:
+  // havola bosilganda BO'SH katalog chiqardi. `check-nav-targets.mjs`
+  // aynan shuni topdi.
+  {
+    slug: 'tirnoq',
+    uz: 'Tirnoq',
+    ru: 'Ногти',
+    children: [
+      { slug: 'gel-lak', uz: 'Gel lak', ru: 'Гель-лак' },
+      { slug: 'tirnoq-parvarishi', uz: 'Tirnoq parvarishi', ru: 'Уход за ногтями' },
+    ],
+  },
   { slug: 'toplamlar', uz: 'To‘plamlar', ru: 'Наборы' },
 ];
 
@@ -65,6 +77,38 @@ const WARNINGS_DEFAULT =
   'Faqat tashqi qo‘llash uchun. Ko‘zga tegsa, ko‘p suv bilan yuving. Bolalar qo‘li yetmaydigan joyda saqlang.';
 
 const PRODUCTS: ProductSeed[] = [
+  {
+    slug: 'gel-lak-rose-nude',
+    uz: 'ALIVER Gel lak Rose Nude',
+    ru: 'ALIVER Гель-лак Rose Nude',
+    category: 'gel-lak',
+    collections: ['yangi-kelganlar'],
+    tags: ['tiniqlik'],
+    ikpu: '03304300001000000',
+    shortUz: 'LED lampada 30 soniyada qotadigan gel lak',
+    shortRu: 'Гель-лак, застывающий в LED-лампе за 30 секунд',
+    ingredientsUz:
+      'Di-HEMA Trimethylhexyl Dicarbamate, HEMA, Hydroxypropyl Methacrylate, Photoinitiator, CI 77891.',
+    warningsUz: WARNINGS_DEFAULT,
+    variants: [
+      { sku: 'ALV-GEL-RN8', color: 'Rose Nude', size: '8 ml', price: 69000, stock: 36, volumeMl: 8 },
+      { sku: 'ALV-GEL-CR8', color: 'Coral', size: '8 ml', price: 69000, stock: 28, volumeMl: 8 },
+    ],
+  },
+  {
+    slug: 'kutikula-moyi',
+    uz: 'ALIVER Kutikula uchun parvarish moyi',
+    ru: 'ALIVER Масло для кутикулы',
+    category: 'tirnoq-parvarishi',
+    collections: [],
+    tags: ['quruqlik'],
+    ikpu: '03304991002000000',
+    shortUz: 'Jojoba va E vitamini bilan kutikulani yumshatuvchi moy',
+    shortRu: 'Масло с жожоба и витамином E, смягчает кутикулу',
+    ingredientsUz: 'Simmondsia Chinensis Seed Oil, Tocopheryl Acetate, Prunus Amygdalus Dulcis Oil, Parfum.',
+    warningsUz: WARNINGS_DEFAULT,
+    variants: [{ sku: 'ALV-CUT-015', size: '15 ml', price: 54000, stock: 44, volumeMl: 15 }],
+  },
   {
     slug: 'rosemary-soch-moyi',
     uz: 'ALIVER Rosemary soch o‘sishi uchun moy',

@@ -8,8 +8,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "npm run check:prisma && npm run typecheck",
+    "lint": "npm run check:prisma && npm run check:nav && npm run typecheck",
     "check:prisma": "node scripts/check-prisma-fields.mjs",
+    "check:nav": "node scripts/check-nav-targets.mjs",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:e2e": "node scripts/e2e-smoke.mjs",

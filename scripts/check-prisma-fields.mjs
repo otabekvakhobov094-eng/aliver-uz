@@ -32,7 +32,9 @@ import ts from 'typescript';
 
 const ROOT = process.cwd();
 const SCHEMA = path.join(ROOT, 'apps/api/prisma/schema.prisma');
-const SRC = path.join(ROOT, 'apps/api/src');
+// Seed fayllari ham Prisma bilan yozadi va ularda ham xuddi shu
+// xato bo'lishi mumkin — `isPublished` yo'q modelga `isPublished`.
+const SCAN = [path.join(ROOT, 'apps/api/src'), path.join(ROOT, 'apps/api/prisma')];
 
 /* ------------------------------------------------------------------ *
  * 1. Sxemani o'qish
@@ -252,7 +254,7 @@ function walkDir(dir) {
   }
 }
 
-walkDir(SRC);
+for (const dir of SCAN) walkDir(dir);
 
 if (problems.length > 0) {
   console.error(`\nPrisma so'rovlarida ${problems.length} ta nomuvofiqlik:\n`);

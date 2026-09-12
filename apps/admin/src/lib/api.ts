@@ -33,6 +33,88 @@ export interface CmsRecord {
   updatedAt?: string;
 }
 
+export interface AdminMenuItem {
+  id: string;
+  location: string;
+  parentId: string | null;
+  labelUz: string;
+  labelRu: string;
+  noteUz: string | null;
+  noteRu: string | null;
+  targetType: string;
+  targetValue: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  isHighlighted: boolean;
+  /** Server hisoblab beradi — bandning saytdagi manzili. */
+  href: string;
+  /**
+   * Nishoni endi mavjud emas (kategoriya o'chirilgan, sahifa nashrdan
+   * olingan). Bunday band SAYTDA KO'RINMAYDI, admin esa uni qizil
+   * holda ko'radi va tuzatadi.
+   */
+  broken: boolean;
+}
+
+export interface MenuOptions {
+  targetTypes: string[];
+  routes: string[];
+}
+
+export interface LoyaltyBalance {
+  points: number;
+  /** Ballning so'mdagi qiymati, tiyinda — string (BigInt). */
+  amount: string;
+  rate: {
+    pointsPerSum: string;
+    tiyinPerPoint: string;
+    maxRedeemSharePercent: number;
+    expiryMonths: number;
+  };
+  expiresAt: string | null;
+}
+
+export interface LoyaltyEntry {
+  id: string;
+  kind: string;
+  points: number;
+  amount: string;
+  comment: string | null;
+  orderNumber: string | null;
+  createdAt: string;
+}
+
+export interface LoyaltyView {
+  balance: LoyaltyBalance;
+  history: LoyaltyEntry[];
+}
+
+export interface UzumStatus {
+  ready: boolean;
+  missing: string[];
+  baseUrl: string;
+}
+
+export interface UzumProductPreview {
+  total: number;
+  readable: number;
+  unreadable: number;
+  alreadyInCatalog: number;
+  newToCatalog: number;
+  sample: Array<{ externalId: string; nameUz: string; sku: string | null }>;
+}
+
+export interface UzumReviewImport {
+  total: number;
+  readable: number;
+  unreadable: number;
+  created: number;
+  duplicate: number;
+  unmatched: number;
+  unmatchedSample: Array<{ externalId: string; sku: string | null; rating: number }>;
+  dryRun: boolean;
+}
+
 export interface B2bLead {
   id: string; company: string; contactPerson: string; phone: string; telegram: string | null;
   city: string | null; businessType: string | null; monthlyVolume: string | null;
@@ -1345,6 +1427,29 @@ export const adminApi = {
     if (to) qs.set('to', to);
     return request<DashboardData>(`/admin/reports/dashboard?${qs.toString()}`);
   },
+
+  loyalty: (customerId: string) => request<LoyaltyView>(`/admin/loyalty/${customerId}`),
+  adjustLoyalty: (customerId: string, points: number, comment: string) =>
+    request<unknown>(`/admin/loyalty/${customerId}/adjust`, {
+      method: 'POST',
+      body: JSON.stringify({ points, comment }),
+    }),
+
+  uzumStatus: () => request<UzumStatus>('/admin/uzum/status'),
+  uzumPreview: () => request<UzumProductPreview>('/admin/uzum/products/preview'),
+  uzumImportReviews: (dryRun: boolean) =>
+    request<UzumReviewImport>(`/admin/uzum/reviews/import?dryRun=${dryRun}`, { method: 'POST' }),
+
+  menu: (location: 'HEADER' | 'FOOTER') =>
+    request<AdminMenuItem[]>(`/admin/menu?location=${location}`),
+  menuOptions: () => request<MenuOptions>('/admin/menu/options'),
+  createMenuItem: (body: Record<string, unknown>) =>
+    request<AdminMenuItem>('/admin/menu', { method: 'POST', body: JSON.stringify(body) }),
+  updateMenuItem: (id: string, body: Record<string, unknown>) =>
+    request<AdminMenuItem>(`/admin/menu/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteMenuItem: (id: string) => request<{ ok: true }>(`/admin/menu/${id}`, { method: 'DELETE' }),
+  reorderMenu: (ids: string[]) =>
+    request<{ ok: true }>('/admin/menu/reorder', { method: 'PUT', body: JSON.stringify({ ids }) }),
 
   collections: () => request<AdminCollection[]>('/admin/collections'),
   createCollection: (body: Record<string, unknown>) =>

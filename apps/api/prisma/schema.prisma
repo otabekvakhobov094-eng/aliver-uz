@@ -1861,3 +1861,46 @@ enum ImportMode {
   UPDATE_ONLY
   CREATE_AND_UPDATE
 }
+
+/// Sayt navigatsiyasi. [TZ 41]
+///
+/// Ilgari menyu `SiteHeader.tsx` ichidagi massiv edi: yangi bo'lim
+/// qo'shish uchun dasturchi va deploy kerak bo'lardi, admin esa o'z
+/// do'konining menyusini o'zgartira olmasdi. Endi menyu — ma'lumot.
+///
+/// `targetType` + `targetValue` juftligi ataylab shunday: shunchaki
+/// `href` saqlansa, admin `/katalog?category=tirnoq` deb yozib
+/// qo'yishi va sayt jim turib BO'SH sahifa ko'rsatishi mumkin edi.
+/// Tur ajratilgani uchun server saqlashdan oldin nishon haqiqatan
+/// mavjudligini tekshira oladi.
+model MenuItem {
+  id       String  @id @default(uuid()) @db.Uuid
+  /// HEADER | FOOTER
+  location String
+  parentId String? @db.Uuid
+  parent   MenuItem?  @relation("MenuTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children MenuItem[] @relation("MenuTree")
+
+  labelUz String
+  labelRu String
+  /// Mega-menyudagi qisqa izoh.
+  noteUz  String?
+  noteRu  String?
+
+  /// HOME | CATEGORY | COLLECTION | PAGE | BLOG | ROUTE | URL
+  targetType  String
+  /// Kategoriya/kolleksiya/sahifa uchun — slug; ROUTE uchun — `/aloqa`;
+  /// URL uchun — to'liq manzil. HOME uchun bo'sh.
+  targetValue String?
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+  /// Yangi bo'limni ajratib ko'rsatish uchun.
+  isHighlighted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([location, parentId, sortOrder])
+  @@map("menu_items")
+}

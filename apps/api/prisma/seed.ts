@@ -8,6 +8,7 @@ import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { ALL_PERMISSIONS, ROLE_PRESETS } from '../src/modules/rbac/permissions.constants';
 import { seedCatalog } from './seed-catalog';
+import { seedContent } from './seed-content';
 
 const prisma = new PrismaClient();
 
@@ -295,6 +296,7 @@ async function main(): Promise<void> {
   await seedDeliveryMethods();
   await seedSettings();
   await seedLegalPages();
+  await seedContent(prisma);
 
   // Demo katalog faqat ishlab chiqish/staging uchun.
   if (process.env.SEED_DEMO_CATALOG !== 'false' && process.env.APP_ENV !== 'production') {

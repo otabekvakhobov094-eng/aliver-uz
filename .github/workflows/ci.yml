@@ -53,6 +53,10 @@ jobs:
       # olmaydigan sinfdagi xatoni topadi — deploy bir marta aynan
       # shu sababdan yiqilgan edi.
       - run: npm run check:prisma
+      # Menyudagi har bir bandning nishoni haqiqatan mavjudmi.
+      # Buzilgan havola 404 bermaydi — bo'sh sahifa beradi, ya'ni
+      # o'zini ko'rsatmaydi.
+      - run: npm run check:nav
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test

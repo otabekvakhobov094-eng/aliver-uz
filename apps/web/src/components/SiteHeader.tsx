@@ -1,6 +1,8 @@
 import { AliverLogo } from '@aliver/ui';
 import Link from 'next/link';
 import type { Locale } from '@/i18n/messages';
+import { contentApi, type MenuNode } from '@/lib/content-api';
+import { DEFAULT_HEADER_MENU } from '@/lib/default-menu';
 import { CartBadge } from './CartBadge';
 import styles from './SiteHeader.module.css';
 
@@ -13,146 +15,30 @@ import styles from './SiteHeader.module.css';
  *      ko'riladigan narsa bo'lishi kerak.
  *   2. O'ng tomonda IKONKALAR, matn emas. «Savat», «Kabinet», «Kuzatuv»
  *      so'zlari o'ng ustunni kengaytirib, logotipni markazdan surardi.
- *   3. Bo'limlar to'liq — aliver.com dagi hammasi. Ilgari beshtasi bor
- *      edi, ya'ni «Yordam», «Blog», «Hamkorlik» kabi butun bo'limlarga
- *      sarlavhadan yo'l yo'q edi.
+ *   3. Menyu KODDA EMAS, bazada. Ilgari u shu fayldagi massiv edi va
+ *      do'kon egasi o'z menyusini o'zgartira olmasdi — har bir yangi
+ *      bo'lim uchun dasturchi va deploy kerak bo'lardi. Endi uni admin
+ *      panelidan boshqarish mumkin, kodda esa faqat ZAXIRA qoladi:
+ *      API javob bermasa, sayt sarlavhasiz qolmaydi.
  */
 
-interface NavChild {
-  href: string;
-  uz: string;
-  ru: string;
-  /** Qisqa izoh — mega-menyuda bo'lim nima ekanini aytadi. */
-  noteUz?: string;
-  noteRu?: string;
+function label(item: MenuNode, locale: Locale) {
+  return locale === 'ru' ? item.labelRu : item.labelUz;
 }
 
-interface NavItem {
-  href: string;
-  uz: string;
-  ru: string;
-  children?: NavChild[];
+function note(item: MenuNode, locale: Locale) {
+  return locale === 'ru' ? item.noteRu : item.noteUz;
 }
 
-const NAV: NavItem[] = [
-  { href: '', uz: 'Bosh sahifa', ru: 'Главная' },
-  {
-    href: '/katalog',
-    uz: 'Do‘kon',
-    ru: 'Магазин',
-    children: [
-      {
-        href: '/katalog?category=soch-parvarishi',
-        uz: 'Soch parvarishi',
-        ru: 'Уход за волосами',
-        noteUz: 'Moylar, shampunlar, niqoblar',
-        noteRu: 'Масла, шампуни, маски',
-      },
-      {
-        href: '/katalog?category=yuz-parvarishi',
-        uz: 'Yuz parvarishi',
-        ru: 'Уход за лицом',
-        noteUz: 'Tozalash, namlash, serumlar',
-        noteRu: 'Очищение, увлажнение, сыворотки',
-      },
-      {
-        href: '/katalog?category=tana-parvarishi',
-        uz: 'Tana parvarishi',
-        ru: 'Уход за телом',
-        noteUz: 'Kremlar, skrablar, moylar',
-        noteRu: 'Кремы, скрабы, масла',
-      },
-      {
-        href: '/katalog?category=tirnoq',
-        uz: 'Tirnoq',
-        ru: 'Ногти',
-        noteUz: 'Gel laklar va vositalar',
-        noteRu: 'Гель-лаки и средства',
-      },
-      {
-        href: '/tanlagich',
-        uz: 'Vosita tanlagich',
-        ru: 'Подбор средства',
-        noteUz: 'Uchta savol — tayyor tanlov',
-        noteRu: 'Три вопроса — готовая подборка',
-      },
-      {
-        href: '/kategoriyalar',
-        uz: 'Barcha kategoriyalar',
-        ru: 'Все категории',
-      },
-    ],
-  },
-  { href: '/katalog?collection=yangi-kelganlar', uz: 'Yangi kelganlar', ru: 'Новинки' },
-  { href: '/katalog?collection=best-sellers', uz: 'TOP sotuvlar', ru: 'Хиты продаж' },
-  { href: '/katalog?collection=sovga-toplamlari', uz: 'Sovg‘a to‘plamlari', ru: 'Наборы в подарок' },
-  {
-    href: '/savollar',
-    uz: 'Yordam',
-    ru: 'Помощь',
-    children: [
-      {
-        href: '/yetkazish',
-        uz: 'Yetkazib berish',
-        ru: 'Доставка',
-        noteUz: 'Muddat va narxlar',
-        noteRu: 'Сроки и цены',
-      },
-      {
-        href: '/kuzatuv',
-        uz: 'Buyurtmani kuzatish',
-        ru: 'Отследить заказ',
-        noteUz: 'Raqam va telefon bo‘yicha',
-        noteRu: 'По номеру и телефону',
-      },
-      {
-        href: '/savollar',
-        uz: 'Savol-javob',
-        ru: 'Вопросы и ответы',
-      },
-      {
-        href: '/aloqa',
-        uz: 'Aloqa',
-        ru: 'Контакты',
-      },
-    ],
-  },
-  { href: '/blog', uz: 'Blog', ru: 'Блог' },
-  {
-    href: '/biz-haqimizda',
-    uz: 'ALIVER haqida',
-    ru: 'Об ALIVER',
-    children: [
-      {
-        href: '/biz-haqimizda',
-        uz: 'Brend haqida',
-        ru: 'О бренде',
-      },
-      {
-        href: '/sahifa/originallik',
-        uz: 'Originallik kafolati',
-        ru: 'Гарантия оригинала',
-        noteUz: 'Rasmiy diler — chek bilan',
-        noteRu: 'Официальный дилер — с чеком',
-      },
-      {
-        href: '/kabinet/ballar',
-        uz: 'Bonus ballar',
-        ru: 'Бонусные баллы',
-        noteUz: 'Har 1 000 so‘mga 1 ball',
-        noteRu: 'За каждые 1 000 сум — 1 балл',
-      },
-    ],
-  },
-  { href: '/hamkorlik', uz: 'Hamkor bo‘ling', ru: 'Стать партнёром' },
-];
-
-function label(item: { uz: string; ru: string }, locale: Locale) {
-  return locale === 'ru' ? item.ru : item.uz;
+/** Ichki havolaga til prefiksi qo'yiladi, tashqisiga — yo'q. */
+function hrefFor(item: MenuNode, locale: Locale) {
+  return item.external ? item.href : `/${locale}${item.href}`;
 }
 
-export function SiteHeader({ locale }: { locale: Locale }) {
+export async function SiteHeader({ locale }: { locale: Locale }) {
   const other: Locale = locale === 'uz' ? 'ru' : 'uz';
+  const fetched = await contentApi.menu('HEADER');
+  const nav = fetched.length > 0 ? fetched : DEFAULT_HEADER_MENU;
 
   return (
     <header className={styles.header}>
@@ -218,11 +104,11 @@ export function SiteHeader({ locale }: { locale: Locale }) {
                 className={styles.mobileMenu}
                 aria-label={locale === 'ru' ? 'Мобильная навигация' : 'Mobil navigatsiya'}
               >
-                {NAV.map((item) => (
-                  <div key={item.uz} className={styles.mobileGroup}>
-                    <Link href={`/${locale}${item.href}`}>{label(item, locale)}</Link>
-                    {item.children?.map((c) => (
-                      <Link key={c.uz} href={`/${locale}${c.href}`} className={styles.mobileChild}>
+                {nav.map((item) => (
+                  <div key={item.id} className={styles.mobileGroup}>
+                    <Link href={hrefFor(item, locale)}>{label(item, locale)}</Link>
+                    {item.children.map((c) => (
+                      <Link key={c.id} href={hrefFor(c, locale)} className={styles.mobileChild}>
                         {label(c, locale)}
                       </Link>
                     ))}
@@ -250,26 +136,27 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           className={`alv-page ${styles.desktopNav}`}
           aria-label={locale === 'ru' ? 'Основная навигация' : 'Asosiy navigatsiya'}
         >
-          {NAV.map((item) => (
-            <div key={item.uz} className={styles.navItem}>
-              <Link href={`/${locale}${item.href}`} className={styles.navLink}>
+          {nav.map((item) => (
+            <div key={item.id} className={styles.navItem}>
+              <Link
+                href={hrefFor(item, locale)}
+                className={`${styles.navLink}${item.highlighted ? ` ${styles.navHighlight}` : ''}`}
+              >
                 {label(item, locale)}
-                {item.children ? (
+                {item.children.length > 0 ? (
                   <span className={styles.caret} aria-hidden>
                     ▾
                   </span>
                 ) : null}
               </Link>
 
-              {item.children ? (
+              {item.children.length > 0 ? (
                 <div className={styles.panel} role="group">
                   <div className={styles.panelInner}>
                     {item.children.map((c) => (
-                      <Link key={c.uz} href={`/${locale}${c.href}`} className={styles.panelLink}>
+                      <Link key={c.id} href={hrefFor(c, locale)} className={styles.panelLink}>
                         <strong>{label(c, locale)}</strong>
-                        {c.noteUz ? (
-                          <span>{locale === 'ru' ? c.noteRu : c.noteUz}</span>
-                        ) : null}
+                        {note(c, locale) ? <span>{note(c, locale)}</span> : null}
                       </Link>
                     ))}
                   </div>

@@ -48,7 +48,31 @@ async function get<T>(path: string, revalidate = 120): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export interface MenuNode {
+  id: string;
+  labelUz: string;
+  labelRu: string;
+  noteUz: string | null;
+  noteRu: string | null;
+  href: string;
+  external: boolean;
+  highlighted: boolean;
+  children: MenuNode[];
+}
+
 export const contentApi = {
+  /**
+   * Sayt menyusi. Xatolik bo'lsa BO'SH ro'yxat qaytaradi — chaqiruvchi
+   * o'rnini o'rnatilgan menyu bilan to'ldiradi. Sarlavhasiz sayt
+   * eskirgan menyuli saytdan yomonroq.
+   */
+  menu: async (location: 'HEADER' | 'FOOTER'): Promise<MenuNode[]> => {
+    try {
+      return await get<MenuNode[]>(`/content/menu?location=${location}`, 300);
+    } catch {
+      return [];
+    }
+  },
   page: (slug: string) => get<ContentPage>(`/content/pages/${encodeURIComponent(slug)}`, 300),
   posts: () => get<BlogPost[]>('/content/blog', 120),
   post: (slug: string) => get<BlogPost>(`/content/blog/${encodeURIComponent(slug)}`, 120),

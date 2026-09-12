@@ -1,28 +1,27 @@
 import Link from 'next/link';
 import { AliverLogo } from '@aliver/ui';
 import type { Locale } from '@/i18n/messages';
+import { contentApi } from '@/lib/content-api';
+import { DEFAULT_FOOTER_MENU } from '@/lib/default-menu';
 import styles from './SiteFooter.module.css';
 
 /**
- * Footer havolalari. `/sahifa/delivery` va `/sahifa/payment` o'rniga
- * bitta `/yetkazish` sahifasi qo'yildi: mijoz "qachon keladi va qanday
- * to'layman" degan savolni doim birga so'raydi, ikkita sahifa esa uni
- * ikki marta qidirishga majbur qilardi.
+ * Footer havolalari ham bazadan keladi.
+ *
+ * Ilgari bu yerda `/sahifa/return-policy`, `/sahifa/public-offer` va
+ * `/sahifa/privacy-policy` qattiq yozilgan edi. Uchalasi ham seed'da
+ * NASHR QILINMAGAN holatda turadi — matnini yurist beradi. Ya'ni
+ * footerda uchta havola bor edi va uchalasi ham 404 berardi, buni esa
+ * hech narsa ko'rsatmasdi.
+ *
+ * Endi menyu serverdan keladi va server nashr qilinmagan sahifaga
+ * ishora qiladigan bandni javobdan chiqarib tashlaydi: yurist matni
+ * kelib, admin sahifani nashr qilgan kuni havola O'ZI paydo bo'ladi.
  */
-const LINKS: Array<[string, string, string]> = [
-  ['/biz-haqimizda', 'Biz haqimizda', 'О нас'],
-  ['/yetkazish', 'Yetkazish va to‘lov', 'Доставка и оплата'],
-  ['/aloqa', 'Aloqa', 'Контакты'],
-  ['/kategoriyalar', 'Kategoriyalar', 'Категории'],
-  ['/savollar', 'Ko‘p so‘raladigan savollar', 'Частые вопросы'],
-  ['/sahifa/return-policy', 'Qaytarish shartlari', 'Условия возврата'],
-  ['/sahifa/public-offer', 'Ommaviy oferta', 'Публичная оферта'],
-  ['/sahifa/privacy-policy', 'Maxfiylik siyosati', 'Политика конфиденциальности'],
-  ['/blog', 'Blog', 'Блог'],
-  ['/hamkorlik', 'Hamkorlik', 'Партнёрство'],
-];
+export async function SiteFooter({ locale }: { locale: Locale }) {
+  const fetched = await contentApi.menu('FOOTER');
+  const links = fetched.length > 0 ? fetched : DEFAULT_FOOTER_MENU;
 
-export function SiteFooter({ locale }: { locale: Locale }) {
   return (
     <footer className={styles.footer}>
       <div className="alv-page">
@@ -36,9 +35,13 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         </p>
 
         <nav className={styles.links}>
-          {LINKS.map(([href, uz, ru]) => (
-            <Link key={href} href={`/${locale}${href}`}>
-              {locale === 'ru' ? ru : uz}
+          {links.map((item) => (
+            <Link
+              key={item.id}
+              href={item.external ? item.href : `/${locale}${item.href}`}
+              {...(item.external ? { rel: 'noopener noreferrer', target: '_blank' } : {})}
+            >
+              {locale === 'ru' ? item.labelRu : item.labelUz}
             </Link>
           ))}
         </nav>

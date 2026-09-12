@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { use, useCallback, useEffect, useState } from 'react';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { CustomerLoyalty } from '@/components/CustomerLoyalty';
 import { adminApi, type AdminCustomerDetail } from '@/lib/api';
 import {
   ORDER_STATUS_LABEL,
@@ -276,6 +277,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 ))}
               </ul>
             )}
+          </Card>
+
+          <Card title="Bonus ballar">
+            <CustomerLoyalty customerId={id} />
           </Card>
         </div>
       </div>

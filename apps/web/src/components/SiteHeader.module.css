@@ -124,6 +124,16 @@
   color: var(--alv-brand);
 }
 
+/*
+  Admin menyuda bandni «ajratib ko'rsatish» ni yoqsa — masalan aksiya
+  yoki yangi bo'lim. Rang o'zgarishi bilan chegaralanamiz: menyuda
+  miltillovchi band butun sarlavhani bezovta qiladi.
+*/
+.navHighlight {
+  color: var(--alv-brand);
+  font-weight: 700;
+}
+
 .caret {
   font-size: 9px;
   opacity: 0.55;
