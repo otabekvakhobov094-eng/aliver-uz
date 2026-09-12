@@ -438,11 +438,18 @@
 
 /* ---- Shior ------------------------------------------------------- */
 .alv-intro__tag {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.42em;
-  text-indent: 0.42em; /* oxirgi harfdan keyingi bo'shliqni muvozanatlaydi */
+  /*
+    0.42em juda keng edi. Lotin qisqartmalari uchun u chiroyli
+    ko'rinadi, lekin kirill va o'zbek so'zlari uzunroq — shunday
+    interval bilan «Лаборатория природы» ikki qatorga bo'linib
+    ketardi. 0.26em brend hissini saqlaydi va so'z butun qoladi.
+  */
+  letter-spacing: 0.26em;
+  text-indent: 0.26em; /* oxirgi harfdan keyingi bo'shliqni muvozanatlaydi */
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--alv-brand-on-tint);
   animation: alvIntroTag var(--alv-intro-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

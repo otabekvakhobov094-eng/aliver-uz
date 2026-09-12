@@ -29,7 +29,7 @@ const FALLBACK = [
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
-  const [categories, best, fresh, banners, promos, posts] = await Promise.all([
+  const [categories, best, fresh, banners, promos, summerItems, lipItems, posts] = await Promise.all([
     catalogApi.categories().catch(() => []),
     catalogApi.products({ collection: 'best-sellers', perPage: 4 }).catch(() => ({ items: [] })),
     catalogApi.products({ sort: 'newest', perPage: 4 }).catch(() => ({ items: [] })),
@@ -37,6 +37,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     // Aksiya bannerlari. Adminda bo'lmasa — kodda tayyor matn bor,
     // ya'ni bo'sh joy hech qachon ko'rinmaydi.
     contentApi.banners('PROMO').catch(() => []),
+    // Kampaniya bannerlaridagi suratlar — HAQIQIY katalogdan.
+    catalogApi.products({ category: 'soch-parvarishi', perPage: 3, inStock: true }).catch(() => ({ items: [] })),
+    catalogApi.products({ category: 'makiyaj', perPage: 3, inStock: true }).catch(() => ({ items: [] })),
     // Blog bloki uchun. Xato bo'lsa blok shunchaki chizilmaydi.
     contentApi.posts().catch(() => []),
   ]);
@@ -45,6 +48,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // `sortOrder` bilan boshqariladi.
   const summer = fromBanner(promos[0], SUMMER_CAMPAIGN);
   const lips = fromBanner(promos[1], LIP_CAMPAIGN);
+  const toCampaign = (items: Awaited<ReturnType<typeof catalogApi.products>>['items']) =>
+    items.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      nameUz: p.nameUz,
+      nameRu: p.nameRu,
+      imageUrl: p.imageUrl,
+    }));
   const title = (locale === 'ru' ? hero?.titleRu : hero?.titleUz) ?? (locale === 'ru' ? 'Красота, которая начинается с заботы' : 'Go‘zallik — g‘amxo‘rlikdan boshlanadi');
   const subtitle = (locale === 'ru' ? hero?.subtitleRu : hero?.subtitleUz) ?? (locale === 'ru' ? 'Оригинальная косметика ALIVER для ежедневных ритуалов красоты. Официально в Узбекистане.' : 'Kundalik go‘zallik marosimingiz uchun original ALIVER kosmetikasi. O‘zbekistonda rasmiy.');
 
@@ -126,7 +137,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         qilingandan keyin.
       */}
       <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
-        <CampaignBanner copy={summer} locale={locale} />
+        <CampaignBanner copy={summer} locale={locale} products={toCampaign(summerItems.items)} />
       </Reveal>
 
       <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
@@ -270,7 +281,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </Reveal>
 
       <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
-        <CampaignBanner copy={lips} locale={locale} />
+        <CampaignBanner copy={lips} locale={locale} products={toCampaign(lipItems.items)} />
       </Reveal>
 
       <Reveal as="section" className={`${styles.shell} ${styles.story}`}><div className={styles.storyArt}><span>ALIVER</span></div><div className={styles.storyCopy}><p className={styles.eyebrow}>{locale === 'ru' ? 'Философия ALIVER' : 'ALIVER falsafasi'}</p><h2>{locale === 'ru' ? 'Уход, созданный для вашей уверенности' : 'O‘zingizga bo‘lgan ishonch uchun yaratilgan parvarish'}</h2><p>{locale === 'ru' ? 'Красота — это ежедневное внимание к себе. Эффективные формулы, приятные текстуры и современный дизайн.' : 'Go‘zallik o‘zingizga har kuni e’tibor berishdan boshlanadi. Samarali formulalar, yoqimli teksturalar va zamonaviy dizayn.'}</p><Link className={styles.textAction} href={`/${locale}/biz-haqimizda`}>{locale === 'ru' ? 'Узнать больше' : 'Batafsil bilish'} <span>→</span></Link></div></Reveal>

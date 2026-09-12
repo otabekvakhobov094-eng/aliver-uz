@@ -1,4 +1,5 @@
 import { AliverLogo } from '@aliver/ui';
+import type { Locale } from '@/i18n/messages';
 
 /**
  * Ochilish animatsiyasi — logotip avval, so'ng sayt.
@@ -31,7 +32,29 @@ import { AliverLogo } from '@aliver/ui';
  * uning ichidan ochiladi. Harakat faqat `transform`/`opacity`/`filter`
  * bo'yicha, ya'ni kompozitor qatlamida.
  */
-export function BrandIntro() {
+/**
+ * Kirish ekranidagi shior.
+ *
+ * Ilgari bu yerda brendning inglizcha «Laboratories of Nature» yozuvi
+ * turardi. O'zbekistondagi do'kon uchun bu to'g'ri emas: saytga
+ * kiradigan odam o'zbek yoki rus tilida o'qiydi, va birinchi
+ * ko'radigan so'zi tushunmaydigan tilda bo'lishi kerak emas.
+ *
+ * Shior brendning O'Z ma'nosini saqlaydi — ALIVER o'zini tabiiy
+ * formulalar laboratoriyasi deb tanitadi — lekin mahalliy tilda
+ * yangraydi. Saytning tili almashsa, shior ham almashadi.
+ *
+ * Boshqa variantni sinab ko'rmoqchi bo'lsangiz, faqat shu ikki
+ * qatorni almashtiring:
+ *   «Go'zallik tabiatdan boshlanadi» / «Красота начинается с природы»
+ *   «Tabiat kuchi — go'zallik uchun» / «Сила природы для красоты»
+ */
+const TAGLINE: Record<Locale, string> = {
+  uz: 'Tabiat laboratoriyasi',
+  ru: 'Лаборатория природы',
+};
+
+export function BrandIntro({ locale }: { locale: Locale }) {
   return (
     <>
       {/*
@@ -60,7 +83,7 @@ export function BrandIntro() {
             <span className="alv-intro__sheen" />
           </div>
           <div className="alv-intro__line" />
-          <div className="alv-intro__tag">Laboratories of Nature</div>
+          <div className="alv-intro__tag">{TAGLINE[locale]}</div>
         </div>
       </div>
     </>

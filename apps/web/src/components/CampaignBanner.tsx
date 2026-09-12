@@ -24,6 +24,15 @@ import styles from './CampaignBanner.module.css';
  * dengiz), «warm» iliq pushti (lab bo'yoqlari, shirinlik).
  */
 
+/** Bannerda ko'rsatiladigan mahsulot. */
+export interface CampaignProduct {
+  id: string;
+  slug: string;
+  nameUz: string;
+  nameRu: string;
+  imageUrl: string | null;
+}
+
 export interface CampaignCopy {
   eyebrowUz: string;
   eyebrowRu: string;
@@ -46,27 +55,69 @@ export interface CampaignCopy {
 const pick = (locale: Locale, uz: string | undefined, ru: string | undefined) =>
   (locale === 'ru' ? ru : uz) ?? '';
 
-export function CampaignBanner({ copy, locale }: { copy: CampaignCopy; locale: Locale }) {
+export function CampaignBanner({
+  copy,
+  locale,
+  products = [],
+}: {
+  copy: CampaignCopy;
+  locale: Locale;
+  /** Kampaniyaga tegishli mahsulotlar — suratlari bannerda chiqadi. */
+  products?: CampaignProduct[];
+}) {
   const offer = pick(locale, copy.offerUz, copy.offerRu);
   const lead = pick(locale, copy.leadUz, copy.leadRu);
+  // Surati yo'q mahsulot bannerda bo'sh joy qoldiradi — tashlab ketamiz.
+  const shown = products.filter((p) => p.imageUrl);
 
   return (
     <section className={`${styles.banner} ${styles[copy.tone]}`}>
       {copy.imageUrl ? (
+        /*
+          Marketing tayyor banner suratini yuklagan bo'lsa — u ustun.
+          Dizayner qilgan kompozitsiya avtomatik yig'ilganidan doim
+          yaxshiroq.
+        */
         <div
           className={styles.photo}
           style={{ backgroundImage: `url(${copy.imageUrl})` }}
           aria-hidden
         />
       ) : (
-        // Surat yo'q bo'lsa — shishalar siluetidan qurilgan sahna.
-        // Bo'sh to'rtburchakdan ko'ra shu yaxshi, va u hech qanday
-        // so'rov talab qilmaydi.
         <div className={styles.scene} aria-hidden>
-          <span className={styles.bottle} />
-          <span className={styles.bottle} />
-          <span className={styles.bottle} />
           <span className={styles.halo} />
+          {shown.length > 0 ? (
+            /*
+              HAQIQIY mahsulot suratlari — katalogdan.
+              
+              Ilgari bu yerda mavhum shisha shakllari chizilardi va
+              banner «namuna» bo'lib ko'rinardi. Endi kampaniyaga
+              tegishli mahsulotlar o'z suratlari bilan turadi: aksiya
+              qaysi mahsulotlarga tegishli ekani BIR QARASHDA ko'rinadi.
+
+              Har bir surat shaffof «tokcha» ustida turadi — namunadagi
+              akril bloklar kabi. Bu shakl ataylab tanlangan: katalog
+              suratlarining bir qismi oq fonli, bir qismi kesilgan
+              bo'lishi mumkin, tokcha esa ikkalasini ham joyida
+              ko'rsatadi.
+            */
+            shown.slice(0, 3).map((product, i) => (
+              <span key={product.id} className={`${styles.stand} ${styles[`stand${i + 1}`]}`}>
+                <img
+                  src={product.imageUrl ?? ''}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              </span>
+            ))
+          ) : (
+            <>
+              <span className={styles.bottle} />
+              <span className={styles.bottle} />
+              <span className={styles.bottle} />
+            </>
+          )}
         </div>
       )}
 

@@ -17,8 +17,6 @@
 .list {
   display: flex;
   flex-wrap: wrap;
-  /* `align-items: center` EMAS: plitkalar bir xil balandlikda va
-     yuqori chetidan tekislanadi — qator to'g'ri chiziqda turadi. */
   align-items: flex-start;
   gap: 10px;
   margin: 0;
@@ -27,17 +25,22 @@
 }
 
 /*
-  Plitka. Balandlik QAT'IY — ichidagi logotip qanday bo'lishidan
-  qat'i nazar qator bir tekisda qoladi.
+  Plitkalar BIR XIL: kenglik ham, balandlik ham qat'iy.
+
+  Ilgari faqat balandlik qat'iy edi, kenglik esa logotipga qarab
+  o'zi hisoblanardi — natijada EMU ning qutisi tor, Payme niki keng
+  bo'lib chiqdi va qator notekis ko'rindi. Endi quti — doimiy ramka,
+  logotip esa uning ICHIDA joylashadi.
 */
 .tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* 54px — tik lokap (EMU) ham o'qiladigan o'lchamda sig'adi.
-     Barcha plitkalar bir xil, shuning uchun qator tekis qoladi. */
-  height: 54px;
-  padding: 0 14px;
+  /* `flex: none` — flex qatorida quti cho'zilib yoki qisqarib
+     ketmasligi uchun. */
+  flex: none;
+  width: 118px;
+  height: 56px;
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
@@ -46,10 +49,10 @@
 .tile img {
   display: block;
   width: auto;
-  max-width: 100%;
-  /* Balandlik inline uslubdan keladi — har bir logotip uchun alohida
-     sozlangan. Bu yerda faqat yuqori chegara. */
-  max-height: 42px;
+  /* Quti ichidagi eng katta ruxsat etilgan o'lcham. Aniq balandlik
+     har bir logotip uchun alohida beriladi (komponentga qarang). */
+  max-width: 90px;
+  max-height: 40px;
   object-fit: contain;
 }
 
@@ -58,7 +61,11 @@
     gap: 20px;
   }
   .tile {
-    height: 48px;
-    padding: 0 11px;
+    width: 100px;
+    height: 50px;
+  }
+  .tile img {
+    max-width: 76px;
+    max-height: 34px;
   }
 }

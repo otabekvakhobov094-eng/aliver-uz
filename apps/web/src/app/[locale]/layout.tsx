@@ -45,7 +45,7 @@ export default async function LocaleLayout({
           yashirmaydi: u `position: fixed` qoplama va sayt uning ostida
           odatdagidek chiziladi.
         */}
-        <BrandIntro />
+        <BrandIntro locale={lang} />
         <CartProvider>{children}</CartProvider>
         <CookieConsent locale={lang} />
       </body>
