@@ -29,10 +29,10 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const VALUE_HINTS: Record<string, string> = {
-  CATEGORY: 'Kategoriya slugi, masalan: soch-parvarishi',
-  COLLECTION: 'Kolleksiya slugi, masalan: best-sellers',
-  PAGE: 'Nashr qilingan sahifa slugi, masalan: originallik',
-  BLOG: 'Bo‘sh qoldirilsa — blog ro‘yxati. Slug yozilsa — bitta maqola',
+  CATEGORY: 'Bazadagi faol kategoriyalardan biri',
+  COLLECTION: 'Bazadagi faol kolleksiyalardan biri',
+  PAGE: 'Nashr qilingan sahifalardan biri',
+  BLOG: 'Bo‘sh qoldirilsa — blog ro‘yxati. Maqola tanlansa — bitta maqola',
   URL: 'https:// bilan boshlanadigan to‘liq manzil',
 };
 
@@ -171,6 +171,18 @@ export default function MenuPage() {
   };
 
   const needsValue = draft.targetType !== 'HOME';
+
+  /**
+   * CATEGORY/COLLECTION/PAGE/BLOG uchun slug qo'lda yozilmaydi —
+   * serverdan kelgan ro'yxatdan tanlanadi. Bu aynan shu xatoni
+   * yopadi: sayt menyusidagi olti band bazada yo'q slug'larga
+   * qarab turgani uchun ko'rinmay qolgan edi.
+   */
+  const valueChoices = options?.values?.[draft.targetType] ?? null;
+  const missingValue =
+    !!valueChoices &&
+    !!draft.targetValue &&
+    !valueChoices.some((c) => c.value === draft.targetValue);
   const brokenCount = items.filter((i) => i.broken).length;
 
   function row(item: AdminMenuItem, depth: number) {
@@ -335,6 +347,25 @@ export default function MenuPage() {
                       {r}
                     </option>
                   ))}
+                </select>
+              ) : valueChoices ? (
+                <select
+                  style={input}
+                  value={draft.targetValue}
+                  onChange={(e) => setDraft({ ...draft, targetValue: e.target.value })}
+                  required={draft.targetType !== 'BLOG'}
+                >
+                  <option value="">
+                    {draft.targetType === 'BLOG' ? '— butun blog —' : '— tanlang —'}
+                  </option>
+                  {valueChoices.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label} ({c.value})
+                    </option>
+                  ))}
+                  {missingValue ? (
+                    <option value={draft.targetValue}>{draft.targetValue} — topilmadi</option>
+                  ) : null}
                 </select>
               ) : (
                 <input

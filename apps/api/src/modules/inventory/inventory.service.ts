@@ -505,34 +505,66 @@ export class InventoryService {
     });
   }
 
+  /**
+   * Qoldig'i kam variantlar.
+   *
+   * IKKITA XATO shu yerda edi va ikkalasi ham bir yo'nalishda ishlagan:
+   * ro'yxatni to'ldirish kerak bo'lgan tovarlarni YASHIRGAN.
+   *
+   * 1. `totalStock > 0` sharti butunlay tugagan tovarni chiqarib
+   *    tashlardi. Natijada «Ombor» ekrani «Qoldig'i kam mahsulot yo'q,
+   *    hammasi chegaradan yuqori» deb yozardi, o'sha paytda dashboard
+   *    1004 ta tovarni to'ldirish kerak deb turardi. Ikkala ekran
+   *    bitta bazaga qarab bir-biriga zid javob berardi — va ishonch
+   *    ekranga emas, tasodifga qolardi. Adminkadagi «Faqat
+   *    tugaganlari» filtri ham shu sababdan hech qachon hech narsa
+   *    ko'rsatmasdi.
+   *
+   * 2. Avval 500 ta qator OLINIB, keyin kodda filtrlanardi. Qoldig'i
+   *    kam tovar 500 tadan ko'p bo'lsa, ro'yxatga tasodifiy qism
+   *    tushardi — eng kam qolganlari emas.
+   *
+   * Shuning uchun filtr ham, tartib ham, chegara ham SQL da: baza
+   * to'g'ri javobni o'zi qaytaradi.
+   */
   async lowStock(limit = 50) {
-    const rows = await this.prisma.inventory.findMany({
-      where: { totalStock: { gt: 0 } },
-      include: {
-        variant: {
-          select: {
-            id: true,
-            sku: true,
-            options: true,
-            product: { select: { nameUz: true, slug: true } },
-          },
-        },
-      },
-      take: 500,
-    });
-    return rows
-      .map((r) => ({
-        variantId: r.variantId,
-        sku: r.variant.sku,
-        options: r.variant.options,
-        productName: r.variant.product.nameUz,
-        productSlug: r.variant.product.slug,
-        available: Math.max(r.totalStock - r.reservedStock, 0),
-        threshold: r.lowStockThreshold,
-      }))
-      .filter((r) => r.available <= r.threshold)
-      .sort((a, b) => a.available - b.available)
-      .slice(0, limit);
+    const rows = await this.prisma.$queryRaw<
+      Array<{
+        variantId: string;
+        sku: string;
+        options: unknown;
+        productName: string;
+        productSlug: string;
+        available: number;
+        threshold: number;
+      }>
+    >`
+      SELECT i."variantId"                                        AS "variantId",
+             v.sku                                                AS "sku",
+             v.options                                            AS "options",
+             p."nameUz"                                           AS "productName",
+             p.slug                                               AS "productSlug",
+             GREATEST(i."totalStock" - i."reservedStock", 0)::int  AS "available",
+             i."lowStockThreshold"::int                            AS "threshold"
+      FROM inventory i
+      JOIN product_variants v ON v.id = i."variantId"
+      JOIN products p ON p.id = v."productId"
+      WHERE v."deletedAt" IS NULL
+        AND p."deletedAt" IS NULL
+        AND (i."totalStock" - i."reservedStock") <= i."lowStockThreshold"
+      ORDER BY GREATEST(i."totalStock" - i."reservedStock", 0) ASC, p."nameUz" ASC
+      LIMIT ${Math.max(1, Math.min(limit, 500))}
+    `;
+
+    return rows.map((r) => ({
+      variantId: r.variantId,
+      sku: r.sku,
+      options: r.options,
+      productName: r.productName,
+      productSlug: r.productSlug,
+      available: Number(r.available),
+      threshold: Number(r.threshold),
+    }));
   }
 
   /**

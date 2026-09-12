@@ -76,6 +76,65 @@ export class AdminAuthService {
     };
   }
 
+  /**
+   * Sessiyani uzaytirish.
+   *
+   * NEGA KERAK. Kirish tokeni 15 daqiqa yashaydi, refresh tokeni esa
+   * 30 kun — va u login paytida BERILARDI-YU, hech qachon
+   * ISHLATILMASDI: adminda uzaytirish yo'li umuman yo'q edi. Natijada
+   * xodim 15 daqiqadan keyin, forma to'ldirib turgan joyida, login
+   * oynasiga uchib ketardi va yozgani yo'qolardi. Xato ham chiqmasdi —
+   * shuning uchun buni hech kim nosozlik deb aytmagan, «shunaqa ekan»
+   * deb qabul qilingan.
+   *
+   * Rotatsiya: eski refresh bekor qilinadi, yangisi yoziladi. O'g'irlangan
+   * eski token ikkinchi marta ishlamaydi.
+   */
+  async refresh(refreshToken: string): Promise<TokenPair> {
+    const session = await this.prisma.adminSession.findUnique({
+      where: { refreshTokenHash: this.tokens.hashRefresh(refreshToken) },
+      include: {
+        admin: { include: { role: { include: { permissions: { include: { permission: true } } } } } },
+      },
+    });
+
+    const invalid = new UnauthorizedException('Sessiya yaroqsiz. Qaytadan kiring.');
+    if (!session || session.revokedAt || session.expiresAt.getTime() < Date.now()) throw invalid;
+
+    const admin = session.admin;
+    if (!admin || admin.deletedAt || admin.status !== 'ACTIVE') throw invalid;
+
+    // Huquqlar HOZIRGI holatdan olinadi: rol o'zgargan bo'lsa yangi
+    // token eski huquqlarni olib yurmaydi.
+    const pair = await this.tokens.issue({
+      sub: admin.id,
+      kind: 'admin',
+      email: admin.email,
+      roleCode: admin.role.code,
+      permissions: admin.role.permissions.map(
+        (rp: { permission: { code: string } }) => rp.permission.code,
+      ),
+    });
+
+    await this.prisma.$transaction([
+      this.prisma.adminSession.update({
+        where: { id: session.id },
+        data: { revokedAt: new Date() },
+      }),
+      this.prisma.adminSession.create({
+        data: {
+          adminId: admin.id,
+          refreshTokenHash: this.tokens.hashRefresh(pair.refreshToken),
+          ip: session.ip,
+          userAgent: session.userAgent,
+          expiresAt: new Date(Date.now() + pair.refreshTtl * 1000),
+        },
+      }),
+    ]);
+
+    return pair;
+  }
+
   async logout(refreshToken?: string): Promise<void> {
     if (!refreshToken) return;
     await this.prisma.adminSession.updateMany({

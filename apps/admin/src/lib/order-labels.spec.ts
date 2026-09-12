@@ -1,12 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  ORDER_STATUS_LABEL,
-  ORDER_STATUS_TONE,
-  reservationLeft,
-  sumInputToTiyin,
-  tiyinToSumInput,
-} from './order-labels';
+import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE, fmtDate, fmtNumber, reservationLeft, sumInputToTiyin, tiyinToSumInput } from './order-labels';
 
 /**
  * Admin panel statuslarni o'zbekcha ko'rsatadi. Agar schema ga yangi status
@@ -62,5 +56,40 @@ describe('so‘m va tiyin', () => {
     for (const t of ['0', '1', '99', '100', '123456789']) {
       expect(sumInputToTiyin(tiyinToSumInput(t))?.toString()).toBe(t);
     }
+  });
+});
+
+describe('sana va son formati', () => {
+  /*
+   * Kod `toLocaleDateString('uz-UZ', { month: 'short' })` ishlatardi.
+   * Brauzerlarda o'zbekcha oy nomlari yo'q va natija «2026 M08 14»
+   * bo'lib chiqardi — hisobot sarlavhasida aynan shunday turgan edi.
+   * Bunday xato brauzerga qarab paydo bo'ladi, ya'ni ba'zi
+   * mashinalarda umuman ko'rinmaydi.
+   */
+  it('sana kun.oy.yil tartibida', () => {
+    expect(fmtDate('2026-09-12T10:00:00Z')).toBe('12.09.2026');
+    expect(fmtDate('2026-01-05T00:00:00Z')).toBe('05.01.2026');
+  });
+
+  it('Date obyekti ham qabul qilinadi', () => {
+    expect(fmtDate(new Date('2026-08-14T00:00:00Z'))).toBe('14.08.2026');
+  });
+
+  it('bo‘sh va noto‘g‘ri sana tire beradi', () => {
+    expect(fmtDate(null)).toBe('—');
+    expect(fmtDate('')).toBe('—');
+    expect(fmtDate('salom')).toBe('—');
+  });
+
+  it('son minglik bo‘shliq bilan ajratiladi', () => {
+    expect(fmtNumber(1004)).toBe('1 004');
+    expect(fmtNumber(1234567)).toBe('1 234 567');
+    expect(fmtNumber(999)).toBe('999');
+    expect(fmtNumber(0)).toBe('0');
+  });
+
+  it('kasr son yaxlitlanadi', () => {
+    expect(fmtNumber(1500.6)).toBe('1 501');
   });
 });

@@ -10,6 +10,7 @@ import {
   type UzumStatus,
   type UzumSyncPlan,
 } from '@/lib/api';
+import { fmtNumber } from '@/lib/order-labels';
 
 /**
  * Uzum Seller bilan bog'lanish — TZ-4.
@@ -328,7 +329,7 @@ export default function UzumPage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div style={{ fontSize: 19, fontWeight: 800 }}>{value.toLocaleString('uz-UZ')}</div>
+      <div style={{ fontSize: 19, fontWeight: 800 }}>{fmtNumber(value)}</div>
       <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>{label}</div>
     </div>
   );

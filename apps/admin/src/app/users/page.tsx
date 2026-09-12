@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminRole, type AdminUser } from '@/lib/api';
+import { fmtDateTime } from '@/lib/order-labels';
 
 /** Adminlar — TZ 72. */
 
@@ -10,7 +11,7 @@ const EMPTY = { fullName: '', email: '', phone: '', roleId: '', password: '' };
 
 function dateText(value: string | null): string {
   if (!value) return '—';
-  return new Date(value).toLocaleString('uz-UZ', { dateStyle: 'short', timeStyle: 'short' });
+  return fmtDateTime(value);
 }
 
 export default function UsersPage() {

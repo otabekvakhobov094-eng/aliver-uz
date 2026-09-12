@@ -1,6 +1,7 @@
 import type { Tiyin, Uuid } from '@aliver/types';
 
 import { apiBase } from './api-base';
+import { isAuthPath, refreshSession } from './session-refresh';
 
 /* ----------------------------- Javob tiplari ----------------------------- */
 
@@ -237,7 +238,7 @@ export class ShopNetworkError extends Error {
   }
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
+async function call<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${apiBase()}${path}`, {
@@ -254,6 +255,11 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     // taklif qila oladi, «xato» deb ko'rsatmaydi.
     const timedOut = e instanceof DOMException && e.name === 'TimeoutError';
     throw new ShopNetworkError(timedOut ? 'timeout' : 'offline');
+  }
+
+  // Kirish tokeni eskirgan bo'lsa uzaytirib, BIR MARTA takrorlanadi.
+  if (res.status === 401 && !retried && !isAuthPath(path)) {
+    if (await refreshSession()) return call<T>(path, init, true);
   }
 
   if (!res.ok) {

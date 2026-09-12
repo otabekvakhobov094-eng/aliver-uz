@@ -37,6 +37,23 @@ export class AdminController {
     return { admin: result.admin };
   }
 
+  /**
+   * Kirish tokenini uzaytirish. Cookie dagi refresh token bilan
+   * ishlaydi — tanada hech narsa yuborilmaydi.
+   */
+  @Public()
+  @Post('auth/refresh')
+  @Throttle({ default: { limit: 60, ttl: 300_000 } })
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = (req as Request & { cookies?: Record<string, string> }).cookies?.[
+      'refresh_token'
+    ];
+    if (!token) throw new UnauthorizedException('Sessiya topilmadi. Qaytadan kiring.');
+    const pair = await this.adminAuth.refresh(token);
+    this.tokens.setAuthCookies(res, pair);
+    return { ok: true };
+  }
+
   @Public()
   @Post('auth/logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {

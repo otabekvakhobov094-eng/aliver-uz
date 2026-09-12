@@ -6,6 +6,7 @@ import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { DataList, type DataColumn } from '@/components/DataList';
 import { adminApi, type AdminProduct } from '@/lib/api';
+import { fmtDate } from '@/lib/order-labels';
 
 /**
  * Mahsulotlar ro'yxati — TZ-2, 4.4.
@@ -151,7 +152,7 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
     defaultVisible: false,
     render: (p) => (
       <span style={{ color: 'var(--alv-muted)', whiteSpace: 'nowrap' }}>
-        {new Date(p.updatedAt).toLocaleDateString('uz-UZ')}
+        {fmtDate(p.updatedAt)}
       </span>
     ),
   },

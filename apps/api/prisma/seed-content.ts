@@ -478,6 +478,27 @@ export async function seedContent(prisma: PrismaClient): Promise<void> {
  * Aks holda seed'ni qayta ishga tushirish adminning qo'lda qilgan
  * o'zgarishlarini yo'q qilardi — va buni hech kim so'ramagan bo'lardi.
  */
+async function targetExists(
+  prisma: PrismaClient,
+  type: string,
+  value: string | undefined,
+): Promise<boolean> {
+  const slug = (value ?? '').trim();
+  if (!slug) return type !== 'CATEGORY' && type !== 'COLLECTION' && type !== 'PAGE';
+  switch (type) {
+    case 'CATEGORY':
+      return (await prisma.category.count({ where: { slug, isActive: true, deletedAt: null } })) > 0;
+    case 'COLLECTION':
+      return (await prisma.collection.count({ where: { slug, isActive: true, deletedAt: null } })) > 0;
+    case 'PAGE':
+      return (await prisma.page.count({ where: { slug, isPublished: true, deletedAt: null } })) > 0;
+    case 'BLOG':
+      return (await prisma.blogPost.count({ where: { slug, isPublished: true, deletedAt: null } })) > 0;
+    default:
+      return true;
+  }
+}
+
 async function seedMenu(prisma: PrismaClient, location: string, items: MenuSeed[]): Promise<void> {
   const existing = await prisma.menuItem.count({ where: { location } });
   if (existing > 0) {
@@ -485,8 +506,17 @@ async function seedMenu(prisma: PrismaClient, location: string, items: MenuSeed[
     return;
   }
 
+  // Nishoni yo'q band seed qilinmaydi. Aks holda katalog boshqa
+  // slug'lar bilan kelgan bazada menyu tug'ilishidanoq buzilgan
+  // bo'lardi: admin uni qizil ko'radi, sayt esa umuman ko'rsatmaydi.
+  const skipped: string[] = [];
+
   let total = 0;
   for (const [i, item] of items.entries()) {
+    if (!(await targetExists(prisma, item.targetType, item.targetValue))) {
+      skipped.push(`${item.labelUz} → ${item.targetValue}`);
+      continue;
+    }
     const parent = await prisma.menuItem.create({
       data: {
         location,
@@ -501,6 +531,10 @@ async function seedMenu(prisma: PrismaClient, location: string, items: MenuSeed[
     });
     total += 1;
     for (const [j, child] of (item.children ?? []).entries()) {
+      if (!(await targetExists(prisma, child.targetType, child.targetValue))) {
+        skipped.push(`${child.labelUz} → ${child.targetValue}`);
+        continue;
+      }
       await prisma.menuItem.create({
         data: {
           location,
@@ -518,4 +552,7 @@ async function seedMenu(prisma: PrismaClient, location: string, items: MenuSeed[
     }
   }
   console.log(`  menyu (${location}): ${total} ta band`);
+  if (skipped.length > 0) {
+    console.log(`  menyu (${location}): nishoni yo‘qligi uchun tashlandi — ${skipped.join(', ')}`);
+  }
 }

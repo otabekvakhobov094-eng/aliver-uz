@@ -222,7 +222,15 @@ export default function InventoryPage() {
         }}
       >
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--alv-muted)', flexGrow: 1 }}>
-          Qoldig‘i chegaradan past mahsulotlar. Qoldiq faqat harakat orqali o‘zgaradi.
+          Qoldig‘i chegaradan past mahsulotlar
+          {rows.length > 0 ? (
+            <>
+              {' — '}
+              <b style={{ color: 'var(--alv-ink)' }}>{rows.length} ta</b>
+              {rows.length >= 500 ? ' (birinchi 500 tasi)' : ''}
+            </>
+          ) : null}
+          . Qoldiq faqat harakat orqali o‘zgaradi.
         </p>
         <Button variant="outline" disabled={busy} onClick={() => void expire()}>
           Muddati o‘tgan rezervlarni bo‘shatish

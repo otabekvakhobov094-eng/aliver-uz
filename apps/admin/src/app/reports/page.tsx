@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { fmtDate, fmtNumber } from '@/lib/order-labels';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type ReportOverview } from '@/lib/api';
 
@@ -29,11 +30,7 @@ const PERIODS = [
 ];
 
 function money(value: string | null | undefined): string {
-  return `${(Number(value ?? 0) / 100).toLocaleString('uz-UZ')} so‘m`;
-}
-
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: 'numeric' });
+  return `${fmtNumber(Number(value ?? 0) / 100)} so‘m`;
 }
 
 export default function ReportsPage() {

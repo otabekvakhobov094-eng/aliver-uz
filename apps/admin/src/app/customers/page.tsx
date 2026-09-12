@@ -6,7 +6,7 @@ import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { DataList, type DataColumn } from '@/components/DataList';
 import { adminApi, type AdminCustomerRow } from '@/lib/api';
-import { SEGMENT_LABEL, SEGMENT_TONE, fmtDateTime, label } from '@/lib/order-labels';
+import { SEGMENT_LABEL, SEGMENT_TONE, fmtDate, fmtDateTime, label } from '@/lib/order-labels';
 
 /**
  * Mijozlar ro'yxati — TZ 60, TZ-2 4.6.
@@ -107,7 +107,7 @@ const COLUMNS: Array<DataColumn<AdminCustomerRow>> = [
     defaultVisible: false,
     render: (c) => (
       <span style={{ color: 'var(--alv-muted)', whiteSpace: 'nowrap' }}>
-        {new Date(c.createdAt).toLocaleDateString('uz-UZ')}
+        {fmtDate(c.createdAt)}
       </span>
     ),
   },

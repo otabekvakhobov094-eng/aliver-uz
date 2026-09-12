@@ -56,9 +56,16 @@ export interface AdminMenuItem {
   broken: boolean;
 }
 
+export interface MenuTargetChoice {
+  value: string;
+  label: string;
+}
+
 export interface MenuOptions {
   targetTypes: string[];
   routes: string[];
+  /** Nishon turi → bazada mavjud qiymatlar. Slug qo'lda yozilmaydi. */
+  values?: Record<string, MenuTargetChoice[] | undefined>;
 }
 
 export interface LoyaltyBalance {
@@ -388,6 +395,34 @@ async function once<T>(path: string, init?: RequestInit): Promise<T> {
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
+/* ------------------------------------------------------------------ *
+ * Sessiyani uzaytirish
+ * ------------------------------------------------------------------ */
+
+const AUTH_PATHS = ['/admin/auth/login', '/admin/auth/logout', '/admin/auth/refresh'];
+
+/**
+ * Bir vaqtda ketayotgan o'nta so'rov 401 olsa, uzaytirish BIR MARTA
+ * bo'lishi kerak: aks holda refresh tokeni rotatsiyada o'zini o'zi
+ * bekor qilib, sessiyani butunlay yo'q qilardi.
+ */
+let refreshing: Promise<boolean> | null = null;
+
+function refreshSession(): Promise<boolean> {
+  refreshing ??= fetch(`${apiBase()}/admin/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  })
+    .then((r) => r.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshing = null;
+    });
+  return refreshing;
+}
+
 /**
  * Sovuq startda BIR MARTA qayta urinadi.
  *
@@ -407,6 +442,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } catch (e) {
     if (safeToRetry && e instanceof AdminNetworkError && e.kind === 'timeout') {
       return once<T>(path, init);
+    }
+
+    /*
+     * 401 — kirish tokeni eskirgan. Uni uzaytirib, so'rovni BIR MARTA
+     * takrorlaymiz.
+     *
+     * Bu POST uchun ham xavfsiz: 401 so'rov bajarilishidan OLDIN,
+     * qo'riqchida qaytariladi — server hech narsa yozmagan bo'ladi.
+     *
+     * Ilgari bunday yo'l yo'q edi: token 15 daqiqada tugardi va xodim
+     * forma to'ldirib turgan joyida login oynasiga uchib ketardi.
+     */
+    if (e instanceof AdminApiError && e.status === 401 && !AUTH_PATHS.includes(path)) {
+      if (await refreshSession()) return once<T>(path, init);
     }
     throw e;
   }
@@ -1193,7 +1242,16 @@ export const adminApi = {
       body: JSON.stringify({ status, comment }),
     }),
 
-  lowStock: () => request<LowStockRow[]>('/admin/inventory/low-stock'),
+  /*
+   * Chegara 500.
+   *
+   * Standart 50 edi va bu xodimni chalg'itardi: ro'yxatda 50 ta
+   * ko'rinardi, aslida esa mingdan ortiq tovar to'ldirishni kutardi,
+   * va buni hech narsa aytmasdi. Ro'yxat ostida jami soni ham
+   * yoziladi.
+   */
+  lowStock: (limit = 500) =>
+    request<LowStockRow[]>(`/admin/inventory/low-stock?limit=${limit}`),
 
   bulkThreshold: (variantIds: string[], threshold: number) =>
     request<{ updated: number; requested: number; threshold: number }>(
@@ -1687,16 +1745,27 @@ export const adminApi = {
   reorderMenu: (ids: string[]) =>
     request<{ ok: true }>('/admin/menu/reorder', { method: 'PUT', body: JSON.stringify({ ids }) }),
 
-  collections: () => request<AdminCollection[]>('/admin/collections'),
+  /*
+   * Yo'l `/admin/catalog/collections` — `/admin/collections` EMAS.
+   *
+   * To'rtalasi ham noto'g'ri manzilga borardi va «Kolleksiyalar»
+   * bo'limi butunlay ishlamasdi: ekranda «Cannot GET
+   * /api/admin/collections» chiqardi, kolleksiyani ko'rish ham,
+   * yaratish ham, o'chirish ham mumkin emasdi.
+   */
+  collections: () => request<AdminCollection[]>('/admin/catalog/collections'),
   createCollection: (body: Record<string, unknown>) =>
-    request<AdminCollection>('/admin/collections', { method: 'POST', body: JSON.stringify(body) }),
+    request<AdminCollection>('/admin/catalog/collections', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   updateCollection: (id: string, body: Record<string, unknown>) =>
-    request<AdminCollection>(`/admin/collections/${id}`, {
+    request<AdminCollection>(`/admin/catalog/collections/${id}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
   deleteCollection: (id: string) =>
-    request<{ ok: true }>(`/admin/collections/${id}`, { method: 'DELETE' }),
+    request<{ ok: true }>(`/admin/catalog/collections/${id}`, { method: 'DELETE' }),
 
   discounts: (state?: string) =>
     request<AdminDiscount[]>(`/admin/discounts${state ? `?state=${state}` : ''}`),

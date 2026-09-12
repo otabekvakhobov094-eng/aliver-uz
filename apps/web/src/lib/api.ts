@@ -1,6 +1,7 @@
 import type { ApiError, RequestOtpResponse } from '@aliver/types';
 
 import { apiBase } from './api-base';
+import { isAuthPath, refreshSession } from './session-refresh';
 
 export class ApiRequestError extends Error {
   constructor(
@@ -14,12 +15,19 @@ export class ApiRequestError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
   const res = await fetch(`${apiBase()}${path}`, {
     ...init,
     credentials: 'include', // cookie'dagi tokenlar uchun majburiy
     headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
   });
+
+  // Kirish tokeni eskirgan bo'lsa uzaytirib, BIR MARTA takrorlanadi.
+  // POST uchun ham xavfsiz: 401 qo'riqchida, amal bajarilmasdan oldin
+  // qaytariladi.
+  if (res.status === 401 && !retried && !isAuthPath(path)) {
+    if (await refreshSession()) return request<T>(path, init, true);
+  }
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as

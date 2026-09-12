@@ -63,6 +63,34 @@ export function fmtDateTime(v: string): string {
   });
 }
 
+/**
+ * Sana — 12.09.2026.
+ *
+ * NEGA QO'LDA. Kod `toLocaleDateString('uz-UZ', { month: 'short' })`
+ * ishlatardi, brauzerlarda esa o'zbekcha oy nomlari yo'q va natija
+ * «2026 M08 14» bo'lib chiqardi — hisobot sarlavhasida aynan shunday
+ * turgan edi. Bu xato brauzerga qarab paydo bo'ladi va ba'zi
+ * mashinalarda umuman ko'rinmaydi, ya'ni uni tasodifan topish qiyin.
+ *
+ * O'zbekistonda sana kun.oy.yil tartibida yoziladi — uni o'zimiz
+ * yig'sak, hech qanday til ma'lumotiga bog'liq bo'lmaydi.
+ */
+export function fmtDate(v: string | Date | null | undefined): string {
+  if (!v) return '—';
+  const d = v instanceof Date ? v : new Date(v);
+  if (Number.isNaN(d.getTime())) return '—';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}.${mm}.${d.getFullYear()}`;
+}
+
+/** Son — 1 004 ko'rinishida, til ma'lumotisiz. */
+export function fmtNumber(n: number): string {
+  return Math.round(n)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
 /** Rezerv tugashiga qancha qolgani — ro'yxatda "yonib turgan" buyurtmalarni ko'rsatadi. */
 export function reservationLeft(expiresAt: string | null): string | null {
   if (!expiresAt) return null;

@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpsertMenuItemDto } from './dto/menu.dto';
 import {
+  MENU_ROUTES,
+  MENU_TARGET_TYPES,
   type MenuRow,
   type MenuTargetType,
   type PublicMenuItem,
@@ -37,6 +39,49 @@ export class MenuService {
   }
 
   /* ---------------- admin ---------------- */
+
+  /**
+   * Shakl uchun tanlov ro'yxatlari. Slug qo'lda yozilmaydi — mavjud
+   * nishonlar ro'yxatdan tanlanadi.
+   */
+  async options() {
+    const [categories, collections, pages, posts] = await Promise.all([
+      this.prisma.category.findMany({
+        where: { isActive: true, deletedAt: null },
+        select: { slug: true, nameUz: true },
+        orderBy: [{ depth: 'asc' }, { sortOrder: 'asc' }, { nameUz: 'asc' }],
+        take: 300,
+      }),
+      this.prisma.collection.findMany({
+        where: { isActive: true, deletedAt: null },
+        select: { slug: true, nameUz: true },
+        orderBy: [{ sortOrder: 'asc' }, { nameUz: 'asc' }],
+        take: 300,
+      }),
+      this.prisma.page.findMany({
+        where: { isPublished: true, deletedAt: null },
+        select: { slug: true, titleUz: true },
+        orderBy: { titleUz: 'asc' },
+        take: 300,
+      }),
+      this.prisma.blogPost.findMany({
+        where: { isPublished: true, deletedAt: null },
+        select: { slug: true, titleUz: true },
+        orderBy: { publishedAt: 'desc' },
+        take: 200,
+      }),
+    ]);
+    return {
+      targetTypes: MENU_TARGET_TYPES,
+      routes: MENU_ROUTES,
+      values: {
+        CATEGORY: categories.map((c) => ({ value: c.slug, label: c.nameUz })),
+        COLLECTION: collections.map((c) => ({ value: c.slug, label: c.nameUz })),
+        PAGE: pages.map((p) => ({ value: p.slug, label: p.titleUz })),
+        BLOG: posts.map((p) => ({ value: p.slug, label: p.titleUz })),
+      },
+    };
+  }
 
   /** Admin ro'yxati — buzilgan nishonlar belgilangan holda. */
   async adminTree(location: string) {

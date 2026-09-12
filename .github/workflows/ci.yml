@@ -61,6 +61,11 @@ jobs:
       # qolsa sahifa ochiladi va xato bermaydi — shunchaki sayt
       # chrome'isiz ko'rinadi.
       - run: npm run check:chrome
+      # Adminka chaqiradigan har bir API yo'li serverda bormi.
+      # «Kolleksiyalar» bo'limi aynan shu sababdan butunlay
+      # ishlamagan: yo'l noto'g'ri edi va buni faqat bo'limni
+      # ochganda ko'rish mumkin edi.
+      - run: npm run check:api
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test

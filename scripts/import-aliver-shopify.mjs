@@ -38,21 +38,21 @@ const clean = (html = '') => html
 // products.json kolleksiya aloqalarini bermaydi, shuning uchun product_type,
 // tags, title va handle asosida barqaror klassifikatsiya qilinadi.
 const taxonomy = [
-  { slug: 'nail', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
-  { slug: 'make-up', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
-  { slug: 'foot-hand', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
-  { slug: 'hair-care', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
-  { slug: 'skin-care', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
-  { slug: 'mens-care', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
-  { slug: 'oral', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
-  { slug: 'other', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
+  { slug: 'tirnoq', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
+  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
+  { slug: 'qol-oyoq-parvarishi', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
+  { slug: 'soch-parvarishi', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
+  { slug: 'teri-parvarishi', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
+  { slug: 'erkaklar-parvarishi', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
+  { slug: 'ogiz-parvarishi', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
+  { slug: 'boshqa', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
 ];
 
 const curatedCollections = [
   { slug: 'best-sellers', nameUz: 'Bestsellerlar', nameRu: 'Хиты продаж', words: ['best seller', 'bestseller', 'hot sell', 'hot-sale', 'hot_sale'] },
-  { slug: 'new-arrivals', nameUz: 'Yangi kelganlar', nameRu: 'Новинки', words: ['new arrival', 'new-arrival', 'new_arrival', 'new'] },
-  { slug: 'editor-choice', nameUz: 'Muharrir tanlovi', nameRu: 'Выбор редакции', words: ['editor choice', 'editor-choice', 'editor_choice'] },
-  { slug: 'gifts-sets', nameUz: 'Sovg‘alar va to‘plamlar', nameRu: 'Подарки и наборы', words: ['gift', ' set', 'kit', 'bundle'] },
+  { slug: 'yangi-kelganlar', nameUz: 'Yangi kelganlar', nameRu: 'Новинки', words: ['new arrival', 'new-arrival', 'new_arrival', 'new'] },
+  { slug: 'muharrir-tanlovi', nameUz: 'Muharrir tanlovi', nameRu: 'Выбор редакции', words: ['editor choice', 'editor-choice', 'editor_choice'] },
+  { slug: 'sovga-toplamlari', nameUz: 'Sovg‘alar va to‘plamlar', nameRu: 'Подарки и наборы', words: ['gift', ' set', 'kit', 'bundle'] },
 ];
 
 function productHaystack(product) {
@@ -65,7 +65,7 @@ function matches(words, haystack) {
 
 function categoryFor(product) {
   const haystack = productHaystack(product);
-  return taxonomy.find((item) => item.slug !== 'other' && matches(item.words, haystack)) ?? taxonomy.at(-1);
+  return taxonomy.find((item) => item.slug !== 'boshqa' && matches(item.words, haystack)) ?? taxonomy.at(-1);
 }
 
 function collectionsFor(product) {
@@ -73,7 +73,7 @@ function collectionsFor(product) {
   const selected = curatedCollections.filter((item) => matches(item.words, haystack));
   const publishedAt = product.published_at ? new Date(product.published_at).getTime() : 0;
   const recentCutoff = Date.now() - 180 * 24 * 60 * 60 * 1000;
-  const newest = curatedCollections.find((item) => item.slug === 'new-arrivals');
+  const newest = curatedCollections.find((item) => item.slug === 'yangi-kelganlar');
   if (publishedAt >= recentCutoff && newest && !selected.includes(newest)) selected.push(newest);
   return selected;
 }

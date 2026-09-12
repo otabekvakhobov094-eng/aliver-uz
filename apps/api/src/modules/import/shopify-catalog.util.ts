@@ -162,22 +162,27 @@ export function roundPriceTiyin(tiyin: bigint, stepSum = 1000): bigint {
  * ------------------------------------------------------------------ */
 
 export const TAXONOMY = [
-  { slug: 'nail', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
-  { slug: 'make-up', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
-  { slug: 'foot-hand', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
-  { slug: 'hair-care', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
-  { slug: 'skin-care', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
-  { slug: 'mens-care', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
-  { slug: 'oral', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
-  { slug: 'other', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
+  { slug: 'tirnoq', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями', words: ['nail', 'gel polish', 'poly gel', 'acrylic', 'dipping powder', 'base coat', 'top coat', 'manicure'] },
+  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж', words: ['makeup', 'make up', 'lip', 'lipstick', 'mascara', 'eyeliner', 'eyebrow', 'foundation', 'concealer', 'blush', 'powder', 'palette'] },
+  { slug: 'qol-oyoq-parvarishi', nameUz: 'Qo‘l va oyoq parvarishi', nameRu: 'Уход за руками и ногами', words: ['foot', 'feet', 'hand', 'heel', 'callus'] },
+  { slug: 'soch-parvarishi', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами', words: ['hair', 'shampoo', 'conditioner', 'scalp', 'wig'] },
+  { slug: 'teri-parvarishi', nameUz: 'Teri parvarishi', nameRu: 'Уход за кожей', words: ['skin', 'face', 'serum', 'cream', 'cleanser', 'mask', 'acne', 'moistur', 'waxing'] },
+  { slug: 'erkaklar-parvarishi', nameUz: 'Erkaklar parvarishi', nameRu: 'Мужской уход', words: ["men's", 'mens', 'beard', 'shaving'] },
+  { slug: 'ogiz-parvarishi', nameUz: 'Og‘iz parvarishi', nameRu: 'Уход за полостью рта', words: ['oral', 'teeth', 'tooth', 'whitening strips'] },
+  { slug: 'boshqa', nameUz: 'Boshqa mahsulotlar', nameRu: 'Другие товары', words: [] },
 ] as const;
 
 export const CURATED_COLLECTIONS = [
   { slug: 'best-sellers', nameUz: 'Bestsellerlar', nameRu: 'Хиты продаж', words: ['best seller', 'bestseller', 'hot sell', 'hot-sale', 'hot_sale'] },
-  { slug: 'new-arrivals', nameUz: 'Yangi kelganlar', nameRu: 'Новинки', words: ['new arrival', 'new-arrival', 'new_arrival', 'new'] },
-  { slug: 'editor-choice', nameUz: 'Muharrir tanlovi', nameRu: 'Выбор редакции', words: ['editor choice', 'editor-choice', 'editor_choice'] },
-  { slug: 'gifts-sets', nameUz: 'Sovg‘alar va to‘plamlar', nameRu: 'Подарки и наборы', words: ['gift', ' set', 'kit', 'bundle'] },
+  { slug: 'yangi-kelganlar', nameUz: 'Yangi kelganlar', nameRu: 'Новинки', words: ['new arrival', 'new-arrival', 'new_arrival', 'new'] },
+  { slug: 'muharrir-tanlovi', nameUz: 'Muharrir tanlovi', nameRu: 'Выбор редакции', words: ['editor choice', 'editor-choice', 'editor_choice'] },
+  { slug: 'sovga-toplamlari', nameUz: 'Sovg‘alar va to‘plamlar', nameRu: 'Подарки и наборы', words: ['gift', ' set', 'kit', 'bundle'] },
 ] as const;
+
+/** Hech bir so'z mos kelmasa shu kategoriya beriladi. */
+const FALLBACK_CATEGORY = 'boshqa';
+/** Yaqinda chiqqan mahsulot avtomatik shu kolleksiyaga tushadi. */
+const NEW_ARRIVALS = 'yangi-kelganlar';
 
 function haystack(p: ShopifyProduct): string {
   const tags = Array.isArray(p.tags) ? p.tags.join(' ') : (p.tags ?? '');
@@ -187,7 +192,7 @@ function haystack(p: ShopifyProduct): string {
 export function categoryFor(p: ShopifyProduct) {
   const h = haystack(p);
   return (
-    TAXONOMY.find((t) => t.slug !== 'other' && t.words.some((w) => h.includes(w))) ??
+    TAXONOMY.find((t) => t.slug !== FALLBACK_CATEGORY && t.words.some((w) => h.includes(w))) ??
     TAXONOMY[TAXONOMY.length - 1]!
   );
 }
@@ -200,7 +205,7 @@ export function collectionsFor(p: ShopifyProduct, now = Date.now()) {
   const selected = CURATED_COLLECTIONS.filter((c) => c.words.some((w) => h.includes(w)));
   const publishedAt = p.published_at ? new Date(p.published_at).getTime() : 0;
   const cutoff = now - RECENT_DAYS * 24 * 60 * 60 * 1000;
-  const newest = CURATED_COLLECTIONS.find((c) => c.slug === 'new-arrivals')!;
+  const newest = CURATED_COLLECTIONS.find((c) => c.slug === NEW_ARRIVALS)!;
   if (publishedAt >= cutoff && !selected.includes(newest)) return [...selected, newest];
   return [...selected];
 }

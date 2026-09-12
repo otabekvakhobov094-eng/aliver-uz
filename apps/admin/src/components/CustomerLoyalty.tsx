@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button, formatTiyin } from '@aliver/ui';
 import { adminApi, type LoyaltyView } from '@/lib/api';
+import { fmtDate, fmtNumber } from '@/lib/order-labels';
 
 const KIND_LABEL: Record<string, string> = {
   EARN: 'Buyurtma uchun',
@@ -90,7 +91,7 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
     <div style={{ display: 'grid', gap: 12 }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>{balance.points.toLocaleString('uz-UZ')}</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>{fmtNumber(balance.points)}</div>
           <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>ball</div>
         </div>
         <div>
@@ -99,7 +100,7 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
         </div>
         {balance.expiresAt ? (
           <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>
-            {new Date(balance.expiresAt).toLocaleDateString('uz-UZ')} dan keyin kuyadi
+            {fmtDate(balance.expiresAt)} dan keyin kuyadi
           </div>
         ) : null}
         <Button variant="ghost" size="sm" style={{ marginLeft: 'auto' }} onClick={() => setOpen((v) => !v)}>
@@ -170,7 +171,7 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
                   {h.points}
                 </span>
                 <span style={{ color: 'var(--alv-muted)' }}>
-                  {new Date(h.createdAt).toLocaleDateString('uz-UZ')}
+                  {fmtDate(h.createdAt)}
                 </span>
               </span>
             </li>

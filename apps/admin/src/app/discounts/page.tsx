@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminDiscount } from '@/lib/api';
+import { fmtDate, fmtNumber } from '@/lib/order-labels';
 
 /** Chegirmalar — TZ 47, TZ-2 4.7. */
 
@@ -43,7 +44,7 @@ const EMPTY = {
 
 function money(tiyin: string | null): string {
   if (!tiyin) return '—';
-  return `${Math.round(Number(tiyin) / 100).toLocaleString('uz-UZ')} so‘m`;
+  return `${fmtNumber(Number(tiyin) / 100)} so‘m`;
 }
 
 function valueText(d: AdminDiscount): string {
@@ -53,7 +54,7 @@ function valueText(d: AdminDiscount): string {
 }
 
 function dateText(v: string | null): string {
-  return v ? new Date(v).toLocaleDateString('uz-UZ') : '—';
+  return fmtDate(v);
 }
 
 export default function DiscountsPage() {

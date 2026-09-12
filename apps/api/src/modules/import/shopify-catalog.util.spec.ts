@@ -94,41 +94,41 @@ describe('Shopify katalogini o‘girish', () => {
 
   describe('tasniflash', () => {
     it('nomiga qarab kategoriya topadi', () => {
-      expect(categoryFor(product({ title: 'Gel Polish UV' })).slug).toBe('nail');
-      expect(categoryFor(product({ title: 'Keratin Shampoo' })).slug).toBe('hair-care');
-      expect(categoryFor(product({ title: 'Vitamin C Serum' })).slug).toBe('skin-care');
+      expect(categoryFor(product({ title: 'Gel Polish UV' })).slug).toBe('tirnoq');
+      expect(categoryFor(product({ title: 'Keratin Shampoo' })).slug).toBe('soch-parvarishi');
+      expect(categoryFor(product({ title: 'Vitamin C Serum' })).slug).toBe('teri-parvarishi');
     });
 
     it('`product_type` ham hisobga olinadi', () => {
       // Do'kon turini ko'rsatgan bo'lsa, u nomdan ustun emas, lekin
       // nom hech narsa aytmaganda yagona ishorat bo'lib qoladi.
       expect(categoryFor(product({ title: 'Premium Complex', product_type: 'Hair' })).slug).toBe(
-        'hair-care',
+        'soch-parvarishi',
       );
     });
 
     it('bir nechta bo‘limga tushsa, ro‘yxatdagi birinchisi tanlanadi', () => {
       // «Nail» «skin» dan oldin turadi — bu TAXONOMY tartibi bilan
       // belgilanadi va o'zgarsa natija ham o'zgaradi.
-      expect(categoryFor(product({ title: 'Nail and Skin Oil' })).slug).toBe('nail');
+      expect(categoryFor(product({ title: 'Nail and Skin Oil' })).slug).toBe('tirnoq');
     });
 
     it('mos kelmasa «boshqa» ga tushadi, yo‘qolmaydi', () => {
-      expect(categoryFor(product({ title: 'Зонтик', product_type: '', tags: '' })).slug).toBe('other');
+      expect(categoryFor(product({ title: 'Зонтик', product_type: '', tags: '' })).slug).toBe('boshqa');
     });
 
     it('teglar massiv bo‘lsa ham o‘qiladi', () => {
       // Shopify ba'zi do'konlarda `tags` ni massiv qaytaradi.
-      expect(categoryFor(product({ title: 'X', product_type: '', tags: ['gift', 'nail'] })).slug).toBe('nail');
+      expect(categoryFor(product({ title: 'X', product_type: '', tags: ['gift', 'nail'] })).slug).toBe('tirnoq');
     });
 
     it('yaqinda chiqqan mahsulot «yangi kelganlar» ga qo‘shiladi', () => {
       const now = Date.parse('2026-06-01T00:00:00Z');
       const fresh = collectionsFor(product({ published_at: '2026-05-01T00:00:00Z' }), now);
-      expect(fresh.map((c) => c.slug)).toContain('new-arrivals');
+      expect(fresh.map((c) => c.slug)).toContain('yangi-kelganlar');
 
       const old = collectionsFor(product({ published_at: '2020-01-01T00:00:00Z', title: 'Oil' }), now);
-      expect(old.map((c) => c.slug)).not.toContain('new-arrivals');
+      expect(old.map((c) => c.slug)).not.toContain('yangi-kelganlar');
     });
 
     it('bitta kolleksiyaga ikki marta qo‘shilmaydi', () => {
@@ -137,7 +137,7 @@ describe('Shopify katalogini o‘girish', () => {
         product({ title: 'New Arrival Oil', published_at: '2026-05-20T00:00:00Z' }),
         now,
       );
-      expect(list.filter((c) => c.slug === 'new-arrivals')).toHaveLength(1);
+      expect(list.filter((c) => c.slug === 'yangi-kelganlar')).toHaveLength(1);
     });
   });
 

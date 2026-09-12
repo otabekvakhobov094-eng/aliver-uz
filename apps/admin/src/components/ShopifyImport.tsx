@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@aliver/ui';
 import { adminApi, type ShopifyImportResult, type ShopifyPreview } from '@/lib/api';
+import { fmtNumber } from '@/lib/order-labels';
 
 /**
  * Boshqa do'kondan katalog importi.
@@ -17,7 +18,7 @@ import { adminApi, type ShopifyImportResult, type ShopifyPreview } from '@/lib/a
  * hisoblanganini ko'rsatadi. Import faqat shundan keyin.
  */
 
-const fmt = (n: number) => n.toLocaleString('uz-UZ');
+const fmt = (n: number) => fmtNumber(n);
 
 export function ShopifyImport() {
   const [sourceUrl, setSourceUrl] = useState('https://www.aliverbeauty.eu');

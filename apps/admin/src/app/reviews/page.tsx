@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminReview } from '@/lib/api';
+import { fmtDate } from '@/lib/order-labels';
 
 /**
  * Sharhlar moderatsiyasi — TZ 51.
@@ -210,7 +211,7 @@ export default function ReviewsPage() {
                   ) : null}
                 </div>
                 <div style={{ color: 'var(--alv-muted)', fontSize: 13, margin: '4px 0 8px' }}>
-                  {r.customer.fullName ?? 'Mijoz'} · {new Date(r.createdAt).toLocaleDateString('uz-UZ')}
+                  {r.customer.fullName ?? 'Mijoz'} · {fmtDate(r.createdAt)}
                 </div>
                 {r.body ? (
                   <p style={{ margin: '0 0 10px', lineHeight: 1.6, overflowWrap: 'break-word' }}>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type DashboardData } from '@/lib/api';
+import { fmtDate, fmtNumber } from '@/lib/order-labels';
 
 /**
  * Admin bosh sahifasi — KPI, grafik va e'tibor talab qiladigan ishlar.
@@ -24,7 +25,7 @@ const PERIODS: Array<{ key: string; label: string }> = [
 /** Tiyinni so'mga aylantiradi. Pul hech qachon suzuvchi nuqtada saqlanmaydi. */
 function money(tiyin: string | number | null | undefined): string {
   const value = Number(tiyin ?? 0) / 100;
-  return `${Math.round(value).toLocaleString('uz-UZ')} so'm`;
+  return `${fmtNumber(value)} so'm`;
 }
 
 function delta(current: string, previous: string): { text: string; up: boolean } | null {
@@ -119,7 +120,7 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
           return (
             <div
               key={point.day}
-              title={`${day.toLocaleDateString('uz-UZ')} — ${money(point.revenue)} · ${point.orders} ta buyurtma`}
+              title={`${fmtDate(day)} — ${money(point.revenue)} · ${point.orders} ta buyurtma`}
               style={{
                 flex: '1 0 14px',
                 minWidth: 14,
@@ -141,9 +142,9 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        <span>{first ? new Date(first.day).toLocaleDateString('uz-UZ') : ''}</span>
+        <span>{first ? fmtDate(first.day) : ''}</span>
         <span>Eng yuqori kun: {money(peak)}</span>
-        <span>{last ? new Date(last.day).toLocaleDateString('uz-UZ') : ''}</span>
+        <span>{last ? fmtDate(last.day) : ''}</span>
       </div>
     </div>
   );

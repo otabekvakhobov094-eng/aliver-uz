@@ -10,6 +10,7 @@ import {
   type GiftCardRow,
   type IssuedGiftCard,
 } from '@/lib/api';
+import { fmtDate } from '@/lib/order-labels';
 
 /**
  * Sovg'a sertifikatlari — TZ-3.
@@ -91,7 +92,7 @@ const COLUMNS: Array<DataColumn<GiftCardRow>> = [
     render: (c) =>
       c.expiresAt ? (
         <span style={{ whiteSpace: 'nowrap' }}>
-          {new Date(c.expiresAt).toLocaleDateString('uz-UZ')}
+          {fmtDate(c.expiresAt)}
         </span>
       ) : (
         <span style={{ color: 'var(--alv-muted)' }}>muddatsiz</span>
@@ -103,7 +104,7 @@ const COLUMNS: Array<DataColumn<GiftCardRow>> = [
     defaultVisible: false,
     render: (c) => (
       <span style={{ whiteSpace: 'nowrap' }}>
-        {new Date(c.createdAt).toLocaleDateString('uz-UZ')}
+        {fmtDate(c.createdAt)}
       </span>
     ),
   },
