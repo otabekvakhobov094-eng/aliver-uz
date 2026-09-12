@@ -35,6 +35,7 @@ export const NAV: NavItem[] = [
   { href: '/fiscal', label: 'Fiskal cheklar', permission: 'fiscal.view', stage: 4, ready: true },
   { href: '/reviews', label: 'Sharhlar', permission: 'reviews.view', stage: 6, ready: true },
   { href: '/discounts', label: 'Chegirmalar', permission: 'discounts.view', stage: 7, ready: true },
+  { href: '/gift-cards', label: 'Sovg‘a sertifikatlari', permission: 'discounts.view', stage: 3, ready: true },
   { href: '/content#banners', label: 'Bannerlar', permission: 'banners.view', stage: 7, ready: true },
   { href: '/content', label: 'Sahifalar', permission: 'content.view', stage: 7, ready: true },
   { href: '/content#blog', label: 'Blog', permission: 'blog.view', stage: 7, ready: true },

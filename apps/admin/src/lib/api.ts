@@ -270,6 +270,28 @@ export interface AdminProductDetail {
   tags: Array<{ tag: { slug: string } }>;
 }
 
+export interface GiftCardRow {
+  id: string;
+  tail: string;
+  masked: string;
+  initialAmount: string;
+  remaining: string;
+  status: 'ACTIVE' | 'USED' | 'EXPIRED' | 'CANCELLED';
+  recipientName: string | null;
+  recipientPhone: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface IssuedGiftCard {
+  id: string;
+  /** FAQAT shu javobda. Keyin hech qayerdan ko'rib bo'lmaydi. */
+  code: string;
+  amount: string;
+  expiresAt: string | null;
+  warning: string;
+}
+
 export interface AdminBrand {
   id: string;
   slug: string;
@@ -736,6 +758,29 @@ export const adminApi = {
     request<{ ok: true }>(`/admin/catalog/products/${id}`, { method: 'DELETE' }),
 
   brands: () => request<AdminBrand[]>('/admin/catalog/brands'),
+
+  giftCards: (params: { tail?: string; page?: number }) => {
+    const qs = new URLSearchParams();
+    if (params.tail) qs.set('tail', params.tail);
+    if (params.page) qs.set('page', String(params.page));
+    return request<{ items: GiftCardRow[]; total: number; page: number; perPage: number }>(
+      `/admin/gift-cards?${qs.toString()}`,
+    );
+  },
+
+  issueGiftCard: (body: {
+    amountSum: number;
+    recipientName?: string;
+    recipientPhone?: string;
+    message?: string;
+    expiresAt?: string;
+  }) => request<IssuedGiftCard>('/admin/gift-cards', { method: 'POST', body: JSON.stringify(body) }),
+
+  cancelGiftCard: (id: string, reason: string) =>
+    request<{ id: string }>(`/admin/gift-cards/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
 
   createBrand: (body: { name: string; slug?: string; logoUrl?: string }) =>
     request<AdminBrand>('/admin/catalog/brands', {

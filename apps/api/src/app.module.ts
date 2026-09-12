@@ -34,6 +34,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { GiftCardsModule } from './modules/giftcards/giftcards.module';
 import { UsersModule } from './modules/users/users.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -77,6 +78,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     UsersModule,
     ReviewsModule,
     LoyaltyModule,
+    GiftCardsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

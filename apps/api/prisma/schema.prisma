@@ -389,6 +389,8 @@ model Customer {
 
   loyaltyEntries LoyaltyEntry[]
 
+  giftCardsPurchased GiftCard[] @relation("GiftCardPurchased")
+
   @@index([status])
   @@map("customers")
 }
@@ -1119,6 +1121,8 @@ model Order {
 
   loyaltyEntries LoyaltyEntry[]
 
+  giftCardEntries GiftCardEntry[]
+
   @@index([status, placedAt])
   @@index([customerId])
   @@index([contactPhone])
@@ -1469,6 +1473,77 @@ model Review {
   // «Menga o'xshaganlar» filtri aynan shu uch maydon bo'yicha qidiradi.
   @@index([productId, status, skinType])
   @@map("reviews")
+}
+
+/// Sovg'a sertifikati — TZ-3.
+///
+/// KOD BAZADA OCHIQ SAQLANMAYDI, faqat xeshi. Baza nusxasi chiqib
+/// ketsa (zaxira, xodim, tekshiruv), ochiq kod bilan hammasini darhol
+/// ishlatib bo'lardi — parol bilan bir xil mantiq.
+///
+/// Balans ham alohida ustunda emas: `initialAmount` minus harakatlar
+/// yig'indisi. Sodiqlik ballaridagi bilan bir xil sabab.
+enum GiftCardEntryKind {
+  SPEND /// buyurtmada ishlatildi
+  REFUND /// buyurtma qaytarildi — summa kartaga qaytdi
+  ADJUST /// admin tuzatishi
+}
+
+model GiftCard {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Kodning xeshi. Ochiq kod faqat yaratilganda BIR MARTA qaytariladi.
+  codeHash String @unique
+  /// Oxirgi 4 belgi — qidiruv va ko'rsatish uchun. Kodni tiklashga
+  /// yetarli emas.
+  codeTail String
+
+  /// Boshlang'ich nominal, tiyinda.
+  initialAmount BigInt
+
+  /// Kim sotib oldi (bo'lsa) va kimga atalgan.
+  purchasedById String?   @db.Uuid
+  purchasedBy   Customer? @relation("GiftCardPurchased", fields: [purchasedById], references: [id], onDelete: SetNull)
+  recipientName  String?
+  recipientPhone String?
+  message        String?
+
+  /// Muddat. `null` — muddatsiz.
+  expiresAt   DateTime?
+  cancelledAt DateTime?
+  cancelReason String?
+
+  entries GiftCardEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([codeTail])
+  @@index([purchasedById])
+  @@map("gift_cards")
+}
+
+model GiftCardEntry {
+  id         String            @id @default(uuid()) @db.Uuid
+  giftCardId String            @db.Uuid
+  giftCard   GiftCard          @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
+  kind       GiftCardEntryKind
+
+  /// Chiqim MUSBAT yoziladi va `initialAmount` dan ayiriladi.
+  /// Qaytarish esa manfiy — shunda yig'indi har doim «sarflangan».
+  amount BigInt
+
+  orderId String? @db.Uuid
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  comment String?
+  adminId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  @@index([giftCardId, createdAt])
+  @@index([orderId])
+  @@map("gift_card_entries")
 }
 
 /// Sodiqlik dasturi — TZ-3.
