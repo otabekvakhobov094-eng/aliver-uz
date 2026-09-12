@@ -4,6 +4,12 @@ import { ProductCardView } from '@/components/ProductCard';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
+import {
+  CampaignBanner,
+  LIP_CAMPAIGN,
+  SUMMER_CAMPAIGN,
+  fromBanner,
+} from '@/components/CampaignBanner';
 import { contentApi } from '@/lib/content-api';
 import { HeroCanvas } from '@/components/HeroCanvas';
 import { Reveal } from '@aliver/ui';
@@ -23,15 +29,22 @@ const FALLBACK = [
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
-  const [categories, best, fresh, banners, posts] = await Promise.all([
+  const [categories, best, fresh, banners, promos, posts] = await Promise.all([
     catalogApi.categories().catch(() => []),
     catalogApi.products({ collection: 'best-sellers', perPage: 4 }).catch(() => ({ items: [] })),
     catalogApi.products({ sort: 'newest', perPage: 4 }).catch(() => ({ items: [] })),
     contentApi.banners('HERO').catch(() => []),
+    // Aksiya bannerlari. Adminda bo'lmasa — kodda tayyor matn bor,
+    // ya'ni bo'sh joy hech qachon ko'rinmaydi.
+    contentApi.banners('PROMO').catch(() => []),
     // Blog bloki uchun. Xato bo'lsa blok shunchaki chizilmaydi.
     contentApi.posts().catch(() => []),
   ]);
   const hero = banners[0];
+  // Ikki kampaniya: yozgi moylar va lab bo'yoqlari. Tartib adminda
+  // `sortOrder` bilan boshqariladi.
+  const summer = fromBanner(promos[0], SUMMER_CAMPAIGN);
+  const lips = fromBanner(promos[1], LIP_CAMPAIGN);
   const title = (locale === 'ru' ? hero?.titleRu : hero?.titleUz) ?? (locale === 'ru' ? 'Красота, которая начинается с заботы' : 'Go‘zallik — g‘amxo‘rlikdan boshlanadi');
   const subtitle = (locale === 'ru' ? hero?.subtitleRu : hero?.subtitleUz) ?? (locale === 'ru' ? 'Оригинальная косметика ALIVER для ежедневных ритуалов красоты. Официально в Узбекистане.' : 'Kundalik go‘zallik marosimingiz uchun original ALIVER kosmetikasi. O‘zbekistonda rasmiy.');
 
@@ -112,6 +125,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         checkout'da bilinardi — ya'ni qaror allaqachon qabul
         qilingandan keyin.
       */}
+      <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
+        <CampaignBanner copy={summer} locale={locale} />
+      </Reveal>
+
       <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
         <div className="alv-loyalty-band">
           <div className="alv-loyalty-band__copy">
@@ -250,6 +267,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </div>
           </div>
         </div>
+      </Reveal>
+
+      <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
+        <CampaignBanner copy={lips} locale={locale} />
       </Reveal>
 
       <Reveal as="section" className={`${styles.shell} ${styles.story}`}><div className={styles.storyArt}><span>ALIVER</span></div><div className={styles.storyCopy}><p className={styles.eyebrow}>{locale === 'ru' ? 'Философия ALIVER' : 'ALIVER falsafasi'}</p><h2>{locale === 'ru' ? 'Уход, созданный для вашей уверенности' : 'O‘zingizga bo‘lgan ishonch uchun yaratilgan parvarish'}</h2><p>{locale === 'ru' ? 'Красота — это ежедневное внимание к себе. Эффективные формулы, приятные текстуры и современный дизайн.' : 'Go‘zallik o‘zingizga har kuni e’tibor berishdan boshlanadi. Samarali formulalar, yoqimli teksturalar va zamonaviy dizayn.'}</p><Link className={styles.textAction} href={`/${locale}/biz-haqimizda`}>{locale === 'ru' ? 'Узнать больше' : 'Batafsil bilish'} <span>→</span></Link></div></Reveal>

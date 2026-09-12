@@ -1,0 +1,166 @@
+/* Yordam bo'limi: yuqorida amallar, pastda mavzu bo'yicha savollar. */
+
+.tasks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--alv-radius-lg);
+  background: var(--alv-surface);
+  box-shadow: var(--alv-shadow-sm);
+  color: var(--alv-ink);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s;
+}
+.task:hover {
+  color: var(--alv-ink);
+  transform: translateY(-2px);
+  box-shadow: var(--alv-shadow-md);
+}
+
+.taskIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--alv-brand-soft);
+  color: var(--alv-brand-deep);
+  font-size: 17px;
+}
+
+.taskBody {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.taskBody strong {
+  font-size: 14.5px;
+}
+.taskBody span {
+  font-size: 12.5px;
+  color: var(--alv-muted);
+  line-height: 1.45;
+}
+
+.taskArrow {
+  margin-left: auto;
+  color: var(--alv-muted);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.task:hover .taskArrow {
+  transform: translateX(4px);
+}
+
+/* --- Savollar ------------------------------------------------------ */
+
+.groups {
+  display: grid;
+  gap: 34px;
+  margin-top: 44px;
+}
+
+.groupTitle {
+  margin: 0 0 12px;
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.qa {
+  border-radius: var(--alv-radius-md);
+  background: var(--alv-surface);
+  box-shadow: var(--alv-shadow-sm);
+  overflow: hidden;
+}
+.qa > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  /* Barmoq uchun yetarli balandlik. */
+  min-height: var(--alv-tap-min);
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 14.5px;
+  cursor: pointer;
+  list-style: none;
+}
+/* Safari uchun: standart uchburchakni olib tashlash. */
+.qa > summary::-webkit-details-marker {
+  display: none;
+}
+.qa > p {
+  margin: 0;
+  padding: 0 18px 18px;
+  color: var(--alv-ink-2);
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.chevron {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--alv-blush);
+  color: var(--alv-brand-deep);
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.qa[open] .chevron {
+  transform: rotate(45deg);
+}
+
+/* --- Pastdagi chaqiruv --------------------------------------------- */
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 44px;
+  padding: 24px 26px;
+  border-radius: var(--alv-radius-lg);
+  background: var(--alv-grad-blush);
+}
+.cta strong {
+  display: block;
+  font-size: 16px;
+}
+.cta p {
+  margin: 6px 0 0;
+  /* Kontrast pushti fonda o'lchangan token. */
+  color: var(--alv-muted-on-tint);
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 46ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task,
+  .taskArrow,
+  .chevron {
+    transition: none;
+  }
+  .task:hover {
+    transform: none;
+  }
+}

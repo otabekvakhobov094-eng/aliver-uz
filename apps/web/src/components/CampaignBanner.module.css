@@ -1,0 +1,183 @@
+.banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--alv-radius-xl);
+  isolation: isolate;
+  margin: 0;
+}
+
+/* Ikki kayfiyat. Ranglar tokenlardan emas, ATAYLAB shu yerda: bular
+   kampaniya ranglari va ular sayt palitrasiga bog'lanmasligi kerak —
+   aksiya o'zgarsa, sayt ranglari o'zgarmaydi. */
+.cool {
+  background: linear-gradient(135deg, #cfeefb 0%, #a8dcf2 34%, #7fc7e8 66%, #57aedb 100%);
+  /*
+    Rang gradientning ENG QUYUQ nuqtasiga (#57aedb) qarab tanlangan,
+    eng yorug'iga emas. Matn chapda, ya'ni yorug' tomonda turadi —
+    lekin banner kengaysa yoki tartib o'zgarsa u quyuq tomonga tushishi
+    mumkin, va o'shanda ham o'qilishi kerak. Bu loyihada kontrast
+    xatosi allaqachon uch marta shu sababdan chiqqan: fon noto'g'ri
+    joydan o'lchangan.
+  */
+  color: #042230;
+}
+.warm {
+  background: linear-gradient(135deg, #ffd9e6 0%, #ffc0d4 30%, #ffb9a6 68%, #ffd7a8 100%);
+  color: #5a1030;
+}
+
+.photo,
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.photo {
+  background-size: cover;
+  background-position: center;
+}
+
+/* --- Suratsiz sahna ---------------------------------------------- */
+.scene {
+  overflow: hidden;
+}
+.halo {
+  position: absolute;
+  right: 6%;
+  top: 50%;
+  width: min(52%, 460px);
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 68%);
+}
+.bottle {
+  position: absolute;
+  bottom: 8%;
+  width: clamp(42px, 6vw, 76px);
+  height: clamp(120px, 17vw, 210px);
+  border-radius: 40px 40px 16px 16px / 60px 60px 16px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.22));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+.bottle:nth-child(1) {
+  right: 30%;
+  height: clamp(140px, 20vw, 250px);
+}
+.bottle:nth-child(2) {
+  right: 18%;
+  bottom: 14%;
+}
+.bottle:nth-child(3) {
+  right: 7%;
+}
+
+/* --- Matn --------------------------------------------------------- */
+.inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: clamp(300px, 34vw, 430px);
+  padding-block: 42px;
+}
+.copy {
+  /* Matn kengligi cheklangan: u rasmning ustiga chiqmasligi kerak.
+     `min()` bilan telefonda butun kenglikni oladi. */
+  max-width: min(100%, 520px);
+}
+.eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+.title {
+  margin: 0;
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(28px, 4.4vw, 50px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.lead {
+  margin: 14px 0 0;
+  font-size: clamp(14px, 1.3vw, 16.5px);
+  line-height: 1.6;
+  opacity: 0.94;
+}
+.offer {
+  display: inline-block;
+  margin: 18px 0 0;
+  padding: 9px 18px;
+  border-radius: var(--alv-radius-pill);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: clamp(14px, 1.5vw, 18px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: var(--alv-tap-min);
+  padding: 0 26px;
+  border-radius: var(--alv-radius-pill);
+  background: var(--alv-ink);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.18s;
+}
+.cta:hover {
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(27, 18, 32, 0.22);
+}
+.cta span {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cta:hover span {
+  transform: translateX(4px);
+}
+.dates {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+@media (max-width: 760px) {
+  .inner {
+    min-height: 0;
+    padding-block: 34px;
+  }
+  /* Telefonda shishalar matn ostida qolib, uni o'qishga xalaqit
+     beradi — sahna faqat yumshoq yorug'lik bo'lib qoladi. */
+  .bottle {
+    display: none;
+  }
+  .halo {
+    right: -10%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .cta span {
+    transition: none;
+  }
+  .cta:hover {
+    transform: none;
+  }
+}

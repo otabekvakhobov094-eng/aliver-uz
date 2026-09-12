@@ -344,6 +344,45 @@ const FOOTER_MENU: MenuSeed[] = [
   { labelUz: 'Hamkorlik', labelRu: 'Партнёрство', targetType: 'ROUTE', targetValue: '/hamkorlik' },
 ];
 
+/**
+ * Aksiya bannerlari.
+ *
+ * Matn RASMDA emas, bazada — shuning uchun u ikki tilda bo'la oladi va
+ * marketing uni deploysiz o'zgartiradi. Surat qo'shilsa (`imageUrl`),
+ * u matnning ORTIGA tushadi; suratsiz ham banner to'liq ko'rinadi.
+ */
+const PROMOS: Array<{
+  key: string;
+  titleUz: string;
+  titleRu: string;
+  subtitleUz: string;
+  subtitleRu: string;
+  ctaUz: string;
+  ctaRu: string;
+  ctaUrl: string;
+}> = [
+  {
+    key: 'yozgi-moylar',
+    titleUz: 'Yozda soch va teri uchun salqin moylar',
+    titleRu: 'Освежающие масла для волос и кожи',
+    subtitleUz: 'Rozmarin, batana, kastor va qovoq urug‘i moylari — issiqda ham yengil.',
+    subtitleRu: 'Розмарин, батана, касторовое и тыквенное масла — лёгкие даже в жару.',
+    ctaUz: 'Moylarni ko‘rish',
+    ctaRu: 'Смотреть масла',
+    ctaUrl: '/katalog?category=soch-parvarishi',
+  },
+  {
+    key: 'wine-lip-tint',
+    titleUz: '25% chegirma — Wine Lip Tint',
+    titleRu: 'Скидка 25% — Wine Lip Tint',
+    subtitleUz: 'Ipakdek yumshoq, to‘yingan rang. Kun bo‘yi ushlab turadi.',
+    subtitleRu: 'Шелковистая текстура и насыщенный цвет. Держится весь день.',
+    ctaUz: 'Tanlash',
+    ctaRu: 'Выбрать',
+    ctaUrl: '/katalog?category=makiyaj',
+  },
+];
+
 export async function seedContent(prisma: PrismaClient): Promise<void> {
   for (const p of PAGES) {
     await prisma.page.upsert({
@@ -403,6 +442,31 @@ export async function seedContent(prisma: PrismaClient): Promise<void> {
     });
   }
   console.log(`  blog maqolalari: ${POSTS.length} ta`);
+
+  // Banner'da `slug` yo'q — takrorlanmaslik uchun sarlavha bo'yicha
+  // qidiramiz. Mavjud banner TEGILMAYDI: marketing uni o'zgartirgan
+  // bo'lishi mumkin.
+  for (const [i, promo] of PROMOS.entries()) {
+    const existing = await prisma.banner.findFirst({
+      where: { placement: 'PROMO', titleUz: promo.titleUz },
+    });
+    if (existing) continue;
+    await prisma.banner.create({
+      data: {
+        placement: 'PROMO',
+        titleUz: promo.titleUz,
+        titleRu: promo.titleRu,
+        subtitleUz: promo.subtitleUz,
+        subtitleRu: promo.subtitleRu,
+        ctaLabelUz: promo.ctaUz,
+        ctaLabelRu: promo.ctaRu,
+        ctaUrl: promo.ctaUrl,
+        sortOrder: i,
+        isActive: true,
+      },
+    });
+  }
+  console.log(`  aksiya bannerlari: ${PROMOS.length} ta`);
 
   await seedMenu(prisma, 'HEADER', HEADER_MENU);
   await seedMenu(prisma, 'FOOTER', FOOTER_MENU);

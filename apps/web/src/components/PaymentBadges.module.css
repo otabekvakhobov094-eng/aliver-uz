@@ -1,8 +1,8 @@
 .wrap {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 22px 40px;
-  margin: 26px 0 22px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 24px 48px;
+  margin: 28px 0 24px;
 }
 
 .groupTitle {
@@ -11,53 +11,54 @@
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: #8e8296;
-  margin-bottom: 10px;
+  margin-bottom: 11px;
 }
 
 .list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  /* `align-items: center` EMAS: plitkalar bir xil balandlikda va
+     yuqori chetidan tekislanadi — qator to'g'ri chiziqda turadi. */
+  align-items: flex-start;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 /*
-  Belgilar bir xil balandlikda. Ilgari footerdagi elementlar har xil
-  balandlikda edi va qator «tishli» ko'rinardi — bu yerda balandlik
-  qat'iy, ichidagi narsa esa markazda.
+  Plitka. Balandlik QAT'IY — ichidagi logotip qanday bo'lishidan
+  qat'i nazar qator bir tekisda qoladi.
 */
-.badge {
+.tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 38px;
-  min-width: 74px;
+  /* 54px — tik lokap (EMU) ham o'qiladigan o'lchamda sig'adi.
+     Barcha plitkalar bir xil, shuning uchun qator tekis qoladi. */
+  height: 54px;
   padding: 0 14px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #efe7f2;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
 }
 
-.badge img {
+.tile img {
   display: block;
   width: auto;
   max-width: 100%;
+  /* Balandlik inline uslubdan keladi — har bir logotip uchun alohida
+     sozlangan. Bu yerda faqat yuqori chegara. */
+  max-height: 42px;
+  object-fit: contain;
 }
 
 @media (max-width: 560px) {
   .wrap {
-    gap: 18px;
+    gap: 20px;
   }
-  .badge {
-    height: 36px;
-    min-width: 66px;
+  .tile {
+    height: 48px;
     padding: 0 11px;
-    font-size: 12.5px;
   }
 }
