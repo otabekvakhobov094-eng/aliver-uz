@@ -1,0 +1,630 @@
+/* ============================================================
+   ADMIN PANEL USLUBI
+   ============================================================
+
+   Bu fayl saytning umumiy uslubidan KEYIN yuklanadi va uni panel
+   uchun qayta belgilaydi. Sayt bilan panelning vazifasi boshqacha:
+
+     — sayt SOTADI. Unda bo'sh joy, dekorativ shrift va pushti ranglar
+       o'rinli: ular kayfiyat yaratadi va mahsulotni ko'rsatadi;
+
+     — panelda ISHLANADI. Xodim kuniga yuzlab qator o'qiydi, o'nlab
+       maydon to'ldiradi. Bu yerda dekorativ bezak ish maydonini yeydi,
+       katta bo'shliqlar esa har bir vazifaga qo'shimcha skroll qo'shadi.
+
+   Shuning uchun: neytral kulrang fon, oq kartochkalar, ixcham
+   tipografiya va aniq chegaralar. Rang faqat MA'NO uchun ishlatiladi
+   (holat, ogohlantirish, xato) — bezak uchun emas.
+
+   Bularning hammasi FAQAT admin ilovasida. Saytga tegmaydi.
+   ============================================================ */
+
+:root {
+  /* Ish yuzasi. Kulrang fon ustidagi oq kartochka — eng ishonchli
+     ajratish usuli: u soyaga ham, qalin chegaraga ham muhtoj emas. */
+  --adm-bg: #f1f2f4;
+  --adm-surface: #ffffff;
+  --adm-surface-2: #fafafa;
+  --adm-line: #e1e3e5;
+  --adm-line-strong: #c9cccf;
+
+  --adm-ink: #1a1a1a;
+  --adm-ink-2: #4a4a4a;
+  --adm-muted: #6d7175;
+
+  /* Asosiy tugma qora: panelda brend rangi emas, HARAKAT muhim.
+     Pushti tugmalar qatorida qaysi biri asosiy ekani ko'rinmasdi. */
+  --adm-primary: #1a1a1a;
+  --adm-primary-hover: #333333;
+
+  --adm-top: #1a1a1a;
+  --adm-top-ink: #e3e3e3;
+
+  --adm-ok: #0c6b58;
+  --adm-ok-soft: #e3f5f0;
+  --adm-warn: #8a6116;
+  --adm-warn-soft: #fdf2dd;
+  --adm-danger: #b3231f;
+  --adm-danger-soft: #fdeceb;
+  --adm-info-soft: #eef2f7;
+
+  --adm-radius: 10px;
+  --adm-radius-sm: 8px;
+  --adm-shadow: 0 1px 2px rgba(26, 26, 26, 0.06), 0 0 0 1px rgba(26, 26, 26, 0.04);
+
+  --adm-side: 232px;
+  --adm-top-h: 52px;
+}
+
+/* ---------------------------------------------------------------
+   SAYT TOKENLARINI PANEL UCHUN QAYTA BELGILASH
+   ---------------------------------------------------------------
+
+   Panel sahifalari sayt bilan bir xil o'zgaruvchilarni ishlatadi:
+   `--alv-muted`, `--alv-line`, `--alv-brand` va hokazo. Ularning
+   saytdagi qiymatlari pushti tusda — bu sayt uchun to'g'ri, lekin
+   panelda har bir izoh, chegara va havola pushti bo'lib chiqadi.
+
+   Har bir sahifani qo'lda tahrirlash o'rniga TOKENLAR qayta
+   belgilanadi. Shunda 34 ta sahifaning hammasi bir vaqtda neytral
+   ko'rinishga o'tadi va kelajakda yozilgan sahifa ham avtomatik
+   moslashadi — ya'ni uslub yana ikkiga bo'linib ketmaydi.
+
+   Bu fayl faqat admin ilovasida yuklanadi, saytga ta'sir qilmaydi.
+   --------------------------------------------------------------- */
+
+:root {
+  --alv-bg: var(--adm-bg);
+  --alv-surface: var(--adm-surface);
+  --alv-surface-2: var(--adm-surface-2);
+  --alv-surface-3: var(--adm-surface-2);
+
+  --alv-ink: var(--adm-ink);
+  --alv-ink-2: var(--adm-ink-2);
+  --alv-muted: var(--adm-muted);
+  --alv-muted-on-tint: var(--adm-muted);
+
+  --alv-line: var(--adm-line);
+  --alv-line-2: var(--adm-line-strong);
+
+  /* Havola rangi. Qora matn ichida qora havola ko'rinmaydi, pushti
+     esa panelda o'rinsiz — ish muhitida havola ko'k bo'lgani ma'qul,
+     chunki uni hamma shunday taniydi. */
+  --alv-brand: #0a5ad6;
+  --alv-brand-deep: #0846a8;
+  --alv-brand-soft: #eaf1fd;
+  --alv-brand-on-tint: #0846a8;
+
+  --alv-gold: var(--adm-warn);
+  --alv-gold-soft: var(--adm-warn-soft);
+  --alv-mint: var(--adm-ok);
+  --alv-mint-soft: var(--adm-ok-soft);
+  --alv-danger: var(--adm-danger);
+  --alv-danger-soft: var(--adm-danger-soft);
+  --alv-warn: var(--adm-warn);
+  --alv-warn-soft: var(--adm-warn-soft);
+
+  /* Dekorativ serif panelda ishlatilmaydi — sahifalar uni inline
+     uslubda chaqiradi, shuning uchun tokenning o'zi almashtiriladi. */
+  --alv-font-display: var(--alv-font-body);
+  --alv-weight-display: 650;
+
+  --alv-radius-sm: var(--adm-radius-sm);
+  --alv-radius-md: var(--adm-radius);
+  --alv-radius-lg: var(--adm-radius);
+  --alv-radius-xl: var(--adm-radius);
+
+  --alv-shadow-sm: none;
+  --alv-shadow-md: var(--adm-shadow);
+  --alv-shadow-lg: 0 4px 12px rgba(26, 26, 26, 0.08);
+
+  /* Katakcha va radio ham neytral: pushti katakcha jadval ichida
+     eng ko'zga tashlanadigan element bo'lib qolardi. */
+  accent-color: var(--adm-ink);
+}
+
+body {
+  background: var(--adm-bg);
+  color: var(--adm-ink);
+  font-family: var(--alv-font-body);
+  font-size: 14px;
+}
+
+/* Dekorativ serif panelda ishlatilmaydi: u sarlavhani chiройли
+   qiladi, lekin o'qish tezligini pasaytiradi va qatorlar balandligini
+   oshiradi. */
+.alv-adm h1,
+.alv-adm h2,
+.alv-adm h3 {
+  font-family: var(--alv-font-body);
+  letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------
+   QOBIQ
+   --------------------------------------------------------------- */
+
+.alv-adm {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.alv-adm__boot {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--adm-muted);
+}
+.alv-adm__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--adm-line-strong);
+  border-top-color: var(--adm-ink);
+  border-radius: 50%;
+  animation: adm-spin 700ms linear infinite;
+}
+@keyframes adm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alv-adm__spinner {
+    animation: none;
+  }
+}
+
+/* ---- yuqori qator ---- */
+
+.alv-adm__top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--adm-top-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: var(--adm-top);
+  color: var(--adm-top-ink);
+}
+.alv-adm__brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-decoration: none;
+}
+.alv-adm__brand span {
+  color: #9a9a9a;
+  font-weight: 500;
+}
+.alv-adm__env {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #d8d8d8;
+}
+.alv-adm__who {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.alv-adm__whoName {
+  font-size: 13px;
+  color: #fff;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.alv-adm__whoRole {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #9a9a9a;
+  white-space: nowrap;
+}
+.alv-adm__exit {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: #e3e3e3;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 5px 11px;
+  border-radius: var(--adm-radius-sm);
+  cursor: pointer;
+}
+.alv-adm__exit:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.alv-adm__burger {
+  display: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  flex: none;
+}
+
+/* ---- asosiy maydon ---- */
+
+.alv-adm__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.alv-adm__side {
+  width: var(--adm-side);
+  flex: none;
+  padding: 14px 10px 40px;
+  border-right: 1px solid var(--adm-line);
+  background: var(--adm-bg);
+  /* Menyu sahifa bilan birga siljimaydi: uzun jadvalda pastga tushgan
+     xodim boshqa bo'limga o'tish uchun yuqoriga qaytmasligi kerak. */
+  position: sticky;
+  top: var(--adm-top-h);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--adm-top-h));
+  overflow-y: auto;
+}
+
+.alv-nav__group + .alv-nav__group {
+  margin-top: 14px;
+}
+.alv-nav__title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--adm-muted);
+  padding: 0 10px;
+  margin-bottom: 4px;
+}
+.alv-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  padding: 0 10px;
+  margin-bottom: 1px;
+  border-radius: var(--adm-radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--adm-ink-2);
+  text-decoration: none;
+}
+.alv-nav__item:hover {
+  background: rgba(26, 26, 26, 0.06);
+  color: var(--adm-ink);
+}
+/* Faol band — OQ kartochka kulrang fon ustida. Qora to'ldirish
+   ham ishlardi, lekin u menyuda og'ir dog' bo'lib ko'rinadi va
+   ko'zni sahifa mazmunidan tortadi. */
+.alv-nav__item--on,
+.alv-nav__item--on:hover {
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  font-weight: 600;
+  box-shadow: var(--adm-shadow);
+}
+.alv-nav__item--off {
+  color: var(--adm-muted);
+  pointer-events: none;
+}
+.alv-nav__icon {
+  flex: none;
+  opacity: 0.75;
+}
+.alv-nav__item--on .alv-nav__icon {
+  opacity: 1;
+}
+.alv-nav__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.alv-nav__soon {
+  margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--adm-line);
+  color: var(--adm-muted);
+  white-space: nowrap;
+}
+
+.alv-adm__main {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 20px 24px 56px;
+  /* Cheklangan kenglik ataylab: 2000 px monitorda cho'zilgan jadval
+     qatorini ko'z kuzata olmaydi — boshidan oxirigacha yetguncha
+     qaysi qatorda ekaningiz yo'qoladi. */
+  max-width: 1240px;
+}
+
+.alv-adm__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.alv-adm__headText h1 {
+  font-size: 21px;
+  font-weight: 650;
+  margin: 0;
+}
+.alv-adm__headText p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--adm-muted);
+  max-width: 70ch;
+}
+.alv-adm__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alv-adm__scrim {
+  display: none;
+}
+
+/* ---------------------------------------------------------------
+   KOMPONENTLAR — sayt uslubining panel uchun varianti
+   --------------------------------------------------------------- */
+
+.alv-adm .alv-card {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  box-shadow: none;
+}
+
+.alv-adm .alv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+}
+.alv-adm .alv-table th {
+  background: var(--adm-surface-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--adm-muted);
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--adm-line);
+  white-space: nowrap;
+}
+.alv-adm .alv-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--adm-line);
+  vertical-align: middle;
+}
+.alv-adm .alv-table tr:last-child td {
+  border-bottom: 0;
+}
+.alv-adm .alv-table tbody tr:hover td {
+  background: var(--adm-surface-2);
+}
+/* Raqamlar ustunma-ustun tursin: har xil kenglikdagi raqamlar
+   qatorda sakrab ko'rinadi va summalarni solishtirib bo'lmaydi. */
+.alv-adm .alv-table td[align='right'],
+.alv-adm .alv-table th[align='right'] {
+  font-variant-numeric: tabular-nums;
+}
+
+.alv-adm .alv-btn {
+  border-radius: var(--adm-radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  min-height: 34px;
+  padding: 0 14px;
+}
+.alv-adm .alv-btn--primary {
+  background: var(--adm-primary);
+  border-color: var(--adm-primary);
+  color: #fff;
+}
+.alv-adm .alv-btn--primary:hover:not(:disabled) {
+  background: var(--adm-primary-hover);
+  border-color: var(--adm-primary-hover);
+}
+.alv-adm .alv-btn--outline,
+.alv-adm .alv-btn--ghost {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line-strong);
+  color: var(--adm-ink);
+}
+.alv-adm .alv-btn--outline:hover:not(:disabled),
+.alv-adm .alv-btn--ghost:hover:not(:disabled) {
+  background: var(--adm-surface-2);
+}
+.alv-adm .alv-btn--sm {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+.alv-adm .alv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alv-adm input[type='text'],
+.alv-adm input[type='search'],
+.alv-adm input[type='number'],
+.alv-adm input[type='email'],
+.alv-adm input[type='password'],
+.alv-adm input[type='date'],
+.alv-adm input[type='tel'],
+.alv-adm select,
+.alv-adm textarea {
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--adm-ink);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line-strong);
+  border-radius: var(--adm-radius-sm);
+  padding: 7px 10px;
+  min-height: 34px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.alv-adm textarea {
+  min-height: 88px;
+  line-height: 1.55;
+}
+.alv-adm input:focus-visible,
+.alv-adm select:focus-visible,
+.alv-adm textarea:focus-visible {
+  outline: 2px solid var(--adm-ink);
+  outline-offset: 1px;
+  border-color: var(--adm-ink);
+}
+
+/* Holat belgilari — rang MA'NO tashiydi, bezak emas. */
+.alv-adm .alv-badge {
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 2px 8px;
+  height: auto;
+  line-height: 1.6;
+}
+.alv-adm .alv-badge--mint {
+  background: var(--adm-ok-soft);
+  color: var(--adm-ok);
+}
+.alv-adm .alv-badge--low,
+.alv-adm .alv-badge--new {
+  background: var(--adm-warn-soft);
+  color: var(--adm-warn);
+}
+.alv-adm .alv-badge--sale {
+  background: var(--adm-danger-soft);
+  color: var(--adm-danger);
+}
+.alv-adm .alv-badge--neutral,
+.alv-adm .alv-badge--top {
+  background: var(--adm-info-soft);
+  color: var(--adm-ink-2);
+}
+
+.alv-adm .alv-chip {
+  border-radius: 999px;
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink-2);
+  font-size: 12.5px;
+  padding: 4px 11px;
+  cursor: pointer;
+}
+.alv-adm .alv-chip--on {
+  background: var(--adm-ink);
+  border-color: var(--adm-ink);
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------
+   TELEFON VA PLANSHET
+   --------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+  .alv-adm__burger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .alv-adm__env,
+  .alv-adm__whoRole {
+    display: none;
+  }
+  .alv-adm__side {
+    position: fixed;
+    inset: var(--adm-top-h) auto 0 0;
+    z-index: 45;
+    width: 250px;
+    max-height: none;
+    background: var(--adm-surface);
+    /* Yopiq holatda ekrandan tashqarida turadi — `display: none` emas,
+       shunda ochilish silliq bo'ladi va fokus tartibi buzilmaydi. */
+    transform: translateX(-100%);
+    transition: transform 200ms ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .alv-adm--open .alv-adm__side {
+    transform: none;
+  }
+  .alv-adm--open .alv-adm__scrim {
+    display: block;
+    position: fixed;
+    inset: var(--adm-top-h) 0 0 0;
+    z-index: 44;
+    background: rgba(26, 26, 26, 0.4);
+    border: 0;
+  }
+  .alv-adm__main {
+    padding: 16px 14px 48px;
+  }
+  .alv-adm__headText h1 {
+    font-size: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alv-adm__side {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   SOZLAMALAR QATORI
+   --------------------------------------------------------------- */
+
+.alv-set__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  padding: 16px 0;
+  border-top: 1px solid var(--adm-line);
+  align-items: start;
+}
+.alv-set__row:first-child {
+  border-top: 0;
+}
+
+/* Telefonda ikki ustun sig'maydi: chapda uzun izoh, o'ngda maydon —
+   ikkalasi ham qisqarib, qiymat kesilib ko'rinardi. */
+@media (max-width: 700px) {
+  .alv-set__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}

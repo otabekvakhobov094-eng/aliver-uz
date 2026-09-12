@@ -125,17 +125,16 @@ function Field({
       );
   }
 
+  /*
+   * Qator kengligi CSS da, inline uslubda emas.
+   *
+   * Ilgari ikki ustun inline `gridTemplateColumns` bilan berilgan edi.
+   * Inline uslub media-so'rovdan KUCHLIROQ, ya'ni telefonda ham ikki
+   * ustun bo'lib qolardi va maydonga sig'magan qiymat kesilib
+   * ko'rinardi — «+998 90 199 99 3» degan holatda.
+   */
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-        gap: 18,
-        padding: '18px 0',
-        borderTop: '1px solid var(--alv-line)',
-        alignItems: 'start',
-      }}
-    >
+    <div className="alv-set__row">
       <div style={{ minWidth: 0 }}>
         <label
           htmlFor={id}

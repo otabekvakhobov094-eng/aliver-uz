@@ -975,7 +975,13 @@ export const adminApi = {
       { method: 'POST', body: JSON.stringify({ email, password, totp }) },
     ),
   me: () => request('/admin/me'),
-  permissions: () => request<{ role: string; permissions: string[] }>('/admin/permissions'),
+  permissions: () =>
+    request<{
+      role: string;
+      permissions: string[];
+      fullName: string | null;
+      email: string | null;
+    }>('/admin/permissions'),
   logout: () => request('/admin/auth/logout', { method: 'POST' }),
 
   products: (params: { q?: string; status?: string; page?: number }) => {

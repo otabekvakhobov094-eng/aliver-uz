@@ -3,6 +3,9 @@ import type { ReactNode } from 'react';
 import '@aliver/ui/tokens.css';
 import '@aliver/ui/components.css';
 import '@aliver/ui/motion.css';
+// Panel uslubi umumiy uslubdan KEYIN: u saytnikini panel uchun qayta
+// belgilaydi. Tartib muhim — oldin yuklansa hech narsa o'zgarmasdi.
+import './admin.css';
 
 export const metadata: Metadata = {
   title: { default: 'ALIVER.UZ — Admin', template: '%s — ALIVER Admin' },
@@ -15,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Prata&family=Golos+Text:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap"
         />
       </head>
       <body>{children}</body>

@@ -71,14 +71,14 @@ export default function LoyaltyPage() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
         <button
           type="button"
-          className={tab === 'expiring' ? 'alv-btn' : 'alv-btn alv-btn--ghost'}
+          className={`alv-btn ${tab === 'expiring' ? 'alv-btn--primary' : 'alv-btn--ghost'}`}
           onClick={() => setTab('expiring')}
         >
           Tez orada kuyadi
         </button>
         <button
           type="button"
-          className={tab === 'expired' ? 'alv-btn' : 'alv-btn alv-btn--ghost'}
+          className={`alv-btn ${tab === 'expired' ? 'alv-btn--primary' : 'alv-btn--ghost'}`}
           onClick={() => setTab('expired')}
         >
           Kuygan ballar

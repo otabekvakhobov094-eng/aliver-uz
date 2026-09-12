@@ -55,10 +55,31 @@ export class AdminController {
   }
 
   /** Frontend sidebar shu ro'yxat asosida quriladi. */
+  /**
+   * Kim kirgan va nima qila oladi.
+   *
+   * Ism va e-pochta ham qaytariladi: panelning yuqori qatorida kim
+   * ishlayotgani ko'rinib turishi kerak. Bu bezak emas — bitta
+   * kompyuterda bir necha xodim ishlaydigan do'konda «kim o'zgartirdi»
+   * degan savol audit logdan oldin shu yerda hal bo'ladi.
+   */
   @Get('permissions')
-  permissions(@CurrentUser() user?: AuthPrincipal) {
+  async permissions(@CurrentUser() user?: AuthPrincipal) {
     if (!user || user.kind !== 'admin') throw new UnauthorizedException();
-    return { role: user.roleCode, permissions: user.permissions ?? [] };
+
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: user.sub },
+      select: { fullName: true, email: true },
+    });
+
+    return {
+      role: user.roleCode,
+      permissions: user.permissions ?? [],
+      // Admin o'chirilgan bo'lsa ham token amal qilishi mumkin —
+      // shunda hech bo'lmasa e-pochta ko'rsatiladi.
+      fullName: admin?.fullName ?? null,
+      email: admin?.email ?? user.email ?? null,
+    };
   }
 
   @Get('audit-logs')
