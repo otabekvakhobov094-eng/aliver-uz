@@ -126,6 +126,40 @@ export class UzumClient {
       size: String(size),
     });
   }
+
+  /**
+   * BARCHA sahifalarni o'qiydi.
+   *
+   * NEGA. Ilgari faqat birinchi sahifa olinardi (`products(0, 500)`).
+   * Uzum'dagi 500-dan keyingi har bir tovar bizda «faqat bizda bor»
+   * bo'lib chiqardi va CSV eksport operatorga o'sha yerda allaqachon
+   * mavjud tovarlarni YARATISHNI taklif qilardi. Xato chiqmaydi —
+   * ro'yxat shunchaki noto'g'ri.
+   *
+   * Cheksiz halqadan himoya: sahifa to'liq bo'lmasa to'xtaydi va
+   * qattiq chegara ham bor.
+   */
+  private async all(
+    fetchPage: (page: number, size: number) => Promise<UzumRaw[]>,
+    size = 200,
+    maxPages = 50,
+  ): Promise<UzumRaw[]> {
+    const out: UzumRaw[] = [];
+    for (let page = 0; page < maxPages; page += 1) {
+      const rows = await fetchPage(page, size);
+      out.push(...rows);
+      if (rows.length < size) break;
+    }
+    return out;
+  }
+
+  allProducts() {
+    return this.all((page, size) => this.products(page, size));
+  }
+
+  allReviews() {
+    return this.all((page, size) => this.reviews(page, size));
+  }
 }
 
 /**

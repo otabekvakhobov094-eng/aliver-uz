@@ -90,7 +90,7 @@ export class UzumSyncService {
 
   /** Ikki do'kon o'rtasidagi farq. */
   async plan(): Promise<SyncPlan> {
-    const [local, raw] = await Promise.all([this.localOffers(), this.client.products(0, 500)]);
+    const [local, raw] = await Promise.all([this.localOffers(), this.client.allProducts()]);
     const remote = raw
       .map(mapProduct)
       .filter((m): m is NonNullable<typeof m> => m !== null)

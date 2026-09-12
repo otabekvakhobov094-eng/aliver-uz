@@ -88,7 +88,9 @@ export class UzumService {
    * bu kafolat kodga ishonib qo'yilmagan.
    */
   async importReviews(options: { dryRun?: boolean } = {}) {
-    const raw = await this.client.reviews(0, 500);
+    // BARCHA sahifalar: ilgari faqat birinchi 500 tasi olinardi va
+    // undan keyingi sharhlar hech qachon import qilinmasdi.
+    const raw = await this.client.allReviews();
     const mapped = raw.map(mapReview).filter((m): m is MappedReview => m !== null);
     const targets = await this.targets();
 
