@@ -27,7 +27,20 @@ export async function middleware(req: NextRequest) {
   } catch { /* CMS vaqtincha ishlamasa sayt ochilishda davom etadi. */ }
 
   const hasLocale = LOCALES.some((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`));
-  if (hasLocale) return NextResponse.next();
+  if (hasLocale) {
+    /*
+     * Tilni SARLAVHAGA yozamiz.
+     *
+     * `not-found.tsx` Next.js da `params` olmaydi — ya'ni u qaysi tilda
+     * ochilganini bilmaydi va sayt sarlavhasini to'g'ri tilda chiza
+     * olmaydi. Yagona ishonchli manba — so'rovning o'zi, shuning uchun
+     * til shu yerda ajratib olinadi.
+     */
+    const current = pathname.split('/')[1] ?? DEFAULT_LOCALE;
+    const headers = new Headers(req.headers);
+    headers.set('x-alv-locale', current);
+    return NextResponse.next({ request: { headers } });
+  }
 
   const accept = req.headers.get('accept-language') ?? '';
   const locale = accept.toLowerCase().startsWith('ru') ? 'ru' : DEFAULT_LOCALE;

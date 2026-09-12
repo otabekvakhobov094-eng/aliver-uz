@@ -390,16 +390,26 @@ body {
 
 /* ---------------------------------------------------------------
    KOMPONENTLAR — sayt uslubining panel uchun varianti
+   ---------------------------------------------------------------
+
+   Qoidalar `.alv-adm` ichiga BOG'LANMAGAN va bu ataylab: kirish
+   ekrani qobiqdan tashqarida turadi. Ilgari qoidalar faqat qobiq
+   ichida ishlagani uchun kirish sahifasidagi tugma sayt rangini
+   olardi — natijada kirish ko'k, panelning o'zi qora bo'lib,
+   bitta mahsulot ikki xil ko'rinardi.
+
+   Bu fayl faqat admin ilovasida yuklanadi, ya'ni prefikssiz qoida
+   ham saytga tegmaydi.
    --------------------------------------------------------------- */
 
-.alv-adm .alv-card {
+.alv-card {
   background: var(--adm-surface);
   border: 1px solid var(--adm-line);
   border-radius: var(--adm-radius);
   box-shadow: none;
 }
 
-.alv-adm .alv-table {
+.alv-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
@@ -408,7 +418,7 @@ body {
   border-radius: var(--adm-radius);
   overflow: hidden;
 }
-.alv-adm .alv-table th {
+.alv-table th {
   background: var(--adm-surface-2);
   font-size: 12px;
   font-weight: 600;
@@ -419,25 +429,25 @@ body {
   border-bottom: 1px solid var(--adm-line);
   white-space: nowrap;
 }
-.alv-adm .alv-table td {
+.alv-table td {
   padding: 10px 12px;
   border-bottom: 1px solid var(--adm-line);
   vertical-align: middle;
 }
-.alv-adm .alv-table tr:last-child td {
+.alv-table tr:last-child td {
   border-bottom: 0;
 }
-.alv-adm .alv-table tbody tr:hover td {
+.alv-table tbody tr:hover td {
   background: var(--adm-surface-2);
 }
 /* Raqamlar ustunma-ustun tursin: har xil kenglikdagi raqamlar
    qatorda sakrab ko'rinadi va summalarni solishtirib bo'lmaydi. */
-.alv-adm .alv-table td[align='right'],
-.alv-adm .alv-table th[align='right'] {
+.alv-table td[align='right'],
+.alv-table th[align='right'] {
   font-variant-numeric: tabular-nums;
 }
 
-.alv-adm .alv-btn {
+.alv-btn {
   border-radius: var(--adm-radius-sm);
   font-size: 13.5px;
   font-weight: 600;
@@ -446,44 +456,44 @@ body {
   min-height: 34px;
   padding: 0 14px;
 }
-.alv-adm .alv-btn--primary {
+.alv-btn--primary {
   background: var(--adm-primary);
   border-color: var(--adm-primary);
   color: #fff;
 }
-.alv-adm .alv-btn--primary:hover:not(:disabled) {
+.alv-btn--primary:hover:not(:disabled) {
   background: var(--adm-primary-hover);
   border-color: var(--adm-primary-hover);
 }
-.alv-adm .alv-btn--outline,
-.alv-adm .alv-btn--ghost {
+.alv-btn--outline,
+.alv-btn--ghost {
   background: var(--adm-surface);
   border: 1px solid var(--adm-line-strong);
   color: var(--adm-ink);
 }
-.alv-adm .alv-btn--outline:hover:not(:disabled),
-.alv-adm .alv-btn--ghost:hover:not(:disabled) {
+.alv-btn--outline:hover:not(:disabled),
+.alv-btn--ghost:hover:not(:disabled) {
   background: var(--adm-surface-2);
 }
-.alv-adm .alv-btn--sm {
+.alv-btn--sm {
   min-height: 28px;
   padding: 0 10px;
   font-size: 12.5px;
 }
-.alv-adm .alv-btn:disabled {
+.alv-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.alv-adm input[type='text'],
-.alv-adm input[type='search'],
-.alv-adm input[type='number'],
-.alv-adm input[type='email'],
-.alv-adm input[type='password'],
-.alv-adm input[type='date'],
-.alv-adm input[type='tel'],
-.alv-adm select,
-.alv-adm textarea {
+input[type='text'],
+input[type='search'],
+input[type='number'],
+input[type='email'],
+input[type='password'],
+input[type='date'],
+input[type='tel'],
+select,
+textarea {
   font: inherit;
   font-size: 13.5px;
   color: var(--adm-ink);
@@ -495,20 +505,20 @@ body {
   width: 100%;
   box-sizing: border-box;
 }
-.alv-adm textarea {
+textarea {
   min-height: 88px;
   line-height: 1.55;
 }
-.alv-adm input:focus-visible,
-.alv-adm select:focus-visible,
-.alv-adm textarea:focus-visible {
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
   outline: 2px solid var(--adm-ink);
   outline-offset: 1px;
   border-color: var(--adm-ink);
 }
 
 /* Holat belgilari — rang MA'NO tashiydi, bezak emas. */
-.alv-adm .alv-badge {
+.alv-badge {
   border-radius: 6px;
   font-size: 11.5px;
   font-weight: 600;
@@ -518,26 +528,26 @@ body {
   height: auto;
   line-height: 1.6;
 }
-.alv-adm .alv-badge--mint {
+.alv-badge--mint {
   background: var(--adm-ok-soft);
   color: var(--adm-ok);
 }
-.alv-adm .alv-badge--low,
-.alv-adm .alv-badge--new {
+.alv-badge--low,
+.alv-badge--new {
   background: var(--adm-warn-soft);
   color: var(--adm-warn);
 }
-.alv-adm .alv-badge--sale {
+.alv-badge--sale {
   background: var(--adm-danger-soft);
   color: var(--adm-danger);
 }
-.alv-adm .alv-badge--neutral,
-.alv-adm .alv-badge--top {
+.alv-badge--neutral,
+.alv-badge--top {
   background: var(--adm-info-soft);
   color: var(--adm-ink-2);
 }
 
-.alv-adm .alv-chip {
+.alv-chip {
   border-radius: 999px;
   border: 1px solid var(--adm-line-strong);
   background: var(--adm-surface);
@@ -546,7 +556,7 @@ body {
   padding: 4px 11px;
   cursor: pointer;
 }
-.alv-adm .alv-chip--on {
+.alv-chip--on {
   background: var(--adm-ink);
   border-color: var(--adm-ink);
   color: #fff;

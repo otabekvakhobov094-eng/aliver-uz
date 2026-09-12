@@ -123,13 +123,39 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
   }
 
   if (!cart || cart.items.length === 0) {
+    /*
+     * Bo'sh savat ko'rinishi SAVAT SAHIFASIDAGI bilan bir xil.
+     *
+     * Ilgari bu yerda o'rtada bitta kichkina «Savat bo'sh.» yozuvi
+     * turardi, savat sahifasida esa to'liq kartochka. Bitta holat,
+     * ikki xil ko'rinish — mijoz bir sahifadan ikkinchisiga o'tganda
+     * boshqa saytga tushib qolgandek bo'ladi.
+     */
     return (
-      <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-        <p style={{ marginBottom: 16, color: 'var(--alv-muted)' }}>
-          {locale === 'ru' ? 'Корзина пуста.' : 'Savat bo‘sh.'}
+      <div
+        style={{
+          background: 'var(--alv-surface)',
+          borderRadius: 'var(--alv-radius-xl)',
+          padding: '48px 24px',
+          textAlign: 'center',
+          boxShadow: 'var(--alv-shadow-sm)',
+        }}
+      >
+        <div style={{ fontSize: 40, marginBottom: 12 }} aria-hidden>
+          🧺
+        </div>
+        <h2 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 22, margin: '0 0 8px' }}>
+          {locale === 'ru' ? 'Корзина пуста' : 'Savat bo‘sh'}
+        </h2>
+        <p style={{ color: 'var(--alv-muted)', margin: '0 0 20px', fontSize: 14 }}>
+          {locale === 'ru'
+            ? 'Чтобы оформить заказ, добавьте товары в корзину.'
+            : 'Buyurtma berish uchun avval savatga mahsulot qo‘shing.'}
         </p>
         <Link href={`/${locale}/katalog`}>
-          <Button variant="primary">{locale === 'ru' ? 'В каталог' : 'Katalogga'}</Button>
+          <Button variant="primary" size="lg">
+            {locale === 'ru' ? 'Перейти в каталог' : 'Katalogga o‘tish'}
+          </Button>
         </Link>
       </div>
     );

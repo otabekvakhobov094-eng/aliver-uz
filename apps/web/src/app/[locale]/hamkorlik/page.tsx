@@ -15,7 +15,10 @@ export async function generateMetadata({
   const { locale } = await params;
   const ru = locale === 'ru';
   return {
-    title: ru ? 'Стать партнёром — ALIVER.UZ' : 'Hamkor bo‘ling — ALIVER.UZ',
+    // Sayt nomi BU YERDA yozilmaydi: uni `layout.tsx` dagi
+    // `template: '%s — ALIVER.UZ'` o'zi qo'shadi. Ikkalasi yozilsa
+    // brauzer yorlig'ida «… — ALIVER.UZ — ALIVER.UZ» bo'lib chiqadi.
+    title: ru ? 'Стать партнёром' : 'Hamkor bo‘ling',
     description: ru
       ? 'Закупайте продукцию ALIVER оптом и продавайте в своём магазине или салоне красоты.'
       : 'ALIVER mahsulotlarini ulgurji narxda sotib oling va o‘z do‘koningizda yoki go‘zallik salonida soting.',

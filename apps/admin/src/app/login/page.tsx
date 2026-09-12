@@ -98,7 +98,13 @@ export default function AdminLoginPage() {
     <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 20 }}>
       <Card style={{ width: 400, padding: 28 }}>
         <h1 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 24, margin: '0 0 6px' }}>
-          ALIVER<span style={{ color: 'var(--alv-brand)' }}>.UZ</span> Admin
+          {/*
+            Rang paneldagidek: ish muhitida asosiy harakat qora,
+            ko'k esa faqat HAVOLA uchun. Ilgari bu yerda havola rangi
+            ishlatilgani uchun kirish ekrani ko'k, panelning o'zi
+            qora bo'lib, bitta mahsulot ikki xil ko'rinardi.
+          */}
+          ALIVER<span style={{ color: 'var(--adm-muted)' }}>.UZ</span> Admin
         </h1>
         <p style={{ color: 'var(--alv-muted)', fontSize: 13, margin: '0 0 20px' }}>
           Kirish uchun email va parolni kiriting.

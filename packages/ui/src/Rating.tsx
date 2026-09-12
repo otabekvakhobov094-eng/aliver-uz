@@ -17,6 +17,19 @@ const Star = ({ filled, size }: { filled: boolean; size: number }) => (
 );
 
 export function Rating({ value, count, size = 14 }: RatingProps) {
+  /*
+   * Sharh YO'Q bo'lganda reyting umuman ko'rsatilmaydi.
+   *
+   * Ilgari bunday holatda beshta bo'sh yulduz va «0» chiqardi. Mijoz
+   * buni «hali baholanmagan» deb emas, «past baholangan» deb o'qiydi —
+   * va yangi do'konda bu HAMMA mahsulotda shunday bo'ladi, ya'ni
+   * butun katalog yomon baholangandek ko'rinadi.
+   *
+   * `count` berilmagan joylarda (alohida sharhning o'z bahosi) eski
+   * xatti-harakat saqlanadi: u yerda baho har doim mavjud.
+   */
+  if (count !== undefined && count <= 0) return null;
+
   const rounded = Math.round(value);
   return (
     <span className="alv-rating" role="img" aria-label={`Reyting: ${value.toFixed(1)} / 5`}>
