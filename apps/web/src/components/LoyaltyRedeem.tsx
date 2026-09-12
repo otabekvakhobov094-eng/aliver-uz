@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { fmtDate } from '@/lib/format-date';
 import { formatPrice } from '@aliver/ui';
 import { shopApi, type LoyaltyBalance, type LoyaltyQuote } from '@/lib/shop-api';
 import type { Locale } from '@/i18n/messages';
@@ -148,7 +149,7 @@ export function LoyaltyRedeem({ locale, subtotalAfterDiscount, value, onChange }
       {balance.expiresAt ? (
         <p style={{ margin: 0, fontSize: 12.5, color: 'var(--alv-muted)' }}>
           {ru ? 'Сгорают ' : 'Kuyish sanasi: '}
-          {new Date(balance.expiresAt).toLocaleDateString(ru ? 'ru-RU' : 'uz-UZ')}
+          {fmtDate(balance.expiresAt)}
         </p>
       ) : null}
     </section>

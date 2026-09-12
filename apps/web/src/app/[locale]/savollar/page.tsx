@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { contentApi } from '@/lib/content-api';
+import { getStoreSettings } from '@/lib/store-settings';
 import { isLocale } from '@/i18n/messages';
 import styles from './help.module.css';
 
@@ -93,7 +94,10 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
   const ru = locale === 'ru';
-  const items = await contentApi.faqs().catch(() => []);
+  const [items, store] = await Promise.all([
+    contentApi.faqs().catch(() => []),
+    getStoreSettings(),
+  ]);
 
   const label = (uz: string, ruText: string) => (ru ? ruText : uz);
 
@@ -208,10 +212,21 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
           <div>
             <strong>{label('Javob topilmadimi?', 'Не нашли ответ?')}</strong>
             <p>
-              {label(
-                'Savolingizni yozing — ish kunlari 9:00 dan 18:00 gacha javob beramiz.',
-                'Напишите нам — отвечаем в будни с 9:00 до 18:00.',
-              )}
+              {/*
+                ISH VAQTI SOZLAMADAN. Ilgari bu yerda «ish kunlari
+                9:00–18:00» yozilgan edi, xuddi shu sahifaning
+                footerida esa sozlamadan kelgan boshqa vaqt turardi —
+                ikki ekran bir-biriga zid gapirardi.
+              */}
+              {store.workHours
+                ? label(
+                    `Savolingizni yozing — ${store.workHours} oralig‘ida javob beramiz.`,
+                    `Напишите нам — отвечаем ${store.workHours}.`,
+                  )
+                : label(
+                    'Savolingizni yozing — imkon qadar tez javob beramiz.',
+                    'Напишите нам — ответим как можно скорее.',
+                  )}
             </p>
           </div>
           <Link href={`/${locale}/aloqa`} className="alv-btn alv-btn--primary alv-btn--md">

@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import { fmtDateLong } from '@/lib/format-date';
 import { catalogApi, pick } from '@/lib/catalog-api';
 import { ProductCardView } from '@/components/ProductCard';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
+import { getShopFacts, sumOf } from '@/lib/shop-facts';
 import { BrandStrip } from '@/components/BrandStrip';
 import {
   CampaignBanner,
@@ -30,6 +32,12 @@ const FALLBACK = [
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
+  // Va'dalardagi raqamlar — adminda va savat qoidalarida yashaydi.
+  const facts = await getShopFacts();
+  const sampleFrom = sumOf(facts.sampleFrom);
+  const pointsPerSum = sumOf(facts.loyaltyPointsPerSum);
+  const redeemPercent = facts.loyaltyMaxRedeemPercent;
+
   const [categories, best, fresh, banners, promos, summerItems, lipItems, facets, posts] = await Promise.all([
     catalogApi.categories().catch(() => []),
     catalogApi.products({ collection: 'best-sellers', perPage: 4 }).catch(() => ({ items: [] })),
@@ -158,10 +166,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 ? 'Баллы за каждую покупку'
                 : 'Har bir xariddan ball'}
             </strong>
+            {/*
+              RAQAMLAR SERVERDAN. Ilgari «1 000», «yarmigacha» va
+              «300 000» matnga yozilgan edi, haqiqiy qoidalar esa
+              boshqa joyda yashaydi. Xodim chegarani o'zgartirsa,
+              bosh sahifa eski va'dani takrorlashda davom etardi.
+            */}
             <p>
               {locale === 'ru'
-                ? 'Каждые 1 000 сум — 1 балл. Баллами можно оплатить до половины следующего заказа, а при заказе от 300 000 сум пробник в подарок.'
-                : 'Har 1 000 so‘mga 1 ball. Ballar bilan keyingi buyurtmaning yarmigacha qismini qoplash mumkin, 300 000 so‘mdan yuqori buyurtmaga esa namuna bepul.'}
+                ? `Каждые ${pointsPerSum ?? '1 000'} сум — 1 балл.${
+                    redeemPercent ? ` Баллами можно оплатить до ${redeemPercent}% следующего заказа.` : ''
+                  }${sampleFrom ? ` При заказе от ${sampleFrom} сум пробник в подарок.` : ''}`
+                : `Har ${pointsPerSum ?? '1 000'} so‘mga 1 ball.${
+                    redeemPercent
+                      ? ` Ballar bilan keyingi buyurtmaning ${redeemPercent}% gacha qismini qoplash mumkin.`
+                      : ''
+                  }${sampleFrom ? ` ${sampleFrom} so‘mdan yuqori buyurtmaga namuna bepul.` : ''}`}
             </p>
           </div>
           <Link className={`${styles.lightAction} alv-lift`} href={`/${locale}/kabinet/ballar`}>
@@ -192,8 +212,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </h2>
             <p>
               {locale === 'ru'
-                ? 'Собранные наборы для волос, лица и тела — в подарочной упаковке. При заказе от 300 000 сум добавим пробник.'
-                : 'Soch, yuz va tana uchun yig‘ilgan to‘plamlar — sovg‘a qutisida. 300 000 so‘mdan yuqori buyurtmaga namuna qo‘shamiz.'}
+                ? `Собранные наборы для волос, лица и тела — в подарочной упаковке.${
+                    sampleFrom ? ` При заказе от ${sampleFrom} сум добавим пробник.` : ''
+                  }`
+                : `Soch, yuz va tana uchun yig‘ilgan to‘plamlar — sovg‘a qutisida.${
+                    sampleFrom ? ` ${sampleFrom} so‘mdan yuqori buyurtmaga namuna qo‘shamiz.` : ''
+                  }`}
             </p>
             <Link
               className={`${styles.primaryAction} alv-lift`}
@@ -231,10 +255,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 <div className={blocks.postBody}>
                   {post.publishedAt ? (
                     <span className={blocks.postDate}>
-                      {new Date(post.publishedAt).toLocaleDateString(
-                        locale === 'ru' ? 'ru-RU' : 'uz-UZ',
-                        { day: '2-digit', month: 'long' },
-                      )}
+{fmtDateLong(post.publishedAt, locale === 'ru')}
                     </span>
                   ) : null}
                   <h3>{locale === 'ru' ? post.titleRu : post.titleUz}</h3>

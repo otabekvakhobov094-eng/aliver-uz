@@ -51,9 +51,21 @@ const FALLBACK: StoreSettings = {
   addressRu: null,
 };
 
+/**
+ * Seed'dagi NAMUNA qiymatlar — ular to'ldirilgan hisoblanmaydi.
+ *
+ * `store.tin` seed'da `[SIZNING STIR]` deb turadi va bo'sh emas,
+ * ya'ni oddiy tekshiruvdan o'tib ketardi: «Aloqa» sahifasidagi
+ * yuridik ma'lumotlar kartochkasida STIR o'rniga aynan shu matn
+ * chiqardi. To'ldirilmagan rekvizitni ko'rsatmaslik — uni
+ * kvadrat qavs bilan ko'rsatishdan yaxshi.
+ */
+const PLACEHOLDER = /^\[.*\]$/;
+
 function clean(v: string | null | undefined): string | null {
   const s = (v ?? '').trim();
-  return s === '' ? null : s;
+  if (s === '' || PLACEHOLDER.test(s)) return null;
+  return s;
 }
 
 /**

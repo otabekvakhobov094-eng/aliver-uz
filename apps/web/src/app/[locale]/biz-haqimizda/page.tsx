@@ -50,11 +50,21 @@ const PROMISES = [
   },
 ];
 
+/**
+ * SLUG'LAR KATALOGDAGIDEK.
+ *
+ * Ilgari bu yerda `pardoz`, `soch`, `teri` turgan edi — bunday
+ * kategoriya hech qachon bo'lmagan. Ustiga havola `?kategoriya=`
+ * deb yozilgandi, katalog esa `?category=` ni o'qiydi. Ya'ni har
+ * bir chipka butun katalogni ochardi va xaridor «bu do'konda
+ * bo'lim yo'q ekan» deb o'ylardi. 404 ham bermasdi.
+ */
 const CATEGORIES = [
   { uz: 'Tirnoq', ru: 'Ногти', slug: 'tirnoq' },
-  { uz: 'Pardoz', ru: 'Макияж', slug: 'pardoz' },
-  { uz: 'Soch parvarishi', ru: 'Уход за волосами', slug: 'soch' },
-  { uz: 'Teri parvarishi', ru: 'Уход за кожей', slug: 'teri' },
+  { uz: 'Makiyaj', ru: 'Макияж', slug: 'makiyaj' },
+  { uz: 'Soch parvarishi', ru: 'Уход за волосами', slug: 'soch-parvarishi' },
+  { uz: 'Yuz parvarishi', ru: 'Уход за лицом', slug: 'yuz-parvarishi' },
+  { uz: 'Tana parvarishi', ru: 'Уход за телом', slug: 'tana-parvarishi' },
 ];
 
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -118,7 +128,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             {CATEGORIES.map((c) => (
               <Link
                 key={c.slug}
-                href={`/${locale}/katalog?kategoriya=${c.slug}`}
+                href={`/${locale}/katalog?category=${c.slug}`}
                 className="alv-card"
                 style={{
                   padding: '12px 20px',

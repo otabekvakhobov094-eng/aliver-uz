@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { fmtDate } from '@/lib/format-date';
 import { Rating } from '@aliver/ui';
 import type { Locale } from '@/i18n/messages';
 
@@ -401,7 +402,7 @@ export function ProductReviews({ slug, locale, me }: Props) {
                     </span>
                   ) : null}
                   <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--alv-muted)' }}>
-                    {new Date(r.createdAt).toLocaleDateString(ru ? 'ru-RU' : 'uz-UZ')}
+                    {fmtDate(r.createdAt)}
                   </span>
                 </div>
 

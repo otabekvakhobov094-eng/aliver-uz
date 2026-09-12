@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { fmtDate } from '@/lib/format-date';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Badge, Button, formatPrice } from '@aliver/ui';
@@ -130,7 +131,7 @@ export function AccountReturns({ locale }: { locale: Locale }) {
                 <strong style={{ fontSize: 15 }}>{r.number}</strong>
                 <div style={{ fontSize: 12.5, color: 'var(--alv-muted)', marginTop: 2 }}>
                   {locale === 'ru' ? 'Заказ' : 'Buyurtma'} {r.orderNumber} ·{' '}
-                  {new Date(r.createdAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'uz-UZ')}
+                  {fmtDate(r.createdAt)}
                 </div>
               </div>
 
@@ -204,8 +205,8 @@ export function AccountReturns({ locale }: { locale: Locale }) {
             {open.refundedAt ? (
               <AccountAlert tone="mint">
                 {locale === 'ru'
-                  ? `Деньги возвращены ${new Date(open.refundedAt).toLocaleDateString('ru-RU')}. Зачисление 1–3 дня.`
-                  : `Pul ${new Date(open.refundedAt).toLocaleDateString('uz-UZ')} da qaytarildi. Bankka tushishi 1–3 kun.`}
+                  ? `Деньги возвращены ${fmtDate(open.refundedAt)}. Зачисление 1–3 дня.`
+                  : `Pul ${fmtDate(open.refundedAt)} da qaytarildi. Bankka tushishi 1–3 kun.`}
               </AccountAlert>
             ) : null}
 

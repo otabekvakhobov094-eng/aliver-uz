@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { fmtNumber } from '@/lib/order-labels';
 import { t } from '@/lib/i18n';
 import Link from 'next/link';
 import { Badge, formatTiyin } from '@aliver/ui';
@@ -181,7 +182,7 @@ function Summary(props: { label: string; points: number; amount?: string; note: 
     >
       <div style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{t(props.label)}</div>
       <div style={{ fontSize: 24, fontWeight: 700, marginTop: 2 }}>
-        {props.points.toLocaleString("ru-RU")} {t("ball")}
+        {fmtNumber(props.points)} {t("ball")}
         {props.amount ? (
           <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--alv-muted)' }}>
             {' '}

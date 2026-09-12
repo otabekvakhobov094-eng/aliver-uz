@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { fmtDateLong, fmtDateTime as fmtDateTimeShared } from '@/lib/format-date';
 import { useEffect, useState } from 'react';
 import { Button, formatPrice } from '@aliver/ui';
 import { ShopError, shopApi, type OrderView } from '@/lib/shop-api';
@@ -490,19 +491,16 @@ function Line({ k, v }: { k: string; v: string }) {
   );
 }
 
+/*
+ * Sana formatlari `@/lib/format-date` da — ICU ga bog'liq emas.
+ * `toLocaleDateString('uz-UZ', { month: 'long' })` to'liq ICU
+ * bo'lmagan qurilishda «2026 M08 14» beradi.
+ */
 function fmtDate(v: string | null, locale: Locale): string {
-  if (!v) return '—';
-  return new Date(v).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'uz-UZ', {
-    day: '2-digit',
-    month: 'long',
-  });
+  return fmtDateLong(v, locale === 'ru');
 }
 
 function fmtDateTime(v: string, locale: Locale): string {
-  return new Date(v).toLocaleString(locale === 'ru' ? 'ru-RU' : 'uz-UZ', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  void locale;
+  return fmtDateTimeShared(v);
 }

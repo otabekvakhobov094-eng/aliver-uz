@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/SiteHeader';
+import { fmtNumber } from '@/lib/format-date';
 import { SiteFooter } from '@/components/SiteFooter';
 import { shopApi } from '@/lib/shop-api';
 import { isLocale } from '@/i18n/messages';
@@ -59,7 +60,7 @@ function money(tiyin: string | number | null | undefined, ru: boolean): string {
   if (tiyin === null || tiyin === undefined) return '—';
   const som = Math.round(Number(tiyin) / 100);
   if (som === 0) return ru ? 'Бесплатно' : 'Bepul';
-  return `${som.toLocaleString(ru ? 'ru-RU' : 'uz-UZ')} ${ru ? 'сум' : 'so‘m'}`;
+  return `${fmtNumber(som)} ${ru ? 'сум' : 'so‘m'}`;
 }
 
 export default async function DeliveryPage({ params }: { params: Promise<{ locale: string }> }) {

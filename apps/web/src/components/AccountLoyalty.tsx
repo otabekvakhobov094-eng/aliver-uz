@@ -1,6 +1,7 @@
 'use client';
 
 import { formatPrice } from '@aliver/ui';
+import { fmtDate, fmtDateLong } from '@/lib/format-date';
 import { shopApi, type LoyaltyBalance, type LoyaltyEntry } from '@/lib/shop-api';
 import { AccountStateView } from './AccountState';
 import { useAccountData } from './useAccountData';
@@ -119,7 +120,7 @@ export function AccountLoyalty({ locale }: { locale: Locale }) {
                     {e.orderNumber ? ` · ${e.orderNumber}` : ''}
                   </span>
                   <span style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>
-                    {new Date(e.createdAt).toLocaleDateString(ru ? 'ru-RU' : 'uz-UZ')}
+                    {fmtDate(e.createdAt)}
                     {e.comment ? ` · ${e.comment}` : ''}
                   </span>
                 </span>
@@ -141,11 +142,7 @@ export function AccountLoyalty({ locale }: { locale: Locale }) {
   );
 }
 
-/** Sana — mijoz o'qiydigan ko'rinishda. */
+/** Sana — mijoz o'qiydigan ko'rinishda (ICU ga bog'liq emas). */
 function fmt(iso: string, ru: boolean): string {
-  return new Date(iso).toLocaleDateString(ru ? 'ru-RU' : 'uz-UZ', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
+  return fmtDateLong(iso, ru);
 }

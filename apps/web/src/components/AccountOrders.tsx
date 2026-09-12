@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { fmtDateLong } from '@/lib/format-date';
 import { useEffect, useState } from 'react';
 import { Badge, formatPrice } from '@aliver/ui';
 import { AccountAlert, AccountCard } from './AccountShell';
@@ -95,11 +96,7 @@ export function AccountOrders({ locale }: { locale: Locale }) {
                 {o.number}
               </Link>
               <div style={{ fontSize: 12.5, color: 'var(--alv-muted)', marginTop: 2 }}>
-                {new Date(o.placedAt).toLocaleDateString(locale === 'ru' ? 'ru-RU' : 'uz-UZ', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+{fmtDateLong(o.placedAt, locale === 'ru')}
               </div>
             </div>
 

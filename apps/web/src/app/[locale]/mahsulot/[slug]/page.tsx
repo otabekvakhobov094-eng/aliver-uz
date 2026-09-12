@@ -12,6 +12,7 @@ import { ProductCardView } from '@/components/ProductCard';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
+import { getShopFacts, sumOf } from '@/lib/shop-facts';
 
 export const revalidate = 120;
 
@@ -63,6 +64,10 @@ export default async function ProductPage({
 
   const name = pick(product as never, 'name', locale);
   const ru = locale === 'ru';
+
+  // Bepul yetkazib berish chegarasi — adminda o'zgaradi.
+  const facts = await getShopFacts();
+  const freeFrom = sumOf(facts.freeShippingFrom);
 
   // TZ 82 — mahsulot uchun structured data (SEO). 7-etapda kengaytiriladi.
   const jsonLd = {
@@ -201,7 +206,20 @@ export default async function ProductPage({
               {[
                 [
                   ru ? 'Доставка по Ташкенту — 1 день' : 'Toshkent bo‘ylab — 1 kun',
-                  ru ? 'Свыше 400 000 сум бесплатно' : '400 000 so‘mdan yuqori bepul',
+                  /*
+                   * Chegara SERVERDAN. Ilgari «400 000» matnga
+                   * yozilgan edi va admin uni o'zgartirsa, mahsulot
+                   * sahifasi eski raqamni va'da qilishda davom
+                   * etardi — savat esa yangisini qo'llardi.
+                   * Chegara yo'q bo'lsa va'da umuman berilmaydi.
+                   */
+                  freeFrom
+                    ? ru
+                      ? `Свыше ${freeFrom} сум бесплатно`
+                      : `${freeFrom} so‘mdan yuqori bepul`
+                    : ru
+                      ? 'Стоимость зависит от региона'
+                      : 'Narxi hududga bog‘liq',
                 ],
                 [
                   ru ? '100% оригинал' : '100% original',

@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { fmtDate, fmtDateTime } from '@/lib/order-labels';
 import { t } from '@/lib/i18n';
 import { formatTiyin } from '@aliver/ui';
 import { adminApi } from '@/lib/api';
@@ -101,7 +102,7 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>{data.number}</div>
           <div style={{ fontSize: 12, color: '#555' }}>
-            {new Date(data.placedAt).toLocaleString("ru-RU")}
+            {fmtDateTime(data.placedAt)}
           </div>
         </div>
       </header>
@@ -151,8 +152,8 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
         {data.delivery.etaFrom ? (
           <Row
             k="Taxminiy sana"
-            v={`${new Date(data.delivery.etaFrom).toLocaleDateString('ru-RU')} — ${
-              data.delivery.etaTo ? new Date(data.delivery.etaTo).toLocaleDateString('ru-RU') : ''
+            v={`${fmtDate(data.delivery.etaFrom)} — ${
+              data.delivery.etaTo ? fmtDate(data.delivery.etaTo) : ''
             }`}
           />
         ) : null}

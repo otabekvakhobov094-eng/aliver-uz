@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { fmtNumber } from '@/lib/format-date';
 import Link from 'next/link';
 import { Badge, Button, Price } from '@aliver/ui';
 import type { ProductVariant } from '@/lib/catalog-api';
@@ -136,9 +137,13 @@ export function ProductBuyBox({
                 >
                   <span style={{ fontWeight: 700, fontSize: 14 }}>{label(v)}</span>
                   <span style={{ fontSize: 12, opacity: 0.75, fontWeight: 600 }}>
-                    {Number(BigInt(v.price) / 100n)
-                      .toLocaleString('ru-RU')
-                      .replace(/ /g, ' ')}
+                    {/*
+                      Narx loyihaning O'Z formatlagichi bilan: ICU
+                      bo'lmagan qurilishda `toLocaleString('ru-RU')`
+                      «279,000» beradi va u sahifadagi qolgan
+                      «279 000 so'm» dan boshqacha ko'rinadi.
+                    */}
+                    {fmtNumber(BigInt(v.price) / 100n)}
                   </span>
                 </button>
               );
