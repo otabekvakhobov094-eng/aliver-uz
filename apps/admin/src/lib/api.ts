@@ -115,6 +115,40 @@ export interface UzumReviewImport {
   dryRun: boolean;
 }
 
+export interface ShopifyPreview {
+  sourceUrl: string;
+  usdToUzs: number;
+  total: number;
+  willCreate: number;
+  willUpdate: number;
+  images: number;
+  variants: number;
+  brands: Array<{ name: string; count: number }>;
+  categories: Array<{ name: string; count: number }>;
+  sample: Array<{
+    handle: string;
+    title: string;
+    brand: string;
+    category: string;
+    collections: string[];
+    variants: number;
+    images: number;
+    minPriceSum: number;
+    maxPriceSum: number;
+    published: boolean;
+  }>;
+}
+
+export interface ShopifyImportResult {
+  jobId: string;
+  total: number;
+  created: number;
+  updated: number;
+  failed: number;
+  brands: string[];
+  errors: Array<{ row: number; column: string; message: string }>;
+}
+
 export interface B2bLead {
   id: string; company: string; contactPerson: string; phone: string; telegram: string | null;
   city: string | null; businessType: string | null; monthlyVolume: string | null;
@@ -1427,6 +1461,17 @@ export const adminApi = {
     if (to) qs.set('to', to);
     return request<DashboardData>(`/admin/reports/dashboard?${qs.toString()}`);
   },
+
+  shopifyPreview: (sourceUrl: string, usdToUzs: number) =>
+    request<ShopifyPreview>('/admin/import/shopify/preview', {
+      method: 'POST',
+      body: JSON.stringify({ sourceUrl, usdToUzs }),
+    }),
+  shopifyImport: (sourceUrl: string, usdToUzs: number) =>
+    request<ShopifyImportResult>('/admin/import/shopify/run', {
+      method: 'POST',
+      body: JSON.stringify({ sourceUrl, usdToUzs }),
+    }),
 
   loyalty: (customerId: string) => request<LoyaltyView>(`/admin/loyalty/${customerId}`),
   adjustLoyalty: (customerId: string, points: number, comment: string) =>

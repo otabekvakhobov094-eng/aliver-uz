@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { ShopifyImport } from '@/components/ShopifyImport';
 import { adminApi, type ImportSummary } from '@/lib/api';
 
 const MODES: Array<{ value: string; label: string; hint: string }> = [
@@ -49,6 +50,10 @@ export default function ImportPage() {
 
   return (
     <AdminShell title="Mahsulotlarni import qilish">
+      <div style={{ marginBottom: 22 }}>
+        <ShopifyImport />
+      </div>
+
       <div
         style={{
           display: 'grid',

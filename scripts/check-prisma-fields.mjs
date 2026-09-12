@@ -40,9 +40,29 @@ const SCAN = [path.join(ROOT, 'apps/api/src'), path.join(ROOT, 'apps/api/prisma'
  * 1. Sxemani o'qish
  * ------------------------------------------------------------------ */
 
-/** model nomi → Map<maydon, bog'langan model nomi | null> */
+/**
+ * model nomi → Map<maydon, {relation, enum}>
+ *
+ * `relation` — bog'langan model nomi (ichkariga kirish uchun).
+ * `enum`     — maydon enum bo'lsa, uning ruxsat etilgan qiymatlari.
+ */
 function parseSchema(text) {
   const models = new Map();
+
+  // Enumlar: `mode: 'UPSERT'` kabi xatoni ushlash uchun. Bunday xatoni
+  // typecheck ham, maydon tekshiruvi ham ko'rmaydi — u faqat baza
+  // so'rovi paytida chiqadi.
+  const enums = new Map();
+  for (const m of text.matchAll(/^enum\s+(\w+)\s*\{([\s\S]*?)^\}/gm)) {
+    const values = new Set(
+      m[2]
+        .split('\n')
+        // Qiymat yonida izoh bo'lishi mumkin: `SPEND /// buyurtmada ishlatildi`
+        .map((l) => l.trim().split(/\s|\/\//)[0])
+        .filter((l) => /^[A-Za-z_]\w*$/.test(l)),
+    );
+    enums.set(m[1], values);
+  }
 
   const modelRe = /^model\s+(\w+)\s*\{([\s\S]*?)^\}/gm;
   for (const match of text.matchAll(modelRe)) {
@@ -60,22 +80,27 @@ function parseSchema(text) {
       if (uq) {
         const parts = uq[1].split(',').map((s) => s.trim()).filter(Boolean);
         const named = /name\s*:\s*["'](\w+)["']/.exec(uq[2] || '');
-        fields.set(named ? named[1] : parts.join('_'), null);
+        fields.set(named ? named[1] : parts.join('_'), { type: '__composite__' });
         continue;
       }
       if (trimmed.startsWith('@@')) continue;
 
       const fm = /^(\w+)\s+(\w+)(\[\])?/.exec(trimmed);
       if (!fm) continue;
-      fields.set(fm[1], fm[2]);
+      fields.set(fm[1], { type: fm[2] });
     }
     models.set(name, fields);
   }
 
-  // Ikkinchi o'tish: skalyar va enum turlarini `null` ga aylantiramiz,
-  // faqat haqiqiy model bog'lanishlari qoladi.
+  // Ikkinchi o'tish: turni ma'noga aylantiramiz — bog'lanish, enum yoki
+  // oddiy skalyar.
   for (const [, fields] of models) {
-    for (const [f, t] of fields) if (!models.has(t)) fields.set(f, null);
+    for (const [f, v] of fields) {
+      fields.set(f, {
+        relation: models.has(v.type) ? v.type : null,
+        enum: enums.get(v.type) ?? null,
+      });
+    }
   }
   return models;
 }
@@ -200,7 +225,31 @@ function walkFields(node, modelName, mode, trail) {
       return;
     }
 
-    const target = fields.get(key);
+    const meta = fields.get(key);
+
+    /*
+     * Enum qiymati faqat `where` va `data` da tekshiriladi.
+     *
+     * `orderBy: { status: 'asc' }` da qiymat — saralash YO'NALISHI,
+     * `select: { status: true }` da esa mantiqiy bayroq. Ularni enum
+     * qiymati deb tekshirish yolg'on xato beradi.
+     */
+    if (
+      (mode === 'where' || mode === 'data') &&
+      meta?.enum &&
+      ts.isStringLiteralLike(value) &&
+      !meta.enum.has(value.text)
+    ) {
+      const { line } = ts.getLineAndCharacterOfPosition(value.getSourceFile(), value.getStart());
+      problems.push(
+        `${path.relative(ROOT, value.getSourceFile().fileName)}:${line + 1}  ` +
+          `«${value.text}» — ${modelName}.${key} uchun bunday qiymat yo'q. ` +
+          `Mumkin bo'lganlari: ${[...meta.enum].join(', ')}`,
+      );
+      return;
+    }
+
+    const target = meta?.relation;
     if (!target || !models.has(target)) return; // skalyar — ichkarisi yo'q
     const next = `${trail ? trail + ' → ' : ''}${key}`;
 
