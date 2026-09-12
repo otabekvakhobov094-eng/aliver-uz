@@ -820,4 +820,9 @@ export const RU: Record<string, string> = {
   "← Oldingi": "← Назад",
   "← Qaytarishlar": "← Возвраты",
   "← To‘lovlar": "← Платежи",
+  "Do‘kon sinov rejimida.": "Магазин в тестовом режиме.",
+  "Haqiqiy savdoni boshlashdan oldin to‘lov, OFD va SMS kalitlarini ulang.": "Перед началом реальных продаж подключите ключи оплаты, ОФД и SMS.",
+  "SMS mijozga bormaydi, faqat jurnalga yoziladi": "SMS клиенту не уходит, только записывается в журнал",
+  "fiskal chek OFD ga yuborilmaydi": "фискальный чек не отправляется в ОФД",
+  "to‘lov maket rejimida — haqiqiy pul olinmaydi": "оплата в тестовом режиме — реальные деньги не списываются",
 };

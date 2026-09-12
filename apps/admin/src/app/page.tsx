@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { t } from '@/lib/i18n';
 import { money } from '@/lib/money';
 import { AdminShell } from '@/components/AdminShell';
-import { adminApi, type DashboardData } from '@/lib/api';
+import { adminApi, type DashboardData, type OpsStatus } from '@/lib/api';
 import { fmtDate, fmtNumber } from '@/lib/order-labels';
 
 /**
@@ -158,11 +158,54 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
   );
 }
 
+/**
+ * «Do'kon hali jangovar emas» ogohlantirishi.
+ *
+ * Stendda to'lov, fiskal chek va SMS maket rejimida ishlaydi:
+ * buyurtmada «To'landi» yozuvi turadi-yu, hech kimdan pul olinmagan;
+ * chek OFD ga ketmagan; mijozga SMS bormagan. Buni faqat server
+ * biladi, adminkada esa hech qaerda yozilmagan edi.
+ *
+ * Bu jimgina xatoning eng qimmat turi: u ishga tushishda emas,
+ * hisob-kitob paytida yoki soliq tekshiruvida ma'lum bo'ladi.
+ * Shuning uchun ogohlantirish bosh sahifada, eng ko'rinadigan joyda.
+ */
+function OpsBanner({ ops }: { ops: OpsStatus | null }) {
+  if (!ops || ops.live) return null;
+
+  const notes: string[] = [];
+  if (ops.paymentsMock) notes.push(t("to‘lov maket rejimida — haqiqiy pul olinmaydi"));
+  if (ops.ofdMock) notes.push(t("fiskal chek OFD ga yuborilmaydi"));
+  if (ops.smsMock) notes.push(t("SMS mijozga bormaydi, faqat jurnalga yoziladi"));
+  if (notes.length === 0) return null;
+
+  return (
+    <div
+      role="status"
+      style={{
+        border: '1px solid var(--alv-amber, #9A5A12)',
+        background: 'rgba(154, 90, 18, 0.08)',
+        color: 'var(--alv-amber, #9A5A12)',
+        borderRadius: 12,
+        padding: '12px 16px',
+        marginBottom: 18,
+        fontSize: 13.5,
+        lineHeight: 1.6,
+      }}
+    >
+      <strong>{t("Do‘kon sinov rejimida.")}</strong>{' '}
+      {notes.join('; ')}.{' '}
+      {t("Haqiqiy savdoni boshlashdan oldin to‘lov, OFD va SMS kalitlarini ulang.")}
+    </div>
+  );
+}
+
 export default function AdminHome() {
   const [period, setPeriod] = useState('30d');
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [ops, setOps] = useState<OpsStatus | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -182,6 +225,18 @@ export default function AdminHome() {
   }, [load]);
 
   /*
+   * Rejim bir marta o'qiladi va davr o'zgarganda qayta so'ralmaydi:
+   * u serverning sozlamasi, davrga bog'liq emas. Xato bo'lsa jim
+   * qoladi — ogohlantirish ko'rsatilmaydi, panel esa ishlayveradi.
+   */
+  useEffect(() => {
+    adminApi
+      .opsStatus()
+      .then(setOps)
+      .catch(() => setOps(null));
+  }, []);
+
+  /*
    * `data.previous` YO'Q bo'lishi mumkin: javob kutilgandan boshqa
    * shaklda kelsa (proksi xato sahifasi, eski API, qisman javob),
    * `data` haqiqiy bo'ladi-yu, ichi bo'sh qoladi. Ilgari shu yerda
@@ -195,6 +250,7 @@ export default function AdminHome() {
 
   return (
     <AdminShell title={t("Dashboard")}>
+      <OpsBanner ops={ops} />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 22 }}>
         {PERIODS.map((p) => {
           const active = p.key === period;

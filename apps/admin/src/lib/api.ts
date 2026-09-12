@@ -324,6 +324,17 @@ export interface SettingItem {
   missing: boolean;
 }
 
+export interface OpsStatus {
+  appEnv: string;
+  payments: string;
+  ofd: string;
+  sms: string;
+  paymentsMock: boolean;
+  ofdMock: boolean;
+  smsMock: boolean;
+  live: boolean;
+}
+
 export interface SettingsPayload {
   groups: Array<{ key: string; label: string; help?: string }>;
   settings: SettingItem[];
@@ -1862,6 +1873,9 @@ export const adminApi = {
   deleteRole: (id: string) => request<{ ok: true }>(`/admin/roles/${id}`, { method: 'DELETE' }),
 
   settings: () => request<SettingsPayload>('/admin/settings'),
+
+  /** Do'kon jangovar rejimdami — dashboarddagi ogohlantirish uchun. */
+  opsStatus: () => request<OpsStatus>('/admin/ops-status'),
 
   saveSettings: (changes: Record<string, unknown>) =>
     request<{ saved: number; values: Record<string, unknown> }>('/admin/settings', {

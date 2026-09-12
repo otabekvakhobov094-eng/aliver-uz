@@ -337,11 +337,22 @@ body {
 .alv-nav__item--on .alv-nav__icon {
   opacity: 1;
 }
+/*
+ * Ruscha nom o'zbekchasidan uzunroq: «Sovg'a sertifikatlari» →
+ * «Подарочные сертификаты». Bitta qatorda u «Подарочные сертиф…»
+ * bo'lib kesilardi va menyu bandini o'qib bo'lmasdi. Endi ikki
+ * qatorgacha o'raladi; undan uzuni baribir kesiladi, aks holda
+ * bitta band yon menyuni cho'zib yuboradi.
+ */
 .alv-nav__label {
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 .alv-nav__soon {
   margin-left: auto;
