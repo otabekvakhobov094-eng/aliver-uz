@@ -273,16 +273,31 @@ export class PaymentService {
     }
 
     const paidAt = params.paidAt ?? new Date();
-    const ok = await this.transition({
-      paymentId: payment.id,
-      from: payment.status as PaymentStatus,
-      to: 'PAID',
-      data: { providerTxnId: params.providerTxnId, paidAt, failureReason: null },
-    });
-    if (!ok) return { changed: false };
 
-    await this.prisma.order.update({
-      where: { id: payment.orderId },
+    /*
+     * O'tish qoidasi AVVAL tekshiriladi (bu toza funksiya, hech narsa
+     * yozmaydi): masalan puli qaytarilgan to'lovni qayta "to'landi"
+     * qilib bo'lmaydi. Bunsiz quyidagi buyurtma yozuvi bajarilib,
+     * keyin xato tashlanardi.
+     */
+    assertPaymentTransition(payment.status as PaymentStatus, 'PAID');
+
+    /*
+     * BUYURTMA HOLATI YOZUVDA HAM SHART SIFATIDA TURADI.
+     *
+     * Yuqoridagi tekshiruv o'qish, bu esa yozish — orasida bir necha
+     * so'rovlik oraliq bor va aynan o'sha oraliqda cron rezerv
+     * muddati o'tgan buyurtmani bekor qilishi mumkin. Ilgari yozuv
+     * shartsiz edi: natijada buyurtma BEKOR QILINGAN, to'lov esa
+     * TO'LANGAN bo'lib qolardi — tovar boshqa mijozga sotilgan,
+     * ustiga fiskal chek va bonus ball berilgan.
+     *
+     * Endi shart bazada tekshiriladi: bekor qilingan buyurtma
+     * to'langan deb belgilanmaydi va gateway xatoni ko'radi —
+     * provayder pulni qaytaradi.
+     */
+    const marked = await this.prisma.order.updateMany({
+      where: { id: payment.orderId, status: { in: [...PAYABLE_ORDER_STATUSES] } },
       data: {
         paymentStatus: 'PAID',
         paidAt,
@@ -291,6 +306,27 @@ export class PaymentService {
         reservationExpiresAt: null,
       },
     });
+    if (marked.count !== 1) {
+      const now = await this.prisma.order.findUnique({
+        where: { id: payment.orderId },
+        select: { status: true },
+      });
+      this.logger.warn(
+        `To‘lov ${payment.id}: yozish paytida buyurtma "${now?.status}" holatiga o‘tdi, to‘lov qabul qilinmadi`,
+      );
+      throw new OrderNotPayableError(now?.status ?? 'CANCELLED');
+    }
+
+    // Buyurtma band qilingandan KEYIN to'lov yoziladi. Tartib muhim:
+    // buyurtma bekor bo'lgan bo'lsa to'lovga umuman tegilmaydi va
+    // provayder pulni qaytaradi.
+    const ok = await this.transition({
+      paymentId: payment.id,
+      from: payment.status as PaymentStatus,
+      to: 'PAID',
+      data: { providerTxnId: params.providerTxnId, paidAt, failureReason: null },
+    });
+    if (!ok) return { changed: false };
     await this.prisma.stockReservation.updateMany({
       where: { orderId: payment.orderId, status: 'HELD' },
       data: { expiresAt: null },
