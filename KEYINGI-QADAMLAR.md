@@ -141,8 +141,29 @@ Pul bilan bog'liq qism (kod tekshiruvida topildi):
 - **To'lov abadiy «ishlanmoqda» holatida qolib ketishi mumkin edi**
   (deploy paytida webhook uzilsa).
 
-Bularning har biriga test yozildi; ikkitasi eski kodda sinab
+Xavfsizlik:
+
+- **Huquq oshirish.** `roles.create` huquqiga ega xodim yangi rol
+  ochib, unga tizimdagi barcha huquqlarni bog'lay olardi va keyin
+  o'sha rol orqali to'liq nazoratni qo'lga kiritardi. Tahrirlashda
+  bu to'silgan edi, yaratishda — yo'q.
+- **Sovg'a sertifikati kodlari audit jurnalida ochiq turardi.** Kod
+  bazada xeshlanadi, lekin yaratish javobi jurnalga aynan o'shanday
+  yozilardi: `audit.view` huquqiga ega har qanday xodim (hatto
+  sertifikat bera olmaydigani ham) berilgan barcha kodlarni o'qib
+  olardi.
+- B2B ariza formasi cheklovsiz edi — bitta IP dan kuniga 170 mingga
+  yaqin ariza yozish mumkin edi.
+- Adminkadagi xodim izohi B2B arizasining mijoz yozgan matnini
+  o'chirib yuborardi.
+- Bitta endpoint `@Body()` ni umuman tekshirmasdi.
+
+Bularning har biriga test yozildi; uchtasi eski kodda sinab
 ko'rildi va aynan o'sha xatoni topdi.
+
+Yangi mashina tekshiruvlari: `check:entities` (JS satridagi HTML
+belgilari), `check:dto` (tekshirilmaydigan `@Body()`),
+`check:layout:admin` (adminka telefonda ekrandan chiqmasligi).
 
 Mashina tekshiruvlari: `npm run lint` — 12 ta tekshiruv.
 Mobil ko'rinish: `npm run check:layout:admin` va `npm run check:layout`
