@@ -43,6 +43,47 @@ function pages(dir, prefix = '') {
   return out;
 }
 
+/*
+ * ROOT LAYOUT bormi va `<html>` bitta joydami.
+ *
+ * NEGA. `<html>`/`<body>` `[locale]/layout.tsx` da edi, root layout
+ * esa umuman yo'q edi. Bu ishlaydi — lekin faqat manzil `[locale]`
+ * route'iga tushganda. Noto'g'ri yozilgan manzil o'sha layoutdan
+ * tashqarida qoladi va Next.js `global-error` ga tushadi: mijoz
+ * «Sayt vaqtincha ishlamayapti» ekranini ko'radi, javob esa 500
+ * bo'ladi — qidiruv tizimi buni serverdagi nosozlik deb o'qiydi.
+ */
+const layoutProblems = [];
+{
+  const root = path.join(ROOT, 'apps/web/src/app/layout.tsx');
+  if (!fs.existsSync(root)) {
+    layoutProblems.push('apps/web/src/app/layout.tsx yo‘q — root layout bo‘lishi shart.');
+  }
+
+  const withHtml = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (e.name === 'layout.tsx' || e.name === 'not-found.tsx') {
+        // Izohlardagi eslatma hisobga olinmaydi.
+        const code = fs
+          .readFileSync(full, 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/^\s*\/\/.*$/gm, '');
+        if (/<html[\s>]/.test(code)) {
+          withHtml.push(path.relative(ROOT, full));
+        }
+      }
+    }
+  };
+  walk(path.join(ROOT, 'apps/web/src/app'));
+
+  if (withHtml.length > 1) {
+    layoutProblems.push(`<html> bir nechta faylda: ${withHtml.join(', ')}`);
+  }
+}
+
 const problems = [];
 const titleProblems = [];
 
@@ -54,9 +95,23 @@ const titleProblems = [];
 function hasTitle(file) {
   const text = fs.readFileSync(file, 'utf8');
   if (/generateMetadata|export const metadata/.test(text)) return true;
-  const layout = path.join(path.dirname(file), 'layout.tsx');
-  if (!fs.existsSync(layout)) return false;
-  return /generateMetadata|export const metadata/.test(fs.readFileSync(layout, 'utf8'));
+
+  // Yuqoridagi layout'lar ham sarlavha bera oladi — bosh sahifa
+  // uchun root layoutdagi standart sarlavha to'g'ri javob.
+  const appRoot = path.join(ROOT, 'apps/web/src/app');
+  let dir = path.dirname(file);
+  for (;;) {
+    const layout = path.join(dir, 'layout.tsx');
+    if (fs.existsSync(layout)) {
+      if (/generateMetadata|export const metadata/.test(fs.readFileSync(layout, 'utf8'))) {
+        return true;
+      }
+    }
+    if (path.resolve(dir) === path.resolve(appRoot)) return false;
+    const parent = path.dirname(dir);
+    if (parent === dir) return false;
+    dir = parent;
+  }
 }
 
 for (const { route, file } of pages(APP)) {
@@ -84,6 +139,16 @@ for (const { route, file } of pages(APP)) {
   if (missing.length > 0) {
     problems.push(`${route}  (${rel})\n      yetishmayapti: ${missing.join(', ')}`);
   }
+}
+
+if (layoutProblems.length > 0) {
+  console.error('\nQobiq tuzilishida muammo:\n');
+  for (const p of layoutProblems) console.error('  ' + p);
+  console.error(
+    "\nRoot layout bo'lmasa noto'g'ri manzil 404 emas, 500 beradi va\n" +
+      "«Sayt vaqtincha ishlamayapti» ekranini ko'rsatadi.\n",
+  );
+  process.exit(1);
 }
 
 if (titleProblems.length > 0) {
