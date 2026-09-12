@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { t } from '@/lib/i18n';
 
 /**
  * Umumiy ro'yxat platformasi — TZ-2, 4.2-bo'lim.
@@ -258,7 +259,7 @@ export function DataList<T>({
       {/* Saqlangan ko'rinishlar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
         <button type="button" onClick={() => setActiveView('')} style={chip(activeView === '')}>
-          Hammasi
+          {t("Hammasi")}
         </button>
         {views.map((v) => (
           <span key={v.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -269,7 +270,7 @@ export function DataList<T>({
               type="button"
               onClick={() => removeView(v.id)}
               aria-label={`${v.name} ko‘rinishini o‘chirish`}
-              title="Ko‘rinishni o‘chirish"
+              title={t("Ko‘rinishni o‘chirish")}
               style={{
                 width: 26,
                 height: 26,
@@ -287,7 +288,7 @@ export function DataList<T>({
         ))}
         <div style={{ flex: 1 }} />
         <button type="button" onClick={() => setShowColumns((v) => !v)} style={chip(showColumns)}>
-          Ustunlar
+          {t("Ustunlar")}
         </button>
       </div>
 
@@ -299,8 +300,8 @@ export function DataList<T>({
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
         <input
           ref={nameRef}
-          placeholder="Joriy filtrni ko‘rinish sifatida saqlash — nom bering"
-          aria-label="Yangi ko‘rinish nomi"
+          placeholder={t("Joriy filtrni ko‘rinish sifatida saqlash — nom bering")}
+          aria-label={t("Yangi ko‘rinish nomi")}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -331,7 +332,7 @@ export function DataList<T>({
             cursor: 'pointer',
           }}
         >
-          Saqlash
+          {t("Saqlash")}
         </button>
       </div>
       ) : null}
@@ -339,7 +340,7 @@ export function DataList<T>({
       {showColumns ? (
         <div className="alv-card" style={{ padding: 16, marginBottom: 14 }}>
           <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>
-            Ustunlar — ko‘rinishi va tartibi
+            {t("Ustunlar — ko‘rinishi va tartibi")}
           </strong>
           <div style={{ display: 'grid', gap: 6 }}>
             {order.map((key, i) => {
@@ -363,9 +364,9 @@ export function DataList<T>({
                     style={{ width: 16, height: 16, accentColor: 'var(--alv-brand)' }}
                   />
                   <label htmlFor={`col-${storageKey}-${key}`} style={{ flex: 1, fontSize: 14 }}>
-                    {col.label}
+                    {t(col.label)}
                     {col.locked ? (
-                      <span style={{ color: 'var(--alv-muted)', fontSize: 12.5 }}> · doimiy</span>
+                      <span style={{ color: 'var(--alv-muted)', fontSize: 12.5 }}> {t("· doimiy")}</span>
                     ) : null}
                   </label>
                   <button
@@ -407,7 +408,7 @@ export function DataList<T>({
               fontSize: 13.5,
             }}
           >
-            Dastlabki holatga qaytarish
+            {t("Dastlabki holatga qaytarish")}
           </button>
         </div>
       ) : null}
@@ -449,7 +450,7 @@ export function DataList<T>({
             borderRadius: 12,
           }}
         >
-          <strong style={{ fontSize: 14 }}>{selected.size} ta tanlandi</strong>
+          <strong style={{ fontSize: 14 }}>{selected.size} {t("ta tanlandi")}</strong>
           <button
             type="button"
             onClick={() => setSelected(new Set())}
@@ -463,7 +464,7 @@ export function DataList<T>({
               fontSize: 13,
             }}
           >
-            Bekor qilish
+            {t("Bekor qilish")}
           </button>
           <div style={{ flex: 1 }} />
           {bulkActions.map((a) => (
@@ -483,13 +484,18 @@ export function DataList<T>({
                 cursor: busy ? 'wait' : 'pointer',
               }}
             >
-              {a.label}
+              {t(a.label)}
             </button>
           ))}
         </div>
       ) : null}
 
-      <div className="alv-card" style={{ overflowX: 'auto' }}>
+      {/*
+        `alv-dl` — jadval uchun uslub ilgagi. Ustun sarlavhasi
+        skroll paytida joyida qoladi: 500 qatorli ro'yxatda pastga
+        tushgan xodim qaysi ustun nima ekanini yo'qotmaydi.
+      */}
+      <div className="alv-card alv-dl" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr>
@@ -497,7 +503,7 @@ export function DataList<T>({
                 <th style={{ ...th, width: 44 }}>
                   <input
                     type="checkbox"
-                    aria-label="Hammasini tanlash"
+                    aria-label={t("Hammasini tanlash")}
                     checked={allSelected}
                     onChange={() => setSelected(allSelected ? new Set() : new Set(allIds))}
                     style={{ width: 16, height: 16, accentColor: 'var(--alv-brand)' }}
@@ -506,7 +512,7 @@ export function DataList<T>({
               ) : null}
               {ordered.map((c) => (
                 <th key={c.key} style={{ ...th, textAlign: c.align ?? 'left', minWidth: c.minWidth }}>
-                  {c.label}
+                  {t(c.label)}
                 </th>
               ))}
             </tr>
@@ -560,7 +566,7 @@ export function DataList<T>({
                         <td style={td} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            aria-label="Qatorni tanlash"
+                            aria-label={t("Qatorni tanlash")}
                             checked={on}
                             onChange={() =>
                               setSelected((prev) => {
@@ -609,7 +615,7 @@ export function DataList<T>({
                             cursor: 'pointer',
                           }}
                         >
-                          Filtrni tozalash
+                          {t("Filtrni tozalash")}
                         </button>
                       ) : null}
                     </>

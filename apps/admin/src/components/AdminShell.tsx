@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { adminApi } from '@/lib/api';
 import { navSections, visibleNav, type NavItem } from '@/lib/nav';
 import { cachedSession, clearSession, loadSession } from '@/lib/session-cache';
+import { LocaleSwitch } from './LocaleSwitch';
 import { NavIcon } from './NavIcon';
 import { LinkPending, NavPendingProvider, NavProgress } from './NavPending';
 
@@ -25,6 +27,22 @@ import { LinkPending, NavPendingProvider, NavProgress } from './NavPending';
  * Sidebar huquqlar bo'yicha quriladi (TZ 58, 74) — foydalanuvchi
  * ko'ra olmaydigan bo'lim menyuda ham chiqmaydi.
  */
+/**
+ * Rol kodini o'qiladigan nomga aylantiradi.
+ *
+ * `SUPER_ADMIN` — bu bazadagi kalit, ekranga chiqadigan matn emas.
+ */
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: 'Bosh administrator',
+  ADMIN: 'Administrator',
+  MANAGER: 'Menejer',
+  OPERATOR: 'Operator',
+  COURIER: 'Kuryer',
+  ACCOUNTANT: 'Buxgalter',
+  CONTENT: 'Kontent muharriri',
+  VIEWER: 'Kuzatuvchi',
+};
+
 export function AdminShell({
   title,
   actions,
@@ -88,7 +106,7 @@ export function AdminShell({
     return (
       <div className="alv-adm__boot">
         <span className="alv-adm__spinner" aria-hidden="true" />
-        Yuklanmoqda…
+        {t("Yuklanmoqda…")}
       </div>
     );
   }
@@ -118,14 +136,16 @@ export function AdminShell({
         </button>
 
         <Link href="/" className="alv-adm__brand">
-          ALIVER<span>.UZ</span>
+          ALIVER<span>{t(".UZ")}</span>
         </Link>
 
-        <span className="alv-adm__env">Admin</span>
+        <span className="alv-adm__env">{t("Admin")}</span>
+
+        <LocaleSwitch />
 
         <div className="alv-adm__who">
-          <span className="alv-adm__whoName">{who.name ?? who.email ?? 'Admin'}</span>
-          <span className="alv-adm__whoRole">{role}</span>
+          <span className="alv-adm__whoName">{who.name ?? who.email ?? t("Admin")}</span>
+          <span className="alv-adm__whoRole">{t(ROLE_LABEL[role] ?? role)}</span>
           <button
             type="button"
             className="alv-adm__exit"
@@ -137,7 +157,7 @@ export function AdminShell({
                 .finally(() => router.push('/login'));
             }}
           >
-            Chiqish
+            {t("Chiqish")}
           </button>
         </div>
       </header>
@@ -146,7 +166,7 @@ export function AdminShell({
         <button
           type="button"
           className="alv-adm__scrim"
-          aria-label="Menyuni yopish"
+          aria-label={t("Menyuni yopish")}
           onClick={() => setOpen(false)}
         />
 
@@ -155,7 +175,7 @@ export function AdminShell({
             {sections.map((section) => (
               <div key={section.key} className="alv-nav__group">
                 {section.label ? (
-                  <div className="alv-nav__title">{section.label}</div>
+                  <div className="alv-nav__title">{t(section.label)}</div>
                 ) : null}
                 {section.items.map((item) => {
                   const base = item.href.split('#')[0];
@@ -171,11 +191,11 @@ export function AdminShell({
                       }`}
                     >
                       <NavIcon name={item.icon} />
-                      <span className="alv-nav__label">{item.label}</span>
+                      <span className="alv-nav__label">{t(item.label)}</span>
                       <LinkPending />
                       {!item.ready ? (
-                        <span className="alv-nav__soon" title="Bu bo‘lim hali yozilmagan">
-                          tez orada
+                        <span className="alv-nav__soon" title={t("Bu bo‘lim hali yozilmagan")}>
+                          {t("tez orada")}
                         </span>
                       ) : null}
                     </Link>

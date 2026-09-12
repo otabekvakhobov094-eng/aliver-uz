@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { use, useCallback, useEffect, useState } from 'react';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -82,13 +83,13 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
 
   if (!row) {
     return (
-      <AdminShell title="Qaytarish">
+      <AdminShell title={t("Qaytarish")}>
         {error ? (
           <p role="alert" style={{ color: 'var(--alv-danger)', fontWeight: 600 }}>
             {error}
           </p>
         ) : (
-          <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
         )}
       </AdminShell>
     );
@@ -101,13 +102,13 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
     <AdminShell title={`Qaytarish ${row.number}`}>
       <div style={{ marginBottom: 16, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <Link href="/returns" style={{ fontSize: 13.5, color: 'var(--alv-muted)' }}>
-          ← Qaytarishlar
+          {t("← Qaytarishlar")}
         </Link>
         <Link
           href={`/orders/${row.order.id}`}
           style={{ fontSize: 13.5, color: 'var(--alv-brand)' }}
         >
-          Buyurtma {row.order.number} →
+          {t("Buyurtma")} {row.order.number} →
         </Link>
       </div>
 
@@ -137,11 +138,10 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
 
       <div className="alv-admin-cols">
         <div>
-          <Card title="Pozitsiyalar">
+          <Card title={t("Pozitsiyalar")}>
             {row.status === 'APPROVED' || row.status === 'IN_TRANSIT' ? (
               <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)', lineHeight: 1.55 }}>
-                Tovarni ko‘rib chiqib, har bir pozitsiya holatini belgilang. Faqat «qayta sotiladi»
-                deb belgilangani omborga qaytadi — qolganlari harakatlar jurnalida qoladi.
+                {t("Tovarni ko‘rib chiqib, har bir pozitsiya holatini belgilang. Faqat «qayta sotiladi» deb belgilangani omborga qaytadi — qolganlari harakatlar jurnalida qoladi.")}
               </p>
             ) : null}
 
@@ -183,7 +183,7 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
                   {row.status === 'REFUNDED' || i.restocked ? (
                     <Badge tone={i.condition === 'RESELLABLE' ? 'mint' : 'low'}>
                       {label(CONDITION_LABEL, i.condition)}
-                      {i.restocked ? ' · omborda' : ''}
+                      {i.restocked ? t(" · omborda") : ''}
                     </Badge>
                   ) : (
                     <select
@@ -212,19 +212,18 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
             <div
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}
             >
-              <span style={{ fontWeight: 700 }}>Qaytariladi</span>
+              <span style={{ fontWeight: 700 }}>{t("Qaytariladi")}</span>
               <strong style={{ fontSize: 20 }}>{formatTiyin(row.refundAmount)}</strong>
             </div>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--alv-muted)', lineHeight: 1.5 }}>
-              Summa buyurtmaning MUZLATILGAN nusxasidan hisoblangan: chegirma ulushi hisobga
-              olingan, katalogdagi joriy narx ta’sir qilmaydi.
+              {t("Summa buyurtmaning MUZLATILGAN nusxasidan hisoblangan: chegirma ulushi hisobga olingan, katalogdagi joriy narx ta’sir qilmaydi.")}
             </p>
           </Card>
 
-          <Card title="Holatni o‘zgartirish">
+          <Card title={t("Holatni o‘zgartirish")}>
             {next.length === 0 ? (
               <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-                Bu holatdan boshqa holatga o‘tib bo‘lmaydi — jarayon yakunlangan.
+                {t("Bu holatdan boshqa holatga o‘tib bo‘lmaydi — jarayon yakunlangan.")}
               </p>
             ) : (
               <>
@@ -232,7 +231,7 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={2}
-                  placeholder="Izoh (rad etishda mijozga ko‘rsatiladi)"
+                  placeholder={t("Izoh (rad etishda mijozga ko‘rsatiladi)")}
                   style={{ ...field, resize: 'vertical' }}
                 />
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -251,15 +250,14 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
                   <p
                     style={{ margin: 0, fontSize: 12, color: 'var(--alv-muted)', lineHeight: 1.5 }}
                   >
-                    «Qabul qilindi» bosilganda {resellableCount} ta pozitsiya omborga qaytadi.
+                    {t("«Qabul qilindi» bosilganda")} {resellableCount} {t("ta pozitsiya omborga qaytadi.")}
                   </p>
                 ) : null}
                 {next.includes('REFUNDED') ? (
                   <p
                     style={{ margin: 0, fontSize: 12, color: 'var(--alv-muted)', lineHeight: 1.5 }}
                   >
-                    «Pul qaytarildi» — to‘lov moduli orqali qaytariladi va qaytarish cheki navbatga
-                    tushadi. Click va naqd to‘lovda pul o‘tkazmasi qo‘lda bajariladi.
+                    {t("«Pul qaytarildi» — to‘lov moduli orqali qaytariladi va qaytarish cheki navbatga tushadi. Click va naqd to‘lovda pul o‘tkazmasi qo‘lda bajariladi.")}
                   </p>
                 ) : null}
               </>
@@ -268,7 +266,7 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div>
-          <Card title="Ma’lumot">
+          <Card title={t("Ma’lumot")}>
             <dl style={{ margin: 0, display: 'grid', gap: 8, fontSize: 13.5 }}>
               <Line k="Buyurtma" v={row.order.number} />
               <Line k="Yetkazish narxi" v={formatTiyin(row.order.shippingTotal)} />
@@ -278,7 +276,7 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
             {row.comment ? (
               <div style={{ display: 'grid', gap: 4 }}>
                 <span style={{ fontSize: 12, color: 'var(--alv-muted)', fontWeight: 700 }}>
-                  Mijoz izohi
+                  {t("Mijoz izohi")}
                 </span>
                 <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-ink-2)', lineHeight: 1.55 }}>
                   {row.comment}
@@ -289,7 +287,7 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
             {row.resolutionNote ? (
               <div style={{ display: 'grid', gap: 4 }}>
                 <span style={{ fontSize: 12, color: 'var(--alv-muted)', fontWeight: 700 }}>
-                  Operator izohi
+                  {t("Operator izohi")}
                 </span>
                 <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-ink-2)', lineHeight: 1.55 }}>
                   {row.resolutionNote}
@@ -298,9 +296,9 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
             ) : null}
           </Card>
 
-          <Card title="Qaytarish cheki">
+          <Card title={t("Qaytarish cheki")}>
             {row.receipts.length === 0 ? (
-              <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>Chek yo‘q.</p>
+              <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>{t("Chek yo‘q.")}</p>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 }}>
                 {row.receipts.map((r) => (
@@ -313,7 +311,7 @@ export default function ReturnDetailPage({ params }: { params: Promise<{ id: str
                         rel="noreferrer"
                         style={{ marginLeft: 8, color: 'var(--alv-brand)' }}
                       >
-                        {r.fiscalSign ?? 'Chek'}
+                        {r.fiscalSign ?? t("Chek")}
                       </a>
                     ) : null}
                   </li>

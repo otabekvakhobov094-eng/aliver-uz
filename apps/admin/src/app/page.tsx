@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
+import { money } from '@/lib/money';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type DashboardData } from '@/lib/api';
 import { fmtDate, fmtNumber } from '@/lib/order-labels';
@@ -14,6 +16,11 @@ import { fmtDate, fmtNumber } from '@/lib/order-labels';
  * olinadi, shuning uchun navigatsiya bitta joyda boshqariladi.
  */
 
+/*
+ * Ro'yxat modul darajasida — ya'ni til o'rnatilishidan OLDIN
+ * hisoblanadi. Shuning uchun bu yerda O'ZBEKCHA kalit turadi,
+ * tarjima esa chizilgan joyida qo'llanadi.
+ */
 const PERIODS: Array<{ key: string; label: string }> = [
   { key: 'today', label: 'Bugun' },
   { key: 'yesterday', label: 'Kecha' },
@@ -22,11 +29,6 @@ const PERIODS: Array<{ key: string; label: string }> = [
   { key: 'month', label: 'Shu oy' },
 ];
 
-/** Tiyinni so'mga aylantiradi. Pul hech qachon suzuvchi nuqtada saqlanmaydi. */
-function money(tiyin: string | number | null | undefined): string {
-  const value = Number(tiyin ?? 0) / 100;
-  return `${fmtNumber(value)} so'm`;
-}
 
 function delta(current: string, previous: string): { text: string; up: boolean } | null {
   const a = Number(current ?? 0);
@@ -50,12 +52,14 @@ function Kpi({
   return (
     <div
       className="alv-card"
-      style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}
+      style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}
     >
       <div style={{ color: 'var(--alv-muted)', fontSize: 13 }}>{label}</div>
       <strong
         style={{
-          fontSize: 26,
+          /* Telefonda ikki ustunda «1 845 000 so'm» uch qatorga
+             bo'linib ketardi. Kenglikka qarab kichrayadi. */
+          fontSize: 'clamp(19px, 4.6vw, 26px)',
           lineHeight: 1.15,
           fontVariantNumeric: 'tabular-nums',
           color: tone === 'warn' ? 'var(--alv-amber, #9A5A12)' : undefined,
@@ -66,11 +70,11 @@ function Kpi({
       </strong>
       {hint ? (
         <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>
-          {typeof hint === 'string' ? (
+          {typeof hint === "string" ? (
             hint
           ) : (
             <span style={{ color: hint.up ? 'var(--alv-mint, #1F7A5C)' : 'var(--alv-danger, #C0392B)' }}>
-              {hint.text} <span style={{ color: 'var(--alv-muted)' }}>oldingi davrga nisbatan</span>
+              {hint.text} <span style={{ color: 'var(--alv-muted)' }}>{t("oldingi davrga nisbatan")}</span>
             </span>
           )}
         </div>
@@ -92,7 +96,7 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
   if (!Array.isArray(series) || series.length === 0) {
     return (
       <p style={{ color: 'var(--alv-muted)', margin: 0 }}>
-        Bu davrda to&apos;langan buyurtma yo&apos;q.
+        {t("Bu davrda to&apos;langan buyurtma yo&apos;q.")}
       </p>
     );
   }
@@ -120,12 +124,16 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
           return (
             <div
               key={point.day}
-              title={`${fmtDate(day)} — ${money(point.revenue)} · ${point.orders} ta buyurtma`}
+              title={`${fmtDate(day)} — ${money(point.revenue)} · ${point.orders} ${t('ta buyurtma')}`}
               style={{
                 flex: '1 0 14px',
                 minWidth: 14,
                 height,
-                background: 'var(--alv-brand, #D6336C)',
+                /* Ustunlar diagramma rangida — panelda brend pushti
+                   emas, neytral ko'k ishlatiladi: rang bu yerda
+                   BEZAK emas, «bu o'lchov» degan belgi. */
+                background: 'var(--adm-accent, #2C6ECB)',
+                opacity: 0.9,
                 borderRadius: '4px 4px 0 0',
               }}
             />
@@ -143,7 +151,7 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
         }}
       >
         <span>{first ? fmtDate(first.day) : ''}</span>
-        <span>Eng yuqori kun: {money(peak)}</span>
+        <span>{t("Eng yuqori kun:")} {money(peak)}</span>
         <span>{last ? fmtDate(last.day) : ''}</span>
       </div>
     </div>
@@ -186,7 +194,7 @@ export default function AdminHome() {
     : null;
 
   return (
-    <AdminShell title="Dashboard">
+    <AdminShell title={t("Dashboard")}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 22 }}>
         {PERIODS.map((p) => {
           const active = p.key === period;
@@ -207,7 +215,7 @@ export default function AdminHome() {
                 cursor: 'pointer',
               }}
             >
-              {p.label}
+              {t(p.label)}
             </button>
           );
         })}
@@ -219,7 +227,7 @@ export default function AdminHome() {
           className="alv-card"
           style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}
         >
-          <strong>Ma&apos;lumot yuklanmadi</strong>
+          <strong>{t("Ma&apos;lumot yuklanmadi")}</strong>
           <span style={{ color: 'var(--alv-muted)', fontSize: 14 }}>{error}</span>
           <button
             type="button"
@@ -234,41 +242,42 @@ export default function AdminHome() {
               cursor: 'pointer',
             }}
           >
-            Qayta urinish
+            {t("Qayta urinish")}
           </button>
         </div>
       ) : null}
 
-      {loading && !data ? <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p> : null}
+      {loading && !data ? <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p> : null}
 
       {data ? (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-              gap: 14,
-            }}
-          >
-            <Kpi label="Tushum" value={money(data.revenue)} hint={revenueDelta} />
-            <Kpi label="To'langan buyurtmalar" value={String(data.paidOrders)} hint={ordersDelta} />
-            <Kpi label="O'rtacha chek" value={money(data.avgOrder)} />
-            <Kpi label="Yangi mijozlar" value={String(data.newCustomers)} />
+          {/*
+            Ustunlar soni `admin.css` da: inline uslub media
+            so'rovlaridan kuchli bo'lgani uchun telefon va monitor
+            uchun bitta qiymat to'g'ri kelmasdi — monitorda oltita
+            kartochka bir qatorga tiqilib, «1 845 000 so'm» uch
+            qatorga bo'linib ketardi.
+          */}
+          <div className="alv-kpi">
+            <Kpi label={t("Tushum")} value={money(data.revenue)} hint={revenueDelta} />
+            <Kpi label={t("To'langan buyurtmalar")} value={String(data.paidOrders)} hint={ordersDelta} />
+            <Kpi label={t("O'rtacha chek")} value={money(data.avgOrder)} />
+            <Kpi label={t("Yangi mijozlar")} value={String(data.newCustomers)} />
             <Kpi
-              label="Barcha buyurtmalar"
+              label={t("Barcha buyurtmalar")}
               value={String(data.allOrders)}
-              hint={`shundan ${data.cancelledOrders} ta bekor qilingan`}
+              hint={`${t('shundan')} ${data.cancelledOrders} ${t('ta bekor qilingan')}`}
             />
             <Kpi
-              label="Kam qolgan mahsulot"
+              label={t("Kam qolgan mahsulot")}
               value={String(data.lowStock)}
               tone={data.lowStock > 0 ? 'warn' : undefined}
-              hint={data.lowStock > 0 ? 'Omborni to‘ldirish kerak' : 'Hammasi yetarli'}
+              hint={data.lowStock > 0 ? t('Omborni to‘ldirish kerak') : t('Hammasi yetarli')}
             />
           </div>
 
           <section style={{ marginTop: 32 }}>
-            <h2 style={{ fontSize: 18, margin: '0 0 14px' }}>Tushum dinamikasi</h2>
+            <h2 style={{ fontSize: 18, margin: '0 0 14px' }}>{t("Tushum dinamikasi")}</h2>
             <div className="alv-card" style={{ padding: 20 }}>
               <RevenueChart series={data.series} />
             </div>

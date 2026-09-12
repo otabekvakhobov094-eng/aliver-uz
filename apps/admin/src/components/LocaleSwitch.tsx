@@ -1,12 +1,12 @@
 'use client';
 
-import { LOCALES, currentLocale, switchLocale } from '@/lib/i18n';
+import { LOCALES, currentLocale, switchLocale, t } from '@/lib/i18n';
 
 /** Yuqori qatordagi til tugmalari. */
 export function LocaleSwitch() {
   const active = currentLocale();
   return (
-    <div className="alv-adm__lang" role="group" aria-label="Til / Язык">
+    <div className="alv-adm__lang" role="group" aria-label={t("Til / Язык")}>
       {LOCALES.map((l) => (
         <button
           key={l.value}

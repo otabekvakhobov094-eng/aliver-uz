@@ -21,3 +21,4 @@ coverage/
 # Git bundle fayllari repo papkasiga yoziladi (kod uzatish uchun) —
 # ular hech qachon commit qilinmaydi.
 *.bundle
+tmp/

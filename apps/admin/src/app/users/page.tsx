@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminRole, type AdminUser } from '@/lib/api';
 import { fmtDateTime } from '@/lib/order-labels';
@@ -71,7 +72,7 @@ export default function UsersPage() {
   };
 
   return (
-    <AdminShell title="Adminlar">
+    <AdminShell title={t("Adminlar")}>
       {error ? (
         <div
           role="alert"
@@ -95,8 +96,8 @@ export default function UsersPage() {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Ism, e-pochta yoki telefon"
-          aria-label="Adminlarni qidirish"
+          placeholder={t("Ism, e-pochta yoki telefon")}
+          aria-label={t("Adminlarni qidirish")}
           style={{ ...input, flex: '1 1 260px' }}
         />
         <button
@@ -112,7 +113,7 @@ export default function UsersPage() {
             cursor: 'pointer',
           }}
         >
-          {creating ? 'Yopish' : 'Yangi admin'}
+          {creating ? t("Yopish") : t("Yangi admin")}
         </button>
       </div>
 
@@ -144,7 +145,7 @@ export default function UsersPage() {
           >
             <input
               required
-              placeholder="To‘liq ism"
+              placeholder={t("To‘liq ism")}
               value={form.fullName}
               onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               style={input}
@@ -152,13 +153,13 @@ export default function UsersPage() {
             <input
               required
               type="email"
-              placeholder="E-pochta"
+              placeholder={t("E-pochta")}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               style={input}
             />
             <input
-              placeholder="Telefon"
+              placeholder={t("Telefon")}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               style={input}
@@ -168,9 +169,9 @@ export default function UsersPage() {
               value={form.roleId}
               onChange={(e) => setForm({ ...form, roleId: e.target.value })}
               style={input}
-              aria-label="Rol"
+              aria-label={t("Rol")}
             >
-              <option value="">Rolni tanlang</option>
+              <option value="">{t("Rolni tanlang")}</option>
               {roles.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
@@ -180,15 +181,14 @@ export default function UsersPage() {
             <input
               required
               type="password"
-              placeholder="Boshlang‘ich parol"
+              placeholder={t("Boshlang‘ich parol")}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               style={input}
             />
           </div>
           <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-            Parol kamida 10 ta belgidan iborat bo‘lsin va faqat raqamlardan tuzilmasin. Xodim
-            birinchi kirgach uni o‘zgartirsin.
+            {t("Parol kamida 10 ta belgidan iborat bo‘lsin va faqat raqamlardan tuzilmasin. Xodim birinchi kirgach uni o‘zgartirsin.")}
           </p>
           <button
             type="submit"
@@ -204,7 +204,7 @@ export default function UsersPage() {
               cursor: busy ? 'wait' : 'pointer',
             }}
           >
-            Yaratish
+            {t("Yaratish")}
           </button>
         </form>
       ) : null}
@@ -213,7 +213,7 @@ export default function UsersPage() {
         <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr>
-              {['Ism', 'Rol', 'Holat', 'Oxirgi kirish', '2FA', ''].map((h) => (
+              {[t("Ism"), t("Rol"), t("Holat"), t("Oxirgi kirish"), t("2FA"), ''].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -266,7 +266,7 @@ export default function UsersPage() {
                       fontSize: 11,
                     }}
                   >
-                    {u.status === 'ACTIVE' ? 'Faol' : 'Bloklangan'}
+                    {u.status === 'ACTIVE' ? t("Faol") : t("Bloklangan")}
                   </span>
                 </td>
                 <td
@@ -286,7 +286,7 @@ export default function UsersPage() {
                     color: u.twoFaEnabled ? 'var(--alv-mint,#1F7A5C)' : 'var(--alv-amber,#9A5A12)',
                   }}
                 >
-                  {u.twoFaEnabled ? 'Yoqilgan' : 'Yo‘q'}
+                  {u.twoFaEnabled ? t("Yoqilgan") : t("Yo‘q")}
                 </td>
                 <td
                   style={{
@@ -312,7 +312,7 @@ export default function UsersPage() {
                       fontSize: 13,
                     }}
                   >
-                    Parol
+                    {t("Parol")}
                   </button>
                   <button
                     type="button"
@@ -335,7 +335,7 @@ export default function UsersPage() {
                       fontSize: 13,
                     }}
                   >
-                    {u.status === 'ACTIVE' ? 'Bloklash' : 'Faollashtirish'}
+                    {u.status === 'ACTIVE' ? t("Bloklash") : t("Faollashtirish")}
                   </button>
                 </td>
               </tr>
@@ -343,7 +343,7 @@ export default function UsersPage() {
             {users.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ padding: 28, textAlign: 'center', color: 'var(--alv-muted)' }}>
-                  {q ? 'Bu so‘rovga mos admin topilmadi' : 'Hali admin yo‘q'}
+                  {q ? t("Bu so‘rovga mos admin topilmadi") : t("Hali admin yo‘q")}
                 </td>
               </tr>
             ) : null}
@@ -356,15 +356,15 @@ export default function UsersPage() {
           className="alv-card"
           style={{ padding: 20, marginTop: 20, display: 'grid', gap: 12, maxWidth: 460 }}
         >
-          <strong>{resetFor.fullName} uchun yangi parol</strong>
+          <strong>{resetFor.fullName} {t("uchun yangi parol")}</strong>
           <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-            Saqlangach bu xodimning barcha ochiq sessiyalari yopiladi.
+            {t("Saqlangach bu xodimning barcha ochiq sessiyalari yopiladi.")}
           </p>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Yangi parol"
+            placeholder={t("Yangi parol")}
             style={input}
           />
           <div style={{ display: 'flex', gap: 10 }}>
@@ -389,7 +389,7 @@ export default function UsersPage() {
                 opacity: newPassword.length < 10 ? 0.5 : 1,
               }}
             >
-              Saqlash
+              {t("Saqlash")}
             </button>
             <button
               type="button"
@@ -403,7 +403,7 @@ export default function UsersPage() {
                 cursor: 'pointer',
               }}
             >
-              Bekor qilish
+              {t("Bekor qilish")}
             </button>
           </div>
         </div>

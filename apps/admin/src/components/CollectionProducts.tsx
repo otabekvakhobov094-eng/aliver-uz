@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import {
   adminApi,
   type AdminCollection,
@@ -139,13 +140,13 @@ export function CollectionProducts({
   return (
     <div className="alv-card" style={{ padding: 20, marginBottom: 22, display: 'grid', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-        <strong>«{collection.nameUz}» tarkibi</strong>
+        <strong>«{collection.nameUz}{t("» tarkibi")}</strong>
         <span style={{ color: 'var(--alv-muted)', fontSize: 13 }}>
-          {chosen.length} ta mahsulot · tartib saytda shu ketma-ketlikda ko‘rinadi
+          {chosen.length} {t("ta mahsulot · tartib saytda shu ketma-ketlikda ko‘rinadi")}
         </span>
         <div style={{ flex: 1 }} />
         <button type="button" style={btn} onClick={onClose}>
-          Yopish
+          {t("Yopish")}
         </button>
       </div>
 
@@ -158,13 +159,13 @@ export function CollectionProducts({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 22 }}>
         <div>
           <div style={{ fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--alv-muted)', marginBottom: 6 }}>
-            Kolleksiyada
+            {t("Kolleksiyada")}
           </div>
           {loading ? (
-            <p style={{ color: 'var(--alv-muted)', fontSize: 13 }}>Yuklanmoqda…</p>
+            <p style={{ color: 'var(--alv-muted)', fontSize: 13 }}>{t("Yuklanmoqda…")}</p>
           ) : chosen.length === 0 ? (
             <p style={{ color: 'var(--alv-muted)', fontSize: 13 }}>
-              Bo‘sh. Bo‘sh kolleksiya saytda bo‘sh sahifa bo‘lib ko‘rinadi.
+              {t("Bo‘sh. Bo‘sh kolleksiya saytda bo‘sh sahifa bo‘lib ko‘rinadi.")}
             </p>
           ) : (
             chosen.map((p, i) => (
@@ -178,16 +179,16 @@ export function CollectionProducts({
                     <span style={{ color: 'var(--alv-muted)', fontSize: 12 }}> · {p.status}</span>
                   ) : null}
                 </span>
-                <button type="button" style={btn} aria-label="Yuqoriga" onClick={() => move(i, -1)}>
+                <button type="button" style={btn} aria-label={t("Yuqoriga")} onClick={() => move(i, -1)}>
                   ↑
                 </button>
-                <button type="button" style={btn} aria-label="Pastga" onClick={() => move(i, 1)}>
+                <button type="button" style={btn} aria-label={t("Pastga")} onClick={() => move(i, 1)}>
                   ↓
                 </button>
                 <button
                   type="button"
                   style={btn}
-                  aria-label="Chiqarish"
+                  aria-label={t("Chiqarish")}
                   onClick={() => {
                     setChosen((list) => list.filter((x) => x.id !== p.id));
                   }}
@@ -201,7 +202,7 @@ export function CollectionProducts({
 
         <div>
           <div style={{ fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--alv-muted)', marginBottom: 6 }}>
-            Qo‘shish
+            {t("Qo‘shish")}
           </div>
           <form
             onSubmit={(e) => {
@@ -213,7 +214,7 @@ export function CollectionProducts({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Mahsulot nomi"
+              placeholder={t("Mahsulot nomi")}
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -226,7 +227,7 @@ export function CollectionProducts({
               }}
             />
             <button type="submit" style={btn}>
-              Qidirish
+              {t("Qidirish")}
             </button>
           </form>
           <div style={{ maxHeight: 320, overflowY: 'auto' }}>
@@ -236,12 +237,12 @@ export function CollectionProducts({
                   {p.nameUz}
                 </span>
                 <button type="button" style={btn} disabled={has(p.id)} onClick={() => add(p)}>
-                  {has(p.id) ? 'Bor' : '+ Qo‘shish'}
+                  {has(p.id) ? t("Bor") : t("+ Qo‘shish")}
                 </button>
               </div>
             ))}
             {found.length === 0 ? (
-              <p style={{ color: 'var(--alv-muted)', fontSize: 13 }}>Topilmadi</p>
+              <p style={{ color: 'var(--alv-muted)', fontSize: 13 }}>{t("Topilmadi")}</p>
             ) : null}
           </div>
         </div>
@@ -262,11 +263,11 @@ export function CollectionProducts({
             cursor: busy ? 'wait' : 'pointer',
           }}
         >
-          {confirmEmpty ? 'Ha, tarkibni bo‘shatish' : 'Saqlash'}
+          {confirmEmpty ? t("Ha, tarkibni bo‘shatish") : t("Saqlash")}
         </button>
         {confirmEmpty ? (
           <span style={{ color: 'var(--alv-danger,#C0392B)', fontSize: 13 }}>
-            Ro‘yxat bo‘sh — saqlansa kolleksiyadagi barcha mahsulot chiqarib tashlanadi.
+            {t("Ro‘yxat bo‘sh — saqlansa kolleksiyadagi barcha mahsulot chiqarib tashlanadi.")}
           </span>
         ) : null}
       </div>

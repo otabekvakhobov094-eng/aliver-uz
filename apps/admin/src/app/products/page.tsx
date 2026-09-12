@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -93,7 +94,7 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
   {
     key: 'status',
     label: 'Holat',
-    render: (p) => <Badge tone={STATUS_TONE[p.status] ?? 'neutral'}>{STATUS_LABEL[p.status] ?? p.status}</Badge>,
+    render: (p) => <Badge tone={STATUS_TONE[p.status] ?? 'neutral'}>{t(STATUS_LABEL[p.status] ?? p.status)}</Badge>,
   },
   {
     key: 'price',
@@ -105,7 +106,7 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
           ? formatTiyin(p.minPrice)
           : `${formatTiyin(p.minPrice)} – ${formatTiyin(p.maxPrice)}`}
         {p.hasSale ? (
-          <span style={{ color: 'var(--alv-brand)', marginLeft: 6, fontSize: 12.5 }}>chegirma</span>
+          <span style={{ color: 'var(--alv-brand)', marginLeft: 6, fontSize: 12.5 }}>{t("chegirma")}</span>
         ) : null}
       </span>
     ),
@@ -115,7 +116,7 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
     label: 'Ombor',
     render: (p) => (
       <span style={{ color: p.inStock ? 'var(--alv-mint)' : 'var(--alv-brand-deep)' }}>
-        {p.inStock ? 'Bor' : 'Tugagan'}
+        {p.inStock ? t("Bor") : t("Tugagan")}
       </span>
     ),
   },
@@ -136,7 +137,7 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
       p.ikpuCode ? (
         <code style={{ fontSize: 12.5 }}>{p.ikpuCode}</code>
       ) : (
-        <span style={{ color: 'var(--alv-amber, #9a6200)' }}>yo‘q</span>
+        <span style={{ color: 'var(--alv-amber, #9a6200)' }}>{t("yo‘q")}</span>
       ),
   },
   {
@@ -238,7 +239,7 @@ export default function ProductsPage() {
               whiteSpace: 'nowrap',
             }}
           >
-            {restoring === p.id ? 'Tiklanmoqda…' : 'Tiklash'}
+            {restoring === p.id ? t("Tiklanmoqda…") : t("Tiklash")}
           </button>
         ),
       },
@@ -287,7 +288,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <AdminShell title="Mahsulotlar">
+    <AdminShell title={t("Mahsulotlar")}>
       {error ? (
         <div
           role="alert"
@@ -309,7 +310,7 @@ export default function ProductsPage() {
         }}
       >
         <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14 }}>
-          Jami {total} ta mahsulot
+          {t("Jami")} {total} {t("ta mahsulot")}
         </p>
         <Link
           href="/products/yangi"
@@ -322,7 +323,7 @@ export default function ProductsPage() {
             fontSize: 14,
           }}
         >
-          + Yangi mahsulot
+          {t("+ Yangi mahsulot")}
         </Link>
       </div>
 
@@ -340,29 +341,29 @@ export default function ProductsPage() {
           setFilters({ q: '', status: '' });
           setShowDeleted(false);
         }}
-        emptyTitle="Hali mahsulot qo‘shilmagan"
-        emptyHint="Excel orqali import qiling yoki qo‘lda yarating."
-        noResultsTitle="Bu so‘rovga mos mahsulot topilmadi"
+        emptyTitle={t("Hali mahsulot qo‘shilmagan")}
+        emptyHint={t("Excel orqali import qiling yoki qo‘lda yarating.")}
+        noResultsTitle={t("Bu so‘rovga mos mahsulot topilmadi")}
         filterBar={
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             <input
               type="search"
               value={q}
               onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              placeholder="Nom, SKU yoki barcode — kirill ham ishlaydi"
-              aria-label="Mahsulot qidirish"
+              placeholder={t("Nom, SKU yoki barcode — kirill ham ishlaydi")}
+              aria-label={t("Mahsulot qidirish")}
               style={{ ...input, flex: '1 1 280px' }}
             />
             <select
               value={status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              aria-label="Holat bo‘yicha filtr"
+              aria-label={t("Holat bo‘yicha filtr")}
               disabled={showDeleted}
               style={input}
             >
               {STATUS_FILTERS.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
@@ -381,7 +382,7 @@ export default function ProductsPage() {
                 checked={showDeleted}
                 onChange={(e) => setShowDeleted(e.target.checked)}
               />
-              O‘chirilganlar
+              {t("O‘chirilganlar")}
             </label>
           </div>
         }

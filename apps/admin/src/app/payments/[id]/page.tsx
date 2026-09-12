@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { use, useCallback, useEffect, useState } from 'react';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -84,13 +85,13 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
 
   if (!payment) {
     return (
-      <AdminShell title="To‘lov">
+      <AdminShell title={t("To‘lov")}>
         {error ? (
           <p role="alert" style={{ color: 'var(--alv-danger)', fontWeight: 600 }}>
             {error}
           </p>
         ) : (
-          <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
         )}
       </AdminShell>
     );
@@ -105,14 +106,14 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
     <AdminShell title={`To‘lov ${payment.orderNumber ?? ''}`}>
       <div style={{ marginBottom: 16, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <Link href="/payments" style={{ fontSize: 13.5, color: 'var(--alv-muted)' }}>
-          ← To‘lovlar
+          {t("← To‘lovlar")}
         </Link>
         {payment.orderId ? (
           <Link
             href={`/orders/${payment.orderId}`}
             style={{ fontSize: 13.5, color: 'var(--alv-brand)' }}
           >
-            Buyurtmani ochish →
+            {t("Buyurtmani ochish →")}
           </Link>
         ) : null}
       </div>
@@ -133,7 +134,7 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
         <strong style={{ fontSize: 20 }}>{formatTiyin(payment.amount)}</strong>
         {BigInt(payment.refundedAmount) > 0n ? (
           <span style={{ color: 'var(--alv-danger)', fontWeight: 700 }}>
-            −{formatTiyin(payment.refundedAmount)} qaytarilgan
+            −{formatTiyin(payment.refundedAmount)} {t("qaytarilgan")}
           </span>
         ) : null}
       </div>
@@ -144,33 +145,30 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
       <div className="alv-admin-cols">
         <div>
           {canCash ? (
-            <Card title="Naqd to‘lovni qabul qilish">
+            <Card title={t("Naqd to‘lovni qabul qilish")}>
               <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)', lineHeight: 1.5 }}>
-                Pul kuryerdan olingach bosiladi. Shu paytda fiskal chek beriladi — qonun bo‘yicha
-                chek pul olingan paytda beriladi.
+                {t("Pul kuryerdan olingach bosiladi. Shu paytda fiskal chek beriladi — qonun bo‘yicha chek pul olingan paytda beriladi.")}
               </p>
               <input
                 value={cashComment}
                 onChange={(e) => setCashComment(e.target.value)}
-                placeholder="Izoh (masalan: kvitansiya №44)"
+                placeholder={t("Izoh (masalan: kvitansiya №44)")}
                 style={field}
               />
               <Button variant="primary" disabled={busy} onClick={() => void cash()}>
-                To‘lov qabul qilindi
+                {t("To‘lov qabul qilindi")}
               </Button>
             </Card>
           ) : null}
 
           {canRefund ? (
-            <Card title="Qaytarish">
+            <Card title={t("Qaytarish")}>
               <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)', lineHeight: 1.5 }}>
-                Qolgan summa: <strong>{formatTiyin(remaining.toString())}</strong>. Qaytarish cheki
-                avtomatik navbatga qo‘yiladi. Click va naqd to‘lovda pul o‘tkazmasi QO‘LDA
-                bajariladi — yozuv esa baribir qoladi.
+                {t("Qolgan summa:")} <strong>{formatTiyin(remaining.toString())}</strong>{t(". Qaytarish cheki avtomatik navbatga qo‘yiladi. Click va naqd to‘lovda pul o‘tkazmasi QO‘LDA bajariladi — yozuv esa baribir qoladi.")}
               </p>
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>
-                  Summa (so‘m)
+                  {t("Summa (so‘m)")}
                 </span>
                 <input
                   value={refundAmount}
@@ -181,13 +179,13 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
               </label>
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>
-                  Sabab (majburiy)
+                  {t("Sabab (majburiy)")}
                 </span>
                 <textarea
                   value={refundReason}
                   onChange={(e) => setRefundReason(e.target.value)}
                   rows={2}
-                  placeholder="Masalan: mijoz tovarni qaytardi, holati yaxshi"
+                  placeholder={t("Masalan: mijoz tovarni qaytardi, holati yaxshi")}
                   style={{ ...field, resize: 'vertical' }}
                 />
               </label>
@@ -196,14 +194,14 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
                 disabled={busy || refundReason.trim().length < 3}
                 onClick={() => void refund()}
               >
-                Qaytarishni rasmiylashtirish
+                {t("Qaytarishni rasmiylashtirish")}
               </Button>
             </Card>
           ) : null}
 
-          <Card title="Tranzaksiyalar">
+          <Card title={t("Tranzaksiyalar")}>
             {payment.transactions.length === 0 ? (
-              <Empty>Tranzaksiya yozuvi yo‘q.</Empty>
+              <Empty>{t("Tranzaksiya yozuvi yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
                 {payment.transactions.map((t) => (
@@ -223,9 +221,9 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
             )}
           </Card>
 
-          <Card title="Provayder bilan aloqa">
+          <Card title={t("Provayder bilan aloqa")}>
             {payment.logs.length === 0 ? (
-              <Empty>Log yozuvi yo‘q.</Empty>
+              <Empty>{t("Log yozuvi yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 12 }}>
                 {payment.logs.map((l) => (
@@ -255,7 +253,7 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         <div>
-          <Card title="Ma’lumot">
+          <Card title={t("Ma’lumot")}>
             <dl style={{ margin: 0, display: 'grid', gap: 8, fontSize: 13.5 }}>
               <Line k="Tranzaksiya id" v={payment.providerTxnId ?? '—'} />
               <Line k="To‘langan" v={payment.paidAt ? fmtDateTime(payment.paidAt) : '—'} />
@@ -264,9 +262,9 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
             </dl>
           </Card>
 
-          <Card title="Fiskal cheklar">
+          <Card title={t("Fiskal cheklar")}>
             {payment.fiscal.length === 0 ? (
-              <Empty>Chek yo‘q.</Empty>
+              <Empty>{t("Chek yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
                 {payment.fiscal.map((f) => (
@@ -285,7 +283,7 @@ export default function PaymentDetailPage({ params }: { params: Promise<{ id: st
                         rel="noreferrer"
                         style={{ fontSize: 12, color: 'var(--alv-brand)' }}
                       >
-                        Chekni ochish{f.fiscalSign ? ` · ${f.fiscalSign}` : ''}
+                        {t("Chekni ochish")}{f.fiscalSign ? ` · ${f.fiscalSign}` : ''}
                       </a>
                     ) : null}
                   </li>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import Link from 'next/link';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -67,27 +68,27 @@ export default function LoyaltyPage() {
   }, [load]);
 
   return (
-    <AdminShell title="Bonus ballar">
+    <AdminShell title={t("Bonus ballar")}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
         <button
           type="button"
           className={`alv-btn ${tab === 'expiring' ? 'alv-btn--primary' : 'alv-btn--ghost'}`}
           onClick={() => setTab('expiring')}
         >
-          Tez orada kuyadi
+          {t("Tez orada kuyadi")}
         </button>
         <button
           type="button"
           className={`alv-btn ${tab === 'expired' ? 'alv-btn--primary' : 'alv-btn--ghost'}`}
           onClick={() => setTab('expired')}
         >
-          Kuygan ballar
+          {t("Kuygan ballar")}
         </button>
       </div>
 
-      {tab === 'expiring' && (
+      {tab === "expiring" && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontSize: 13, color: 'var(--alv-muted)' }}>Oraliq:</span>
+          <span style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{t("Oraliq:")}</span>
           {WINDOWS.map((d) => (
             <button
               key={d}
@@ -95,7 +96,7 @@ export default function LoyaltyPage() {
               className={days === d ? 'alv-chip alv-chip--on' : 'alv-chip'}
               onClick={() => setDays(d)}
             >
-              {d} kun
+              {d} {t("kun")}
             </button>
           ))}
         </div>
@@ -107,9 +108,9 @@ export default function LoyaltyPage() {
         </p>
       )}
 
-      {loading && <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>}
+      {loading && <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>}
 
-      {!loading && tab === 'expiring' && (
+      {!loading && tab === "expiring" && (
         <>
           <Summary
             label={`Keyingi ${days} kun ichida kuyadigan ballar`}
@@ -129,7 +130,7 @@ export default function LoyaltyPage() {
                 <span key="d">
                   {fmtDate(r.expiresAt)}{' '}
                   {r.daysLeft !== null && (
-                    <Badge tone={r.daysLeft <= 7 ? 'sale' : 'low'}>{r.daysLeft} kun</Badge>
+                    <Badge tone={r.daysLeft <= 7 ? 'sale' : 'low'}>{r.daysLeft} {t("kun")}</Badge>
                   )}
                 </span>,
               ])}
@@ -138,10 +139,10 @@ export default function LoyaltyPage() {
         </>
       )}
 
-      {!loading && tab === 'expired' && (
+      {!loading && tab === "expired" && (
         <>
           <Summary
-            label="Kuygan ballar (jami)"
+            label={t("Kuygan ballar (jami)")}
             points={expiredTotal.points}
             amount={expiredTotal.amount}
             note="Kuydirish har kuni soat 03:00 da avtomatik bajariladi. Xato bo‘lsa mijoz kartochkasida qo‘lda to‘g‘rilanadi — izoh majburiy."
@@ -178,9 +179,9 @@ function Summary(props: { label: string; points: number; amount?: string; note: 
         marginBottom: 16,
       }}
     >
-      <div style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{props.label}</div>
+      <div style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{t(props.label)}</div>
       <div style={{ fontSize: 24, fontWeight: 700, marginTop: 2 }}>
-        {props.points.toLocaleString('ru-RU')} ball
+        {props.points.toLocaleString("ru-RU")} {t("ball")}
         {props.amount ? (
           <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--alv-muted)' }}>
             {' '}
@@ -198,7 +199,7 @@ function Summary(props: { label: string; points: number; amount?: string; note: 
 function Customer(props: { id: string; name: string | null; phone: string | null }) {
   return (
     <Link href={`/customers/${props.id}`} style={{ textDecoration: 'none' }}>
-      <strong style={{ display: 'block' }}>{props.name ?? 'Ismsiz'}</strong>
+      <strong style={{ display: 'block' }}>{props.name ?? t("Ismsiz")}</strong>
       <span style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>{props.phone ?? '—'}</span>
     </Link>
   );

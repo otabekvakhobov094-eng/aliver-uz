@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { EntityForm, type FormField } from '@/components/EntityForm';
@@ -194,7 +195,7 @@ export default function CategoriesPage() {
   const panelOpen = creating || Boolean(editing);
 
   return (
-    <AdminShell title="Kategoriyalar">
+    <AdminShell title={t("Kategoriyalar")}>
       {error ? (
         <div role="alert" className="alv-card" style={{ padding: 14, marginBottom: 14, borderLeft: '3px solid var(--alv-danger)' }}>
           {error}
@@ -208,8 +209,7 @@ export default function CategoriesPage() {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
         <p style={{ color: 'var(--alv-muted)', margin: 0, maxWidth: 620, lineHeight: 1.6 }}>
-          Ierarxiya maksimal uch daraja. To‘rtinchi darajani qo‘shishga urinish API
-          darajasida rad etiladi — bu URL, breadcrumb va SEO ni tushunarli saqlaydi.
+          {t("Ierarxiya maksimal uch daraja. To‘rtinchi darajani qo‘shishga urinish API darajasida rad etiladi — bu URL, breadcrumb va SEO ni tushunarli saqlaydi.")}
         </p>
         <button
           type="button"
@@ -220,18 +220,18 @@ export default function CategoriesPage() {
           }}
           style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--alv-ink)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
         >
-          + Yangi kategoriya
+          {t("+ Yangi kategoriya")}
         </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: panelOpen ? 'minmax(0,1fr) minmax(280px, 360px)' : '1fr', gap: 18, alignItems: 'start' }}>
         {loading ? (
-          <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
         ) : tree.length === 0 ? (
           <div className="alv-card" style={{ padding: 28, textAlign: 'center' }}>
-            <strong style={{ display: 'block', marginBottom: 6 }}>Hali kategoriya yo‘q</strong>
+            <strong style={{ display: 'block', marginBottom: 6 }}>{t("Hali kategoriya yo‘q")}</strong>
             <span style={{ color: 'var(--alv-muted)', fontSize: 14 }}>
-              Birinchi kategoriyani yuqoridagi tugma bilan yarating.
+              {t("Birinchi kategoriyani yuqoridagi tugma bilan yarating.")}
             </span>
           </div>
         ) : (
@@ -299,10 +299,10 @@ function Node({
         <span style={{ color: 'var(--alv-muted)', fontSize: 12 }}>/{node.slug}</span>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
-            {node.productCount ?? 0} mahsulot
+            {node.productCount ?? 0} {t("mahsulot")}
           </span>
           <Badge tone={node.isActive ? 'mint' : 'neutral'}>
-            {node.isActive ? 'Faol' : 'O‘chiq'}
+            {node.isActive ? t("Faol") : t("O‘chiq")}
           </Badge>
         </span>
       </button>

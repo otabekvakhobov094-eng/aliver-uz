@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { LocaleSwitch } from '@/components/LocaleSwitch';
+import { t } from '@/lib/i18n';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Input } from '@aliver/ui';
 import { AdminApiError, AdminNetworkError, adminApi } from '@/lib/api';
@@ -113,7 +115,15 @@ export default function AdminLoginPage() {
         ko'rinmasdi, sahifa esa yon tomonga siljirdi. Admin telefondan
         ham ochiladi — kuryer va operator ko'pincha shunday ishlaydi.
       */}
-      <Card style={{ width: '100%', maxWidth: 400, padding: 28 }}>
+      <div style={{ width: '100%', maxWidth: 400, display: 'grid', gap: 10 }}>
+      {/*
+        Til tanlash kirish ekranida ham kerak: rus tilida ishlaydigan
+        xodim panelga KIRMASDAN oldin ham o'z tilini ko'rishi kerak.
+      */}
+      <div className="alv-adm__langHost--light" style={{ justifySelf: 'end' }}>
+        <LocaleSwitch />
+      </div>
+      <Card style={{ width: '100%', padding: 28 }}>
         <h1 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 24, margin: '0 0 6px' }}>
           {/*
             Rang paneldagidek: ish muhitida asosiy harakat qora,
@@ -121,16 +131,16 @@ export default function AdminLoginPage() {
             ishlatilgani uchun kirish ekrani ko'k, panelning o'zi
             qora bo'lib, bitta mahsulot ikki xil ko'rinardi.
           */}
-          ALIVER<span style={{ color: 'var(--adm-muted)' }}>.UZ</span> Admin
+          ALIVER<span style={{ color: 'var(--adm-muted)' }}>{t(".UZ")}</span> {t("Admin")}
         </h1>
         <p style={{ color: 'var(--alv-muted)', fontSize: 13, margin: '0 0 20px' }}>
-          Kirish uchun email va parolni kiriting.
+          {t("Kirish uchun email va parolni kiriting.")}
         </p>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <Input
             name="email"
             type="email"
-            label="Email"
+            label={t("Email")}
             autoComplete="username"
             required
             value={email}
@@ -139,7 +149,7 @@ export default function AdminLoginPage() {
           <Input
             name="password"
             type="password"
-            label="Parol"
+            label={t("Parol")}
             autoComplete="current-password"
             required
             value={password}
@@ -148,7 +158,7 @@ export default function AdminLoginPage() {
           {needsTotp ? (
             <Input
               name="totp"
-              label="2FA kodi"
+              label={t("2FA kodi")}
               inputMode="numeric"
               maxLength={6}
               value={totp}
@@ -160,7 +170,7 @@ export default function AdminLoginPage() {
               role="status"
               style={{ color: 'var(--alv-muted)', fontSize: 13, margin: 0, lineHeight: 1.6 }}
             >
-              Server uyg‘onmoqda — bu bir daqiqagacha ketishi mumkin. Sahifani yangilamang.
+              {t("Server uyg‘onmoqda — bu bir daqiqagacha ketishi mumkin. Sahifani yangilamang.")}
             </p>
           ) : null}
 
@@ -173,10 +183,11 @@ export default function AdminLoginPage() {
             </p>
           ) : null}
           <Button type="submit" variant="primary" size="lg" fullWidth disabled={busy}>
-            {busy ? 'Tekshirilmoqda…' : 'Kirish'}
+            {busy ? t("Tekshirilmoqda…") : t("Kirish")}
           </Button>
         </form>
       </Card>
+      </div>
     </main>
   );
 }

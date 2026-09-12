@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -31,7 +32,7 @@ const COLUMNS: Array<DataColumn<AdminReturnRow>> = [
         <Link href={`/returns/${r.id}`} style={{ fontWeight: 700, color: 'var(--alv-brand)' }}>
           {r.number}
         </Link>
-        <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{r.itemsCount} pozitsiya</div>
+        <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{r.itemsCount} {t("pozitsiya")}</div>
       </>
     ),
   },
@@ -128,7 +129,7 @@ export default function ReturnsPage() {
   };
 
   return (
-    <AdminShell title="Qaytarishlar">
+    <AdminShell title={t("Qaytarishlar")}>
       {error ? (
         <div
           role="alert"
@@ -140,7 +141,7 @@ export default function ReturnsPage() {
       ) : null}
 
       <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
-        Jami {total} ta so‘rov
+        {t("Jami")} {total} {t("ta so‘rov")}
       </p>
 
       <DataList<AdminReturnRow>
@@ -152,28 +153,28 @@ export default function ReturnsPage() {
         onFiltersChange={changeFilters}
         loading={loading}
         onClearFilters={() => changeFilters(EMPTY)}
-        emptyTitle="Qaytarish so‘rovi yo‘q"
-        emptyHint="Mijoz qaytarish so‘rasa, u shu yerda paydo bo‘ladi."
-        noResultsTitle="Bu shartlarga mos so‘rov topilmadi"
+        emptyTitle={t("Qaytarish so‘rovi yo‘q")}
+        emptyHint={t("Mijoz qaytarish so‘rasa, u shu yerda paydo bo‘ladi.")}
+        noResultsTitle={t("Bu shartlarga mos so‘rov topilmadi")}
         filterBar={
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             <input
               type="search"
               value={f.q ?? ''}
               onChange={(e) => changeFilters({ ...filters, q: e.target.value })}
-              placeholder="Qaytarish yoki buyurtma raqami, telefon"
-              aria-label="Qaytarish qidirish"
+              placeholder={t("Qaytarish yoki buyurtma raqami, telefon")}
+              aria-label={t("Qaytarish qidirish")}
               style={{ ...input, flex: '1 1 260px' }}
             />
             <select
               value={f.status ?? ''}
               onChange={(e) => changeFilters({ ...filters, status: e.target.value })}
-              aria-label="Holat bo‘yicha filtr"
+              aria-label={t("Holat bo‘yicha filtr")}
               style={input}
             >
               {STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
@@ -188,7 +189,7 @@ export default function ReturnsPage() {
                 disabled={page === 1}
                 style={{ ...input, cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}
               >
-                Oldingi
+                {t("Oldingi")}
               </button>
               <span style={{ fontSize: 14, color: 'var(--alv-muted)' }}>
                 {page} / {pages}
@@ -199,7 +200,7 @@ export default function ReturnsPage() {
                 disabled={page === pages}
                 style={{ ...input, cursor: 'pointer', opacity: page === pages ? 0.5 : 1 }}
               >
-                Keyingi
+                {t("Keyingi")}
               </button>
             </div>
           ) : null

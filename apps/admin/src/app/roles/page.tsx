@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminRole, type PermissionMatrix } from '@/lib/api';
 
@@ -99,7 +100,7 @@ export default function RolesPage() {
   };
 
   return (
-    <AdminShell title="Rollar">
+    <AdminShell title={t("Rollar")}>
       {error ? (
         <div
           role="alert"
@@ -157,20 +158,19 @@ export default function RolesPage() {
                   className="alv-badge alv-badge--neutral"
                   style={{ marginLeft: 10, fontSize: 10, height: 18 }}
                 >
-                  tizim roli
+                  {t("tizim roli")}
                 </span>
               ) : null}
             </h2>
             <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-              <code>{selected.code}</code> · {selected.adminCount} ta admin ·{' '}
-              {isSuper ? 'barcha huquqlar' : `${draft.size} ta huquq`}
+              <code>{selected.code}</code> · {selected.adminCount} {t("ta admin ·")}{' '}
+              {isSuper ? t("barcha huquqlar") : `${draft.size} ta huquq`}
             </p>
           </div>
 
           {isSuper ? (
             <div className="alv-card" style={{ padding: 18, marginBottom: 18 }}>
-              Super Admin har doim to‘liq huquqqa ega — bu rol tahrirlanmaydi. Aks holda oxirgi
-              to‘liq huquqli hisobni tasodifan cheklab qo‘yish mumkin edi.
+              {t("Super Admin har doim to‘liq huquqqa ega — bu rol tahrirlanmaydi. Aks holda oxirgi to‘liq huquqli hisobni tasodifan cheklab qo‘yish mumkin edi.")}
             </div>
           ) : null}
 
@@ -194,7 +194,7 @@ export default function RolesPage() {
                       background: 'var(--alv-surface)',
                     }}
                   >
-                    Modul
+                    {t("Modul")}
                   </th>
                   {matrix.actions.map((a) => (
                     <th
@@ -208,7 +208,7 @@ export default function RolesPage() {
                         color: 'var(--alv-muted)',
                       }}
                     >
-                      {a.label}
+                      {t(a.label)}
                     </th>
                   ))}
                 </tr>
@@ -227,7 +227,7 @@ export default function RolesPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {m.label}
+                      {t(m.label)}
                     </td>
                     {matrix.actions.map((a) => {
                       const code = `${m.key}.${a.key}`;
@@ -275,7 +275,7 @@ export default function RolesPage() {
                 borderRadius: 12,
               }}
             >
-              <strong style={{ fontSize: 14 }}>Huquqlar o‘zgartirildi</strong>
+              <strong style={{ fontSize: 14 }}>{t("Huquqlar o‘zgartirildi")}</strong>
               <div style={{ flex: 1 }} />
               <button
                 type="button"
@@ -289,7 +289,7 @@ export default function RolesPage() {
                   cursor: 'pointer',
                 }}
               >
-                Bekor qilish
+                {t("Bekor qilish")}
               </button>
               <button
                 type="button"
@@ -305,7 +305,7 @@ export default function RolesPage() {
                   cursor: busy ? 'wait' : 'pointer',
                 }}
               >
-                {busy ? 'Saqlanmoqda…' : 'Saqlash'}
+                {busy ? t("Saqlanmoqda…") : t("Saqlash")}
               </button>
             </div>
           ) : null}
@@ -313,7 +313,7 @@ export default function RolesPage() {
       ) : null}
 
       <section style={{ marginTop: 34 }}>
-        <h2 style={{ fontSize: 17, margin: '0 0 10px' }}>Yangi rol</h2>
+        <h2 style={{ fontSize: 17, margin: '0 0 10px' }}>{t("Yangi rol")}</h2>
         <form
           className="alv-card"
           style={{ padding: 18, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}
@@ -338,7 +338,7 @@ export default function RolesPage() {
             required
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Rol nomi, masalan «Kuryer koordinatori»"
+            placeholder={t("Rol nomi, masalan «Kuryer koordinatori»")}
             style={{
               flex: '1 1 260px',
               padding: '9px 12px',
@@ -362,7 +362,7 @@ export default function RolesPage() {
               cursor: 'pointer',
             }}
           >
-            Qo‘shish
+            {t("Qo‘shish")}
           </button>
         </form>
       </section>

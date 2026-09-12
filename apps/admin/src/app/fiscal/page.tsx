@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -215,7 +216,7 @@ export default function FiscalPage() {
   }
 
   return (
-    <AdminShell title="Fiskal cheklar">
+    <AdminShell title={t("Fiskal cheklar")}>
       {mock ? (
         <div
           role="status"
@@ -230,9 +231,7 @@ export default function FiscalPage() {
             lineHeight: 1.55,
           }}
         >
-          MAKET rejimi: cheklar shakllantirilmoqda va saqlanmoqda, lekin OFD ga yuborilmayapti.
-          Provayder tanlanib shartnoma imzolangach <code>OFD_PROVIDER</code> ni o‘zgartiring —
-          boshqa hech narsani o‘zgartirish shart emas.
+          {t("MAKET rejimi: cheklar shakllantirilmoqda va saqlanmoqda, lekin OFD ga yuborilmayapti. Provayder tanlanib shartnoma imzolangach")} <code>OFD_PROVIDER</code> {t("ni o‘zgartiring — boshqa hech narsani o‘zgartirish shart emas.")}
         </div>
       ) : null}
 
@@ -265,7 +264,7 @@ export default function FiscalPage() {
           marginBottom: 14,
         }}
       >
-        <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14 }}>Jami {total} ta chek</p>
+        <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14 }}>{t("Jami")} {total} {t("ta chek")}</p>
         <button
           type="button"
           onClick={() => void runQueue()}
@@ -282,7 +281,7 @@ export default function FiscalPage() {
             opacity: busy ? 0.6 : 1,
           }}
         >
-          {busy ? 'Ishlamoqda…' : 'Navbatni ishga tushirish'}
+          {busy ? t("Ishlamoqda…") : t("Navbatni ishga tushirish")}
         </button>
       </div>
 
@@ -297,12 +296,12 @@ export default function FiscalPage() {
         bulkActions={bulkActions}
         onDone={load}
         onClearFilters={() => setFilters(EMPTY)}
-        emptyTitle="Hali chek yo‘q"
-        emptyHint="Birinchi to‘langan buyurtmadan keyin chek shu yerda paydo bo‘ladi."
-        noResultsTitle="Bu holatda chek topilmadi"
+        emptyTitle={t("Hali chek yo‘q")}
+        emptyHint={t("Birinchi to‘langan buyurtmadan keyin chek shu yerda paydo bo‘ladi.")}
+        noResultsTitle={t("Bu holatda chek topilmadi")}
         filterBar={
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>Holat</span>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>{t("Holat")}</span>
             <select
               value={status}
               onChange={(e) => setFilters({ status: e.target.value })}
@@ -317,7 +316,7 @@ export default function FiscalPage() {
             >
               {STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>

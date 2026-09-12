@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
@@ -387,9 +388,9 @@ export default function ProductEditPage() {
 
   if (loading) {
     return (
-      <AdminShell title="Mahsulot">
+      <AdminShell title={t("Mahsulot")}>
         <div className="alv-card" style={{ padding: 24, color: 'var(--alv-muted)' }}>
-          Yuklanmoqda…
+          {t("Yuklanmoqda…")}
         </div>
       </AdminShell>
     );
@@ -418,27 +419,27 @@ export default function ProductEditPage() {
 
       <p style={{ margin: '0 0 16px' }}>
         <Link href="/products" style={{ color: 'var(--alv-brand)', fontSize: 14 }}>
-          ← Mahsulotlar ro‘yxati
+          {t("← Mahsulotlar ro‘yxati")}
         </Link>
       </p>
 
       <div style={{ display: 'grid', gap: 16, paddingBottom: 90 }}>
-        <Block title="Asosiy">
+        <Block title={t("Asosiy")}>
           <Row>
-            <Field label="Nomi (o‘zbekcha)" required>
+            <Field label={t("Nomi (o‘zbekcha)")} required>
               <input style={INPUT} value={form.nameUz} onChange={(e) => set('nameUz', e.target.value)} />
             </Field>
-            <Field label="Nomi (ruscha)" required>
+            <Field label={t("Nomi (ruscha)")} required>
               <input style={INPUT} value={form.nameRu} onChange={(e) => set('nameRu', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Slug" hint="Bo‘sh qoldirilsa nomdan avtomatik yasaladi.">
+            <Field label={t("Slug")} hint={t("Bo‘sh qoldirilsa nomdan avtomatik yasaladi.")}>
               <input style={INPUT} value={form.slug} onChange={(e) => set('slug', e.target.value)} />
             </Field>
-            <Field label="Brend">
+            <Field label={t("Brend")}>
               <select style={INPUT} value={form.brandId} onChange={(e) => set('brandId', e.target.value)}>
-                <option value="">— tanlanmagan —</option>
+                <option value="">{t("— tanlanmagan —")}</option>
                 {brands.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -448,16 +449,16 @@ export default function ProductEditPage() {
             </Field>
           </Row>
           <Row>
-            <Field label="Holat">
+            <Field label={t("Holat")}>
               <select style={INPUT} value={form.status} onChange={(e) => set('status', e.target.value)}>
                 {STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
-                    {s.label}
+                    {t(s.label)}
                   </option>
                 ))}
               </select>
             </Field>
-            <Field label="Kategoriyalar" hint="Ctrl bilan bir nechtasini tanlash mumkin.">
+            <Field label={t("Kategoriyalar")} hint={t("Ctrl bilan bir nechtasini tanlash mumkin.")}>
               <select
                 multiple
                 size={6}
@@ -472,7 +473,7 @@ export default function ProductEditPage() {
               >
                 {catOptions.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.label}
+                    {t(c.label)}
                   </option>
                 ))}
               </select>
@@ -484,20 +485,20 @@ export default function ProductEditPage() {
               checked={form.isFeatured}
               onChange={(e) => set('isFeatured', e.target.checked)}
             />
-            Bosh sahifada ko‘rsatilsin
+            {t("Bosh sahifada ko‘rsatilsin")}
           </label>
         </Block>
 
-        <Block title="Matnlar">
+        <Block title={t("Matnlar")}>
           <Row>
-            <Field label="Qisqa izoh (o‘zb.)" hint="Kartochkada bir qator bo‘lib chiqadi.">
+            <Field label={t("Qisqa izoh (o‘zb.)")} hint={t("Kartochkada bir qator bo‘lib chiqadi.")}>
               <input
                 style={INPUT}
                 value={form.shortDescUz}
                 onChange={(e) => set('shortDescUz', e.target.value)}
               />
             </Field>
-            <Field label="Qisqa izoh (rus.)">
+            <Field label={t("Qisqa izoh (rus.)")}>
               <input
                 style={INPUT}
                 value={form.shortDescRu}
@@ -506,32 +507,32 @@ export default function ProductEditPage() {
             </Field>
           </Row>
           <Row>
-            <Field label="Tavsif (o‘zb.)">
+            <Field label={t("Tavsif (o‘zb.)")}>
               <textarea style={AREA} rows={5} value={form.descUz} onChange={(e) => set('descUz', e.target.value)} />
             </Field>
-            <Field label="Tavsif (rus.)">
+            <Field label={t("Tavsif (rus.)")}>
               <textarea style={AREA} rows={5} value={form.descRu} onChange={(e) => set('descRu', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Foydasi (o‘zb.)">
+            <Field label={t("Foydasi (o‘zb.)")}>
               <textarea style={AREA} rows={3} value={form.benefitsUz} onChange={(e) => set('benefitsUz', e.target.value)} />
             </Field>
-            <Field label="Foydasi (rus.)">
+            <Field label={t("Foydasi (rus.)")}>
               <textarea style={AREA} rows={3} value={form.benefitsRu} onChange={(e) => set('benefitsRu', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Qo‘llash (o‘zb.)">
+            <Field label={t("Qo‘llash (o‘zb.)")}>
               <textarea style={AREA} rows={3} value={form.howToUseUz} onChange={(e) => set('howToUseUz', e.target.value)} />
             </Field>
-            <Field label="Qo‘llash (rus.)">
+            <Field label={t("Qo‘llash (rus.)")}>
               <textarea style={AREA} rows={3} value={form.howToUseRu} onChange={(e) => set('howToUseRu', e.target.value)} />
             </Field>
           </Row>
         </Block>
 
-        <Block title="Rasmlar" hint="Birinchi rasm kartochkada va qidiruvda ko‘rinadi.">
+        <Block title={t("Rasmlar")} hint={t("Birinchi rasm kartochkada va qidiruvda ko‘rinadi.")}>
           <ProductImages
             productId={isNew ? null : id}
             images={images}
@@ -540,23 +541,23 @@ export default function ProductEditPage() {
         </Block>
 
         <Block
-          title="Tarkib"
-          hint="Mijoz INCI ro‘yxatini baholay olmaydi. Uchta asosiy tarkibni vazifasi bilan yozing — mahsulot sahifasida aynan shular birinchi ko‘rinadi."
+          title={t("Tarkib")}
+          hint={t("Mijoz INCI ro‘yxatini baholay olmaydi. Uchta asosiy tarkibni vazifasi bilan yozing — mahsulot sahifasida aynan shular birinchi ko‘rinadi.")}
         >
           <KeyIngredientsEditor
             items={form.keyIngredients}
             onChange={(v) => set('keyIngredients', v)}
           />
           <Row>
-            <Field label="Isbot / natija (o‘zb.)" hint="Masalan: «100% quruqlik kamayganini tasdiqladi»">
+            <Field label={t("Isbot / natija (o‘zb.)")} hint={t("Masalan: «100% quruqlik kamayganini tasdiqladi»")}>
               <input style={INPUT} value={form.claimUz} onChange={(e) => set('claimUz', e.target.value)} />
             </Field>
-            <Field label="Isbot / natija (rus.)">
+            <Field label={t("Isbot / natija (rus.)")}>
               <input style={INPUT} value={form.claimRu} onChange={(e) => set('claimRu', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="To‘liq tarkib, INCI (o‘zb.)" required>
+            <Field label={t("To‘liq tarkib, INCI (o‘zb.)")} required>
               <textarea
                 style={AREA}
                 rows={4}
@@ -564,7 +565,7 @@ export default function ProductEditPage() {
                 onChange={(e) => set('ingredientsUz', e.target.value)}
               />
             </Field>
-            <Field label="To‘liq tarkib, INCI (rus.)" required>
+            <Field label={t("To‘liq tarkib, INCI (rus.)")} required>
               <textarea
                 style={AREA}
                 rows={4}
@@ -574,7 +575,7 @@ export default function ProductEditPage() {
             </Field>
           </Row>
           <Row>
-            <Field label="Ogohlantirish (o‘zb.)" required>
+            <Field label={t("Ogohlantirish (o‘zb.)")} required>
               <textarea
                 style={AREA}
                 rows={3}
@@ -582,7 +583,7 @@ export default function ProductEditPage() {
                 onChange={(e) => set('warningsUz', e.target.value)}
               />
             </Field>
-            <Field label="Ogohlantirish (rus.)" required>
+            <Field label={t("Ogohlantirish (rus.)")} required>
               <textarea
                 style={AREA}
                 rows={3}
@@ -594,11 +595,11 @@ export default function ProductEditPage() {
         </Block>
 
         <Block
-          title="Fiskal va ishlab chiqaruvchi"
-          hint="IKPU (MXIK) kodisiz chek yuborilmaydi — kodni buxgalter beradi."
+          title={t("Fiskal va ishlab chiqaruvchi")}
+          hint={t("IKPU (MXIK) kodisiz chek yuborilmaydi — kodni buxgalter beradi.")}
         >
           <Row>
-            <Field label="IKPU (MXIK) kodi" required>
+            <Field label={t("IKPU (MXIK) kodi")} required>
               <input
                 style={INPUT}
                 inputMode="numeric"
@@ -607,21 +608,21 @@ export default function ProductEditPage() {
                 placeholder="03302001001000000"
               />
             </Field>
-            <Field label="QQS, %">
+            <Field label={t("QQS, %")}>
               <input style={INPUT} inputMode="numeric" value={form.vatRate} onChange={(e) => set('vatRate', e.target.value)} />
             </Field>
-            <Field label="O‘lchov birligi kodi">
+            <Field label={t("O‘lchov birligi kodi")}>
               <input style={INPUT} value={form.unitCode} onChange={(e) => set('unitCode', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Ishlab chiqarilgan davlat">
+            <Field label={t("Ishlab chiqarilgan davlat")}>
               <input style={INPUT} value={form.countryOfOrigin} onChange={(e) => set('countryOfOrigin', e.target.value)} />
             </Field>
-            <Field label="Ishlab chiqaruvchi">
+            <Field label={t("Ishlab chiqaruvchi")}>
               <input style={INPUT} value={form.manufacturer} onChange={(e) => set('manufacturer', e.target.value)} />
             </Field>
-            <Field label="Yaroqlilik muddati, oy">
+            <Field label={t("Yaroqlilik muddati, oy")}>
               <input
                 style={INPUT}
                 inputMode="numeric"
@@ -632,24 +633,24 @@ export default function ProductEditPage() {
           </Row>
         </Block>
 
-        <Block title="Variantlar" hint="Narxlar SO‘MDA kiritiladi.">
+        <Block title={t("Variantlar")} hint={t("Narxlar SO‘MDA kiritiladi.")}>
           <VariantsEditor items={form.variants} onChange={(v) => set('variants', v)} />
         </Block>
 
         <Block title="SEO">
           <Row>
-            <Field label="Sarlavha (o‘zb.)">
+            <Field label={t("Sarlavha (o‘zb.)")}>
               <input style={INPUT} value={form.seoTitleUz} onChange={(e) => set('seoTitleUz', e.target.value)} />
             </Field>
-            <Field label="Sarlavha (rus.)">
+            <Field label={t("Sarlavha (rus.)")}>
               <input style={INPUT} value={form.seoTitleRu} onChange={(e) => set('seoTitleRu', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Meta tavsif (o‘zb.)">
+            <Field label={t("Meta tavsif (o‘zb.)")}>
               <textarea style={AREA} rows={2} value={form.seoDescUz} onChange={(e) => set('seoDescUz', e.target.value)} />
             </Field>
-            <Field label="Meta tavsif (rus.)">
+            <Field label={t("Meta tavsif (rus.)")}>
               <textarea style={AREA} rows={2} value={form.seoDescRu} onChange={(e) => set('seoDescRu', e.target.value)} />
             </Field>
           </Row>
@@ -691,10 +692,10 @@ export default function ProductEditPage() {
             opacity: saving ? 0.6 : 1,
           }}
         >
-          {saving ? 'Saqlanmoqda…' : isNew ? 'Yaratish' : 'Saqlash'}
+          {saving ? t("Saqlanmoqda…") : isNew ? t("Yaratish") : t("Saqlash")}
         </button>
         <Link href="/products" style={{ color: 'var(--alv-muted)', fontSize: 14 }}>
-          Bekor qilish
+          {t("Bekor qilish")}
         </Link>
       </div>
     </AdminShell>
@@ -735,13 +736,13 @@ function KeyIngredientsEditor({
           <Field label={`${i + 1}. Nomi (o‘zb.)`}>
             <input style={INPUT} value={it.nameUz} onChange={(e) => patch(i, 'nameUz', e.target.value)} />
           </Field>
-          <Field label="Nomi (rus.)">
+          <Field label={t("Nomi (rus.)")}>
             <input style={INPUT} value={it.nameRu} onChange={(e) => patch(i, 'nameRu', e.target.value)} />
           </Field>
-          <Field label="Vazifasi (o‘zb.)">
+          <Field label={t("Vazifasi (o‘zb.)")}>
             <input style={INPUT} value={it.roleUz} onChange={(e) => patch(i, 'roleUz', e.target.value)} />
           </Field>
-          <Field label="Vazifasi (rus.)">
+          <Field label={t("Vazifasi (rus.)")}>
             <input style={INPUT} value={it.roleRu} onChange={(e) => patch(i, 'roleRu', e.target.value)} />
           </Field>
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
@@ -751,7 +752,7 @@ function KeyIngredientsEditor({
               aria-label={`${i + 1}-tarkibni o‘chirish`}
               style={GHOST_BTN}
             >
-              O‘chirish
+              {t("O‘chirish")}
             </button>
           </div>
         </div>
@@ -763,11 +764,11 @@ function KeyIngredientsEditor({
           onClick={() => onChange([...items, { nameUz: '', nameRu: '', roleUz: '', roleRu: '' }])}
           style={{ ...GHOST_BTN, justifySelf: 'start' }}
         >
-          + Asosiy tarkib qo‘shish
+          {t("+ Asosiy tarkib qo‘shish")}
         </button>
       ) : (
         <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-          Uchtadan ortiq bo‘lsa «asosiy» ma‘nosini yo‘qotadi — qolganlari to‘liq INCI ro‘yxatida.
+          {t("Uchtadan ortiq bo‘lsa «asosiy» ma‘nosini yo‘qotadi — qolganlari to‘liq INCI ro‘yxatida.")}
         </p>
       )}
     </div>
@@ -798,35 +799,35 @@ function VariantsEditor({
             <Field label="SKU" required>
               <input style={INPUT} value={v.sku} onChange={(e) => patch(i, 'sku', e.target.value)} />
             </Field>
-            <Field label="Shtrix-kod">
+            <Field label={t("Shtrix-kod")}>
               <input style={INPUT} value={v.barcode} onChange={(e) => patch(i, 'barcode', e.target.value)} />
             </Field>
-            <Field label="Xususiyatlar" hint="Masalan: hajm=60 ml, rang=03">
+            <Field label={t("Xususiyatlar")} hint={t("Masalan: hajm=60 ml, rang=03")}>
               <input style={INPUT} value={v.optionsText} onChange={(e) => patch(i, 'optionsText', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Narx, so‘m" required>
+            <Field label={t("Narx, so‘m")} required>
               <input style={INPUT} inputMode="numeric" value={v.price} onChange={(e) => patch(i, 'price', e.target.value)} />
             </Field>
-            <Field label="Eski narx, so‘m">
+            <Field label={t("Eski narx, so‘m")}>
               <input style={INPUT} inputMode="numeric" value={v.oldPrice} onChange={(e) => patch(i, 'oldPrice', e.target.value)} />
             </Field>
-            <Field label="Tannarx, so‘m" hint="Saytda ko‘rinmaydi, faqat hisobot uchun.">
+            <Field label={t("Tannarx, so‘m")} hint={t("Saytda ko‘rinmaydi, faqat hisobot uchun.")}>
               <input style={INPUT} inputMode="numeric" value={v.costPrice} onChange={(e) => patch(i, 'costPrice', e.target.value)} />
             </Field>
           </Row>
           <Row>
-            <Field label="Og‘irligi, gramm">
+            <Field label={t("Og‘irligi, gramm")}>
               <input style={INPUT} inputMode="numeric" value={v.weightGrams} onChange={(e) => patch(i, 'weightGrams', e.target.value)} />
             </Field>
-            <Field label="Hajmi, ml">
+            <Field label={t("Hajmi, ml")}>
               <input style={INPUT} inputMode="numeric" value={v.volumeMl} onChange={(e) => patch(i, 'volumeMl', e.target.value)} />
             </Field>
             <div style={{ display: 'flex', gap: 14, alignItems: 'center', paddingTop: 18 }}>
               <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
                 <input type="checkbox" checked={v.isActive} onChange={(e) => patch(i, 'isActive', e.target.checked)} />
-                Faol
+                {t("Faol")}
               </label>
               {items.length > 1 ? (
                 <button
@@ -834,7 +835,7 @@ function VariantsEditor({
                   onClick={() => onChange(items.filter((_, idx) => idx !== i))}
                   style={GHOST_BTN}
                 >
-                  Variantni o‘chirish
+                  {t("Variantni o‘chirish")}
                 </button>
               ) : null}
             </div>
@@ -846,7 +847,7 @@ function VariantsEditor({
         onClick={() => onChange([...items, { ...EMPTY_VARIANT }])}
         style={{ ...GHOST_BTN, justifySelf: 'start' }}
       >
-        + Variant qo‘shish
+        {t("+ Variant qo‘shish")}
       </button>
     </div>
   );

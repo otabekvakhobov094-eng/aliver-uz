@@ -1,4 +1,5 @@
 'use client';
+import { t } from '@/lib/i18n';
 
 /**
  * Layout darajasidagi xato.
@@ -31,9 +32,9 @@ export default function AdminGlobalError({
         }}
       >
         <div style={{ maxWidth: 460, textAlign: 'center' }}>
-          <h1 style={{ fontSize: 22, margin: '0 0 10px' }}>Panel ochilmadi</h1>
+          <h1 style={{ fontSize: 22, margin: '0 0 10px' }}>{t("Panel ochilmadi")}</h1>
           <p style={{ color: '#463a4f', lineHeight: 1.65, margin: '0 0 18px', fontSize: 15 }}>
-            Kutilmagan xatolik. Ma’lumotlaringiz joyida.
+            {t("Kutilmagan xatolik. Ma’lumotlaringiz joyida.")}
             {error.digest ? ` Kod: ${error.digest}` : ''}
           </p>
           <button
@@ -50,7 +51,7 @@ export default function AdminGlobalError({
               cursor: 'pointer',
             }}
           >
-            Qayta urinish
+            {t("Qayta urinish")}
           </button>
         </div>
       </body>

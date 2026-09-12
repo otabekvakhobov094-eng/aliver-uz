@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { ShopifyImport } from '@/components/ShopifyImport';
@@ -49,7 +50,7 @@ export default function ImportPage() {
   const updates = result?.plan.filter((p) => p.action === 'update').length ?? 0;
 
   return (
-    <AdminShell title="Mahsulotlarni import qilish">
+    <AdminShell title={t("Mahsulotlarni import qilish")}>
       <div style={{ marginBottom: 22 }}>
         <ShopifyImport />
       </div>
@@ -71,7 +72,7 @@ export default function ImportPage() {
               htmlFor="import-file"
               style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8 }}
             >
-              Excel yoki CSV fayl
+              {t("Excel yoki CSV fayl")}
             </label>
             <input
               id="import-file"
@@ -86,7 +87,7 @@ export default function ImportPage() {
           </div>
 
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Rejim</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>{t("Rejim")}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {MODES.map((m) => (
                 <button
@@ -111,7 +112,7 @@ export default function ImportPage() {
                         : 'inset 0 0 0 1.5px var(--alv-line-2)',
                   }}
                 >
-                  <span style={{ fontWeight: 700, fontSize: 14 }}>{m.label}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>{t(m.label)}</span>
                   <span style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{m.hint}</span>
                 </button>
               ))}
@@ -120,14 +121,14 @@ export default function ImportPage() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Button variant="outline" disabled={!file || busy} onClick={() => void run('PREVIEW')}>
-              Tekshirish (preview)
+              {t("Tekshirish (preview)")}
             </Button>
             <Button
               variant="primary"
               disabled={!file || busy || mode === 'PREVIEW'}
               onClick={() => void run(mode)}
             >
-              {busy ? 'Bajarilmoqda…' : 'Import qilish'}
+              {busy ? t("Bajarilmoqda…") : t("Import qilish")}
             </Button>
           </div>
 
@@ -140,22 +141,21 @@ export default function ImportPage() {
 
         <div className="alv-card" style={{ padding: 20 }}>
           <h2 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 17, margin: '0 0 10px' }}>
-            Shablon
+            {t("Shablon")}
           </h2>
           <p
             style={{ fontSize: 13, color: 'var(--alv-muted)', lineHeight: 1.6, margin: '0 0 14px' }}
           >
-            Majburiy ustunlar pushti rangda belgilangan. Bir mahsulotning har bir varianti — alohida
-            satr, ularni <code>product_slug</code> birlashtiradi.
+            {t("Majburiy ustunlar pushti rangda belgilangan. Bir mahsulotning har bir varianti — alohida satr, ularni")} <code>product_slug</code> {t("birlashtiradi.")}
           </p>
           <a
             className="alv-btn alv-btn--outline alv-btn--sm alv-btn--block"
             href={adminApi.templateUrl()}
           >
-            Shablonni yuklab olish
+            {t("Shablonni yuklab olish")}
           </a>
           <p style={{ fontSize: 12, color: 'var(--alv-muted)', lineHeight: 1.6, marginTop: 14 }}>
-            IKPU (MXIK) kodi majburiy: usiz fiskal chek yuborib bo‘lmaydi.
+            {t("IKPU (MXIK) kodi majburiy: usiz fiskal chek yuborib bo‘lmaydi.")}
           </p>
         </div>
       </div>
@@ -163,12 +163,12 @@ export default function ImportPage() {
       {result ? (
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 20, margin: '0 0 14px' }}>
-            Natija {result.mode === 'PREVIEW' ? '(oldindan ko‘rish)' : ''}
+            {t("Natija")} {result.mode === 'PREVIEW' ? t("(oldindan ko‘rish)") : ''}
           </h2>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-            <Stat label="Satrlar" value={result.totalRows} />
-            <Stat label="Mahsulotlar" value={result.products} />
+            <Stat label={t("Satrlar")} value={result.totalRows} />
+            <Stat label={t("Mahsulotlar")} value={result.products} />
             <Stat
               label={result.mode === 'PREVIEW' ? 'Yaratiladi' : 'Yaratildi'}
               value={result.mode === 'PREVIEW' ? creates : result.created}
@@ -177,9 +177,9 @@ export default function ImportPage() {
               label={result.mode === 'PREVIEW' ? 'Yangilanadi' : 'Yangilandi'}
               value={result.mode === 'PREVIEW' ? updates : result.updated}
             />
-            <Stat label="O‘tkazib yuborildi" value={result.skipped} />
+            <Stat label={t("O‘tkazib yuborildi")} value={result.skipped} />
             <Stat
-              label="Xatolar"
+              label={t("Xatolar")}
               value={result.errorRows}
               tone={result.errorRows > 0 ? 'low' : 'mint'}
             />
@@ -188,14 +188,14 @@ export default function ImportPage() {
           {result.errors.length > 0 ? (
             <div className="alv-card" style={{ padding: 0, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ padding: '14px 18px', fontWeight: 700, fontSize: 14 }}>
-                Xatolar ({result.errors.length})
+                {t("Xatolar (")}{result.errors.length})
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ textAlign: 'left', color: 'var(--alv-muted)', fontSize: 12 }}>
-                    <th style={{ padding: '8px 18px', width: 80 }}>Satr</th>
-                    <th style={{ padding: '8px 8px', width: 160 }}>Ustun</th>
-                    <th style={{ padding: '8px 18px' }}>Xabar</th>
+                    <th style={{ padding: '8px 18px', width: 80 }}>{t("Satr")}</th>
+                    <th style={{ padding: '8px 8px', width: 160 }}>{t("Ustun")}</th>
+                    <th style={{ padding: '8px 18px' }}>{t("Xabar")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -215,7 +215,7 @@ export default function ImportPage() {
 
           {result.plan.length > 0 ? (
             <div className="alv-card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 18px', fontWeight: 700, fontSize: 14 }}>Reja</div>
+              <div style={{ padding: '14px 18px', fontWeight: 700, fontSize: 14 }}>{t("Reja")}</div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <tbody>
                   {result.plan.map((p) => (
@@ -233,15 +233,15 @@ export default function ImportPage() {
                                 : 'neutral'
                           }
                         >
-                          {p.action === 'create'
-                            ? 'yangi'
-                            : p.action === 'update'
-                              ? 'yangilash'
-                              : 'o‘tkazib yuborish'}
+                          {p.action === "create"
+                            ? t("yangi")
+                            : p.action === "update"
+                              ? t("yangilash")
+                              : t("o‘tkazib yuborish")}
                         </Badge>
                       </td>
                       <td style={{ padding: '10px 18px', color: 'var(--alv-muted)' }}>
-                        {p.variants} ta variant
+                        {p.variants} {t("ta variant")}
                       </td>
                     </tr>
                   ))}

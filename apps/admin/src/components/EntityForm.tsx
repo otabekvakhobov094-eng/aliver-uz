@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 
 /**
  * Yon panelda ochiladigan kichik forma.
@@ -85,7 +86,7 @@ export function EntityForm({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <h2 style={{ margin: 0, fontSize: 17 }}>{title}</h2>
-        <button type="button" onClick={onClose} aria-label="Yopish" style={GHOST}>
+        <button type="button" onClick={onClose} aria-label={t("Yopish")} style={GHOST}>
           ✕
         </button>
       </div>
@@ -99,11 +100,11 @@ export function EntityForm({
       {fields.map((f) => (
         <label key={f.key} style={{ display: 'grid', gap: 5, fontSize: 13 }}>
           <span style={{ fontWeight: 600 }}>
-            {f.label}
+            {t(f.label)}
             {f.required ? <span style={{ color: 'var(--alv-danger)' }}> *</span> : null}
           </span>
 
-          {f.type === 'textarea' ? (
+          {f.type === "textarea" ? (
             <textarea
               rows={3}
               value={String(values[f.key] ?? '')}
@@ -111,7 +112,7 @@ export function EntityForm({
               placeholder={f.placeholder}
               style={{ ...FIELD, resize: 'vertical' }}
             />
-          ) : f.type === 'select' ? (
+          ) : f.type === "select" ? (
             <select
               value={String(values[f.key] ?? '')}
               onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
@@ -119,11 +120,11 @@ export function EntityForm({
             >
               {(f.options ?? []).map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.label)}
                 </option>
               ))}
             </select>
-          ) : f.type === 'checkbox' ? (
+          ) : f.type === "checkbox" ? (
             <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input
                 type="checkbox"
@@ -142,7 +143,7 @@ export function EntityForm({
             />
           )}
 
-          {f.hint && f.type !== 'checkbox' ? (
+          {f.hint && f.type !== "checkbox" ? (
             <span style={{ color: 'var(--alv-muted)', fontSize: 12, lineHeight: 1.5 }}>{f.hint}</span>
           ) : null}
         </label>
@@ -150,7 +151,7 @@ export function EntityForm({
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
         <button type="button" onClick={submit} disabled={busy} style={PRIMARY(Boolean(busy))}>
-          {busy ? 'Saqlanmoqda…' : 'Saqlash'}
+          {busy ? t("Saqlanmoqda…") : t("Saqlash")}
         </button>
         {onDelete ? (
           <button

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -34,7 +35,7 @@ const COLUMNS: Array<DataColumn<AdminCustomerRow>> = [
     minWidth: 220,
     render: (c) => (
       <Link href={`/customers/${c.id}`} style={{ color: 'var(--alv-ink)' }}>
-        <strong style={{ display: 'block' }}>{c.name ?? 'Ismi yo‘q'}</strong>
+        <strong style={{ display: 'block' }}>{c.name ?? t("Ismi yo‘q")}</strong>
         <span style={{ color: 'var(--alv-muted)', fontSize: 13 }}>
           {c.phone}
           {c.email ? ` · ${c.email}` : ''}
@@ -91,7 +92,7 @@ const COLUMNS: Array<DataColumn<AdminCustomerRow>> = [
     defaultVisible: false,
     render: (c) => (
       <Badge tone={c.status === 'ACTIVE' ? 'mint' : 'neutral'}>
-        {c.status === 'ACTIVE' ? 'Faol' : 'Bloklangan'}
+        {c.status === 'ACTIVE' ? t("Faol") : t("Bloklangan")}
       </Badge>
     ),
   },
@@ -160,7 +161,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <AdminShell title="Mijozlar">
+    <AdminShell title={t("Mijozlar")}>
       {error ? (
         <div
           role="alert"
@@ -172,7 +173,7 @@ export default function CustomersPage() {
       ) : null}
 
       <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
-        Jami {total} ta mijoz
+        {t("Jami")} {total} {t("ta mijoz")}
       </p>
 
       <DataList<AdminCustomerRow>
@@ -184,40 +185,40 @@ export default function CustomersPage() {
         onFiltersChange={setFilters}
         loading={loading}
         onClearFilters={() => setFilters(EMPTY_FILTERS)}
-        emptyTitle="Hali mijoz yo‘q"
-        emptyHint="Birinchi buyurtma berilgach mijozlar shu yerda paydo bo‘ladi."
-        noResultsTitle="Bu so‘rovga mos mijoz topilmadi"
+        emptyTitle={t("Hali mijoz yo‘q")}
+        emptyHint={t("Birinchi buyurtma berilgach mijozlar shu yerda paydo bo‘ladi.")}
+        noResultsTitle={t("Bu so‘rovga mos mijoz topilmadi")}
         filterBar={
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             <input
               type="search"
               value={q}
               onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              placeholder="Ism, telefon yoki e-pochta"
-              aria-label="Mijoz qidirish"
+              placeholder={t("Ism, telefon yoki e-pochta")}
+              aria-label={t("Mijoz qidirish")}
               style={{ ...input, flex: '1 1 260px' }}
             />
             <select
               value={segment}
               onChange={(e) => setFilters({ ...filters, segment: e.target.value })}
-              aria-label="Segment bo‘yicha filtr"
+              aria-label={t("Segment bo‘yicha filtr")}
               style={input}
             >
               {SEGMENTS.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
             <select
               value={status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              aria-label="Holat bo‘yicha filtr"
+              aria-label={t("Holat bo‘yicha filtr")}
               style={input}
             >
               {STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>

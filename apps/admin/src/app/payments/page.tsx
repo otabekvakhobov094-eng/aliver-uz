@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -177,7 +178,7 @@ export default function PaymentsPage() {
   };
 
   return (
-    <AdminShell title="To‘lovlar">
+    <AdminShell title={t("To‘lovlar")}>
       {error ? (
         <div
           role="alert"
@@ -189,7 +190,7 @@ export default function PaymentsPage() {
       ) : null}
 
       <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
-        Jami {total} ta to‘lov
+        {t("Jami")} {total} {t("ta to‘lov")}
       </p>
 
       <DataList<AdminPaymentRow>
@@ -201,45 +202,45 @@ export default function PaymentsPage() {
         onFiltersChange={changeFilters}
         loading={loading}
         onClearFilters={() => changeFilters(EMPTY)}
-        emptyTitle="Hali to‘lov yo‘q"
-        emptyHint="Birinchi to‘lov amalga oshgach u shu yerda ko‘rinadi."
-        noResultsTitle="Bu shartlarga mos to‘lov topilmadi"
+        emptyTitle={t("Hali to‘lov yo‘q")}
+        emptyHint={t("Birinchi to‘lov amalga oshgach u shu yerda ko‘rinadi.")}
+        noResultsTitle={t("Bu shartlarga mos to‘lov topilmadi")}
         filterBar={
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
             <input
               type="search"
               value={f.q ?? ''}
               onChange={(e) => changeFilters({ ...filters, q: e.target.value })}
-              placeholder="Buyurtma raqami, telefon yoki tranzaksiya"
-              aria-label="To‘lov qidirish"
+              placeholder={t("Buyurtma raqami, telefon yoki tranzaksiya")}
+              aria-label={t("To‘lov qidirish")}
               style={{ ...input, flex: '1 1 260px' }}
             />
             <select
               value={f.provider ?? ''}
               onChange={(e) => changeFilters({ ...filters, provider: e.target.value })}
-              aria-label="Provayder bo‘yicha filtr"
+              aria-label={t("Provayder bo‘yicha filtr")}
               style={input}
             >
               {PROVIDERS.map((x) => (
                 <option key={x.value} value={x.value}>
-                  {x.label}
+                  {t(x.label)}
                 </option>
               ))}
             </select>
             <select
               value={f.status ?? ''}
               onChange={(e) => changeFilters({ ...filters, status: e.target.value })}
-              aria-label="Holat bo‘yicha filtr"
+              aria-label={t("Holat bo‘yicha filtr")}
               style={input}
             >
               {STATUSES.map((x) => (
                 <option key={x.value} value={x.value}>
-                  {x.label}
+                  {t(x.label)}
                 </option>
               ))}
             </select>
             <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Sanadan</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Sanadan")}</span>
               <input
                 type="date"
                 value={f.dateFrom ?? ''}
@@ -248,7 +249,7 @@ export default function PaymentsPage() {
               />
             </label>
             <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Sanagacha</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Sanagacha")}</span>
               <input
                 type="date"
                 value={f.dateTo ?? ''}
@@ -267,7 +268,7 @@ export default function PaymentsPage() {
                 disabled={page === 1}
                 style={{ ...input, cursor: 'pointer', opacity: page === 1 ? 0.5 : 1 }}
               >
-                Oldingi
+                {t("Oldingi")}
               </button>
               <span style={{ fontSize: 14, color: 'var(--alv-muted)' }}>
                 {page} / {pages}
@@ -278,7 +279,7 @@ export default function PaymentsPage() {
                 disabled={page === pages}
                 style={{ ...input, cursor: 'pointer', opacity: page === pages ? 0.5 : 1 }}
               >
-                Keyingi
+                {t("Keyingi")}
               </button>
             </div>
           ) : null

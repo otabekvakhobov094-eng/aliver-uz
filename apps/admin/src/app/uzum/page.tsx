@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import {
@@ -63,7 +64,7 @@ export default function UzumPage() {
   const ready = status?.ready ?? false;
 
   return (
-    <AdminShell title="Uzum Seller">
+    <AdminShell title={t("Uzum Seller")}>
       {error ? (
         <div
           role="alert"
@@ -75,34 +76,30 @@ export default function UzumPage() {
       ) : null}
 
       <section className="alv-card" style={{ padding: 18, display: 'grid', gap: 10, marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>Ulanish</h2>
+        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>{t("Ulanish")}</h2>
         {!status ? (
-          <p style={{ margin: 0, color: 'var(--alv-muted)' }}>Tekshirilmoqda…</p>
+          <p style={{ margin: 0, color: 'var(--alv-muted)' }}>{t("Tekshirilmoqda…")}</p>
         ) : ready ? (
           <p style={{ margin: 0 }}>
-            Ulangan. Manzil: <code>{status.baseUrl}</code>
+            {t("Ulangan. Manzil:")} <code>{status.baseUrl}</code>
           </p>
         ) : (
           <>
             <p style={{ margin: 0 }}>
-              Ulanmagan. Yetishmayotgan sozlamalar:{' '}
+              {t("Ulanmagan. Yetishmayotgan sozlamalar:")}{' '}
               <strong>{status.missing.join(', ')}</strong>
             </p>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-              Kalitlar server muhitida (Render → Environment) beriladi va admin panelda
-              ko‘rsatilmaydi. Kalitni bu yerga kiritish mumkin emas — u brauzerga tushib
-              qolmasligi kerak.
+              {t("Kalitlar server muhitida (Render → Environment) beriladi va admin panelda ko‘rsatilmaydi. Kalitni bu yerga kiritish mumkin emas — u brauzerga tushib qolmasligi kerak.")}
             </p>
           </>
         )}
       </section>
 
       <section className="alv-card" style={{ padding: 18, display: 'grid', gap: 12, marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>Mahsulotlar</h2>
+        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>{t("Mahsulotlar")}</h2>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-          Bu yerda hech narsa yozilmaydi. Uzum’dagi mahsulotlar bizning katalog bilan SKU va
-          shtrix-kod bo‘yicha solishtiriladi. Narxlar ko‘chirilmaydi: Uzum narxida marketpleys
-          komissiyasi bor va uni saytga qo‘yish noto‘g‘ri bo‘ladi.
+          {t("Bu yerda hech narsa yozilmaydi. Uzum’dagi mahsulotlar bizning katalog bilan SKU va shtrix-kod bo‘yicha solishtiriladi. Narxlar ko‘chirilmaydi: Uzum narxida marketpleys komissiyasi bor va uni saytga qo‘yish noto‘g‘ri bo‘ladi.")}
         </p>
         <div>
           <Button
@@ -114,23 +111,23 @@ export default function UzumPage() {
               })
             }
           >
-            {busy === 'preview' ? 'Tekshirilmoqda…' : 'Ko‘rib chiqish'}
+            {busy === "preview" ? t("Tekshirilmoqda…") : t("Ko‘rib chiqish")}
           </Button>
         </div>
 
         {preview ? (
           <>
             <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
-              <Stat label="Uzum’da" value={preview.total} />
-              <Stat label="O‘qildi" value={preview.readable} />
-              <Stat label="O‘qib bo‘lmadi" value={preview.unreadable} />
-              <Stat label="Katalogda bor" value={preview.alreadyInCatalog} />
-              <Stat label="Katalogda yo‘q" value={preview.newToCatalog} />
+              <Stat label={t("Uzum’da")} value={preview.total} />
+              <Stat label={t("O‘qildi")} value={preview.readable} />
+              <Stat label={t("O‘qib bo‘lmadi")} value={preview.unreadable} />
+              <Stat label={t("Katalogda bor")} value={preview.alreadyInCatalog} />
+              <Stat label={t("Katalogda yo‘q")} value={preview.newToCatalog} />
             </div>
             {preview.sample.length > 0 ? (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-                  Katalogda yo‘q mahsulotlardan namuna:
+                  {t("Katalogda yo‘q mahsulotlardan namuna:")}
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, display: 'grid', gap: 3 }}>
                   {preview.sample.map((s) => (
@@ -153,11 +150,10 @@ export default function UzumPage() {
       */}
       <section className="alv-card" style={{ padding: 18, display: 'grid', gap: 12, marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>
-          Narx va qoldiqni tenglashtirish
+          {t("Narx va qoldiqni tenglashtirish")}
         </h2>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-          Ikkala do‘kondagi farq SKU bo‘yicha hisoblanadi. Hech narsa o‘zgartirilmaydi —
-          natijani CSV qilib olib, Uzum kabinetidagi ommaviy tahrirlashga yuklaysiz.
+          {t("Ikkala do‘kondagi farq SKU bo‘yicha hisoblanadi. Hech narsa o‘zgartirilmaydi — natijani CSV qilib olib, Uzum kabinetidagi ommaviy tahrirlashga yuklaysiz.")}
         </p>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -170,7 +166,7 @@ export default function UzumPage() {
               })
             }
           >
-            {busy === 'sync' ? 'Solishtirilmoqda…' : 'Farqni hisoblash'}
+            {busy === "sync" ? t("Solishtirilmoqda…") : t("Farqni hisoblash")}
           </Button>
           {sync ? (
             <a
@@ -178,7 +174,7 @@ export default function UzumPage() {
               href={adminApi.uzumSyncCsvUrl()}
               download="uzum-sync.csv"
             >
-              CSV yuklab olish
+              {t("CSV yuklab olish")}
             </a>
           ) : null}
         </div>
@@ -186,12 +182,12 @@ export default function UzumPage() {
         {sync ? (
           <>
             <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
-              <Stat label="Jami" value={sync.summary.total} />
-              <Stat label="Mos" value={sync.summary.ok} />
-              <Stat label="Qoldiq farqi" value={sync.summary.needsStock} />
-              <Stat label="Narx farqi" value={sync.summary.needsPrice} />
-              <Stat label="Uzum’da yo‘q" value={sync.summary.onlyHere} />
-              <Stat label="Bizda yo‘q" value={sync.summary.onlyThere} />
+              <Stat label={t("Jami")} value={sync.summary.total} />
+              <Stat label={t("Mos")} value={sync.summary.ok} />
+              <Stat label={t("Qoldiq farqi")} value={sync.summary.needsStock} />
+              <Stat label={t("Narx farqi")} value={sync.summary.needsPrice} />
+              <Stat label={t("Uzum’da yo‘q")} value={sync.summary.onlyHere} />
+              <Stat label={t("Bizda yo‘q")} value={sync.summary.onlyThere} />
             </div>
 
             {!sync.summary.priceSyncEnabled ? (
@@ -204,17 +200,13 @@ export default function UzumPage() {
                   borderRadius: 8,
                 }}
               >
-                Narx taqqoslanmayapti. Uzum narxi ichida marketpleys komissiyasi bor, ya’ni
-                saytdagi narxni o‘sha yerga ko‘chirish zarar keltiradi. Taqqoslash uchun
-                server sozlamasida <code>UZUM_PRICE_MARKUP_PERCENT</code> ni ko‘rsating —
-                masalan <code>15</code>.
+                {t("Narx taqqoslanmayapti. Uzum narxi ichida marketpleys komissiyasi bor, ya’ni saytdagi narxni o‘sha yerga ko‘chirish zarar keltiradi. Taqqoslash uchun server sozlamasida")} <code>UZUM_PRICE_MARKUP_PERCENT</code> {t("ni ko‘rsating — masalan")} <code>15</code>.
               </p>
             ) : null}
 
             {sync.summary.reserveStock > 0 ? (
               <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-                Marketpleysga har bir tovardan {sync.summary.reserveStock} dona kam
-                ko‘rsatiladi — oxirgi donani ikki joyda bir vaqtda sotib qo‘ymaslik uchun.
+                {t("Marketpleysga har bir tovardan")} {sync.summary.reserveStock} {t("dona kam ko‘rsatiladi — oxirgi donani ikki joyda bir vaqtda sotib qo‘ymaslik uchun.")}
               </p>
             ) : null}
 
@@ -223,14 +215,14 @@ export default function UzumPage() {
                 <thead>
                   <tr>
                     <th style={{ textAlign: 'left' }}>SKU</th>
-                    <th style={{ textAlign: 'left' }}>Nomi</th>
-                    <th style={{ textAlign: 'right' }}>Qoldiq (biz / Uzum)</th>
-                    <th style={{ textAlign: 'left' }}>Izoh</th>
+                    <th style={{ textAlign: 'left' }}>{t("Nomi")}</th>
+                    <th style={{ textAlign: 'right' }}>{t("Qoldiq (biz / Uzum)")}</th>
+                    <th style={{ textAlign: 'left' }}>{t("Izoh")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sync.rows
-                    .filter((r) => r.action !== 'ok')
+                    .filter((r) => r.action !== "ok")
                     .slice(0, 40)
                     .map((r) => (
                       <tr key={`${r.sku}-${r.externalId ?? 'x'}`}>
@@ -255,10 +247,9 @@ export default function UzumPage() {
       </section>
 
       <section className="alv-card" style={{ padding: 18, display: 'grid', gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>Sharhlar</h2>
+        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>{t("Sharhlar")}</h2>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-          Import qilingan sharh saytda «Uzum’dan» belgisi bilan chiqadi va moderatsiyaga tushadi.
-          «Tasdiqlangan xarid» belgisi qo‘yilmaydi — xarid bizda emas, Uzum’da qilingan.
+          {t("Import qilingan sharh saytda «Uzum’dan» belgisi bilan chiqadi va moderatsiyaga tushadi. «Tasdiqlangan xarid» belgisi qo‘yilmaydi — xarid bizda emas, Uzum’da qilingan.")}
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button
@@ -271,7 +262,7 @@ export default function UzumPage() {
               })
             }
           >
-            {busy === 'dry' ? 'Sinalmoqda…' : 'Sinov (hech narsa yozilmaydi)'}
+            {busy === "dry" ? t("Sinalmoqda…") : t("Sinov (hech narsa yozilmaydi)")}
           </Button>
           <Button
             size="sm"
@@ -283,37 +274,37 @@ export default function UzumPage() {
               });
             }}
           >
-            {busy === 'real' ? 'Import qilinmoqda…' : 'Import qilish'}
+            {busy === "real" ? t("Import qilinmoqda…") : t("Import qilish")}
           </Button>
         </div>
 
         {imported ? (
           <>
             <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
-              <Stat label="Uzum’da" value={imported.total} />
+              <Stat label={t("Uzum’da")} value={imported.total} />
               <Stat label={imported.dryRun ? 'Yozilardi' : 'Yozildi'} value={imported.created} />
-              <Stat label="Takror" value={imported.duplicate} />
-              <Stat label="Mahsulot topilmadi" value={imported.unmatched} />
-              <Stat label="O‘qib bo‘lmadi" value={imported.unreadable} />
+              <Stat label={t("Takror")} value={imported.duplicate} />
+              <Stat label={t("Mahsulot topilmadi")} value={imported.unmatched} />
+              <Stat label={t("O‘qib bo‘lmadi")} value={imported.unreadable} />
             </div>
             {imported.dryRun ? (
               <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-                Bu sinov edi — bazaga hech narsa yozilmadi.
+                {t("Bu sinov edi — bazaga hech narsa yozilmadi.")}
               </p>
             ) : (
               <p style={{ margin: 0, fontSize: 13 }}>
-                Sharhlar «Sharhlar» bo‘limida moderatsiyani kutmoqda.
+                {t("Sharhlar «Sharhlar» bo‘limida moderatsiyani kutmoqda.")}
               </p>
             )}
             {imported.unmatchedSample.length > 0 ? (
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-                  Mahsuloti topilmagan sharhlar (SKU bo‘yicha):
+                  {t("Mahsuloti topilmagan sharhlar (SKU bo‘yicha):")}
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, display: 'grid', gap: 3 }}>
                   {imported.unmatchedSample.map((u) => (
                     <li key={u.externalId}>
-                      {u.sku ?? 'SKU yo‘q'} · {u.rating}★
+                      {u.sku ?? t("SKU yo‘q")} · {u.rating}★
                     </li>
                   ))}
                 </ul>

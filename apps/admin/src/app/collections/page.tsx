@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { CollectionProducts } from '@/components/CollectionProducts';
 import { adminApi, type AdminCollection } from '@/lib/api';
@@ -72,7 +73,7 @@ export default function CollectionsPage() {
   };
 
   return (
-    <AdminShell title="Kolleksiyalar">
+    <AdminShell title={t("Kolleksiyalar")}>
       {error ? (
         <div
           role="alert"
@@ -93,9 +94,7 @@ export default function CollectionsPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
         <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14 }}>
-          Kolleksiya — marketing to‘plami (masalan «Yangi kelganlar»). Kategoriya bilan
-          almashtirmang: mahsulot bitta kategoriyaga tegishli, kolleksiyaga esa nechtasiga ham
-          kirishi mumkin.
+          {t("Kolleksiya — marketing to‘plami (masalan «Yangi kelganlar»). Kategoriya bilan almashtirmang: mahsulot bitta kategoriyaga tegishli, kolleksiyaga esa nechtasiga ham kirishi mumkin.")}
         </p>
         <div style={{ flex: 1 }} />
         <button
@@ -112,7 +111,7 @@ export default function CollectionsPage() {
             whiteSpace: 'nowrap',
           }}
         >
-          {open ? 'Yopish' : 'Yangi kolleksiya'}
+          {open ? t("Yopish") : t("Yangi kolleksiya")}
         </button>
       </div>
 
@@ -142,27 +141,27 @@ export default function CollectionsPage() {
           >
             <input
               required
-              placeholder="Nomi (o‘zbekcha)"
+              placeholder={t("Nomi (o‘zbekcha)")}
               value={form.nameUz}
               onChange={(e) => setForm({ ...form, nameUz: e.target.value })}
               style={input}
             />
             <input
               required
-              placeholder="Nomi (ruscha)"
+              placeholder={t("Nomi (ruscha)")}
               value={form.nameRu}
               onChange={(e) => setForm({ ...form, nameRu: e.target.value })}
               style={input}
             />
             <input
-              placeholder="Manzil (bo‘sh = nomdan yasaladi)"
+              placeholder={t("Manzil (bo‘sh = nomdan yasaladi)")}
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
               style={input}
             />
             <input
               type="number"
-              placeholder="Tartib"
+              placeholder={t("Tartib")}
               value={form.sortOrder}
               onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}
               style={input}
@@ -182,7 +181,7 @@ export default function CollectionsPage() {
               cursor: busy ? 'wait' : 'pointer',
             }}
           >
-            Yaratish
+            {t("Yaratish")}
           </button>
         </form>
       ) : null}
@@ -202,7 +201,7 @@ export default function CollectionsPage() {
         <table style={{ width: '100%', minWidth: 620, borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr>
-              {['Nomi', 'Manzil', 'Mahsulot', 'Holat', ''].map((h) => (
+              {[t("Nomi"), t("Manzil"), t("Mahsulot"), t("Holat"), ''].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -248,7 +247,7 @@ export default function CollectionsPage() {
                       fontSize: 11,
                     }}
                   >
-                    {c.isActive ? 'Faol' : 'Yashirilgan'}
+                    {c.isActive ? t("Faol") : t("Yashirilgan")}
                   </span>
                 </td>
                 <td
@@ -272,7 +271,7 @@ export default function CollectionsPage() {
                       marginRight: 8,
                     }}
                   >
-                    Tarkibi
+                    {t("Tarkibi")}
                   </button>
                   <button
                     type="button"
@@ -298,7 +297,7 @@ export default function CollectionsPage() {
                       fontSize: 13,
                     }}
                   >
-                    {c.isActive ? 'Yashirish' : 'Faollashtirish'}
+                    {c.isActive ? t("Yashirish") : t("Faollashtirish")}
                   </button>
                 </td>
               </tr>
@@ -306,7 +305,7 @@ export default function CollectionsPage() {
             {items.length === 0 ? (
               <tr>
                 <td colSpan={5} style={{ padding: 28, textAlign: 'center', color: 'var(--alv-muted)' }}>
-                  Hali kolleksiya yo‘q
+                  {t("Hali kolleksiya yo‘q")}
                 </td>
               </tr>
             ) : null}

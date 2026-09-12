@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Button, formatTiyin } from '@aliver/ui';
 import { adminApi, type LoyaltyView } from '@/lib/api';
 import { fmtDate, fmtNumber } from '@/lib/order-labels';
@@ -83,7 +84,7 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
       </p>
     );
   }
-  if (!data) return <p style={{ color: 'var(--alv-muted)', fontSize: 13.5, margin: 0 }}>Yuklanmoqda…</p>;
+  if (!data) return <p style={{ color: 'var(--alv-muted)', fontSize: 13.5, margin: 0 }}>{t("Yuklanmoqda…")}</p>;
 
   const { balance, history } = data;
 
@@ -92,19 +93,19 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
       <div style={{ display: 'flex', gap: 16, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 800 }}>{fmtNumber(balance.points)}</div>
-          <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>ball</div>
+          <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>{t("ball")}</div>
         </div>
         <div>
           <div style={{ fontSize: 16, fontWeight: 700 }}>{formatTiyin(BigInt(balance.amount))}</div>
-          <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>qiymati</div>
+          <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>{t("qiymati")}</div>
         </div>
         {balance.expiresAt ? (
           <div style={{ fontSize: 12.5, color: 'var(--alv-muted)' }}>
-            {fmtDate(balance.expiresAt)} dan keyin kuyadi
+            {fmtDate(balance.expiresAt)} {t("dan keyin kuyadi")}
           </div>
         ) : null}
         <Button variant="ghost" size="sm" style={{ marginLeft: 'auto' }} onClick={() => setOpen((v) => !v)}>
-          {open ? 'Yopish' : 'Qo‘lda tuzatish'}
+          {open ? t("Yopish") : t("Qo‘lda tuzatish")}
         </Button>
       </div>
 
@@ -122,35 +123,35 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
       {open ? (
         <form onSubmit={submit} style={{ display: 'grid', gap: 8 }}>
           <label style={{ display: 'grid', gap: 4, fontSize: 12.5, fontWeight: 600 }}>
-            Ball (manfiy — yechish)
+            {t("Ball (manfiy — yechish)")}
             <input
               value={points}
               onChange={(e) => setPoints(e.target.value)}
               inputMode="numeric"
-              placeholder="masalan: 500 yoki -200"
+              placeholder={t("masalan: 500 yoki -200")}
               style={fieldStyle}
             />
           </label>
           <label style={{ display: 'grid', gap: 4, fontSize: 12.5, fontWeight: 600 }}>
-            Izoh (majburiy)
+            {t("Izoh (majburiy)")}
             <input
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               maxLength={300}
-              placeholder="Nega tuzatildi"
+              placeholder={t("Nega tuzatildi")}
               style={fieldStyle}
             />
           </label>
           <div>
             <Button size="sm" disabled={busy}>
-              {busy ? 'Saqlanmoqda…' : 'Saqlash'}
+              {busy ? t("Saqlanmoqda…") : t("Saqlash")}
             </Button>
           </div>
         </form>
       ) : null}
 
       {history.length === 0 ? (
-        <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>Hali harakat yo‘q.</p>
+        <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>{t("Hali harakat yo‘q.")}</p>
       ) : (
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>
           {history.map((h) => (
@@ -159,7 +160,7 @@ export function CustomerLoyalty({ customerId }: { customerId: string }) {
               style={{ display: 'flex', gap: 10, justifyContent: 'space-between', fontSize: 13, alignItems: 'baseline' }}
             >
               <span style={{ minWidth: 0 }}>
-                {KIND_LABEL[h.kind] ?? h.kind}
+                {t(KIND_LABEL[h.kind] ?? h.kind)}
                 {h.orderNumber ? ` · ${h.orderNumber}` : ''}
                 {h.comment ? (
                   <span style={{ color: 'var(--alv-muted)' }}> · {h.comment}</span>

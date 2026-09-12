@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -56,7 +57,7 @@ const COLUMNS: Array<DataColumn<AdminOrderRow>> = [
         <Link href={`/orders/${o.id}`} style={{ fontWeight: 700, color: 'var(--alv-brand)' }}>
           {o.number}
         </Link>
-        <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{o.itemsCount} pozitsiya</div>
+        <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{o.itemsCount} {t("pozitsiya")}</div>
       </>
     ),
   },
@@ -220,7 +221,7 @@ export default function OrdersPage() {
   });
 
   return (
-    <AdminShell title="Buyurtmalar">
+    <AdminShell title={t("Buyurtmalar")}>
       {error ? (
         <div
           role="alert"
@@ -232,7 +233,7 @@ export default function OrdersPage() {
       ) : null}
 
       <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
-        Jami {total} ta buyurtma
+        {t("Jami")} {total} {t("ta buyurtma")}
       </p>
 
       <DataList<AdminOrderRow>
@@ -246,45 +247,45 @@ export default function OrdersPage() {
         bulkActions={bulkActions}
         onDone={load}
         onClearFilters={() => changeFilters(EMPTY_FILTERS)}
-        emptyTitle="Hali buyurtma yo‘q"
-        emptyHint="Birinchi buyurtma berilgach u shu yerda paydo bo‘ladi."
-        noResultsTitle="Bu shartlarga mos buyurtma topilmadi"
+        emptyTitle={t("Hali buyurtma yo‘q")}
+        emptyHint={t("Birinchi buyurtma berilgach u shu yerda paydo bo‘ladi.")}
+        noResultsTitle={t("Bu shartlarga mos buyurtma topilmadi")}
         filterBar={
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
             <input
               type="search"
               value={f.q ?? ''}
               onChange={(e) => changeFilters({ ...filters, q: e.target.value })}
-              placeholder="Raqam, telefon yoki ism"
-              aria-label="Buyurtma qidirish"
+              placeholder={t("Raqam, telefon yoki ism")}
+              aria-label={t("Buyurtma qidirish")}
               style={{ ...input, flex: '1 1 240px' }}
             />
             <select
               value={f.status ?? ''}
               onChange={(e) => changeFilters({ ...filters, status: e.target.value })}
-              aria-label="Holat bo‘yicha filtr"
+              aria-label={t("Holat bo‘yicha filtr")}
               style={input}
             >
               {STATUS_FILTERS.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
             <select
               value={f.paymentStatus ?? ''}
               onChange={(e) => changeFilters({ ...filters, paymentStatus: e.target.value })}
-              aria-label="To‘lov holati bo‘yicha filtr"
+              aria-label={t("To‘lov holati bo‘yicha filtr")}
               style={input}
             >
               {PAYMENT_FILTERS.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
             <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Sanadan</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Sanadan")}</span>
               <input
                 type="date"
                 value={f.dateFrom ?? ''}
@@ -293,7 +294,7 @@ export default function OrdersPage() {
               />
             </label>
             <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Sanagacha</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Sanagacha")}</span>
               <input
                 type="date"
                 value={f.dateTo ?? ''}
@@ -312,7 +313,7 @@ export default function OrdersPage() {
                 disabled={page === 1}
                 style={{ ...pageBtn(false), opacity: page === 1 ? 0.5 : 1, padding: '0 14px' }}
               >
-                Oldingi
+                {t("Oldingi")}
               </button>
               <span style={{ fontSize: 14, color: 'var(--alv-muted)' }}>
                 {page} / {pages}
@@ -323,7 +324,7 @@ export default function OrdersPage() {
                 disabled={page === pages}
                 style={{ ...pageBtn(false), opacity: page === pages ? 0.5 : 1, padding: '0 14px' }}
               >
-                Keyingi
+                {t("Keyingi")}
               </button>
             </div>
           ) : null

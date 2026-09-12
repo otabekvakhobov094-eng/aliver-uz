@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { fmtDate, fmtNumber } from '@/lib/order-labels';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type ReportOverview } from '@/lib/api';
@@ -30,7 +31,7 @@ const PERIODS = [
 ];
 
 function money(value: string | null | undefined): string {
-  return `${fmtNumber(Number(value ?? 0) / 100)} so‘m`;
+  return `${fmtNumber(Number(value ?? 0) / 100)} ${t('so‘m')}`;
 }
 
 export default function ReportsPage() {
@@ -98,9 +99,9 @@ export default function ReportsPage() {
     : [];
 
   return (
-    <AdminShell title="Hisobotlar">
+    <AdminShell title={t("Hisobotlar")}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end', marginBottom: 18 }}>
-        <div role="group" aria-label="Davr" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div role="group" aria-label={t("Davr")} style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {PERIODS.map((p) => (
             <button
               key={p.key}
@@ -118,19 +119,19 @@ export default function ReportsPage() {
                 cursor: 'pointer',
               }}
             >
-              {p.label}
+              {t(p.label)}
             </button>
           ))}
         </div>
 
-        {period === 'custom' ? (
+        {period === "custom" ? (
           <>
             <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Sanadan</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Sanadan")}</span>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={FIELD} />
             </label>
             <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Sanagacha</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Sanagacha")}</span>
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={FIELD} />
             </label>
           </>
@@ -153,7 +154,7 @@ export default function ReportsPage() {
             opacity: exporting || !report ? 0.55 : 1,
           }}
         >
-          {exporting ? 'Tayyorlanmoqda…' : 'CSV yuklab olish'}
+          {exporting ? t("Tayyorlanmoqda…") : t("CSV yuklab olish")}
         </button>
       </div>
 
@@ -163,25 +164,24 @@ export default function ReportsPage() {
           className="alv-card"
           style={{ padding: 16, marginBottom: 16, borderLeft: '3px solid var(--alv-danger)' }}
         >
-          <strong style={{ display: 'block', marginBottom: 4 }}>Hisobot olinmadi</strong>
+          <strong style={{ display: 'block', marginBottom: 4 }}>{t("Hisobot olinmadi")}</strong>
           <span style={{ fontSize: 14, color: 'var(--alv-ink-2)' }}>{error}</span>
           <div style={{ marginTop: 12 }}>
             <button type="button" onClick={() => void load()} style={RETRY}>
-              Qayta urinish
+              {t("Qayta urinish")}
             </button>
           </div>
         </div>
       ) : null}
 
-      {period === 'custom' && (!from || !to) ? (
-        <p style={{ color: 'var(--alv-muted)' }}>Ikkala sanani ham tanlang.</p>
+      {period === "custom" && (!from || !to) ? (
+        <p style={{ color: 'var(--alv-muted)' }}>{t("Ikkala sanani ham tanlang.")}</p>
       ) : loading ? (
-        <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+        <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
       ) : !report ? null : (
         <>
           <p style={{ margin: '0 0 16px', color: 'var(--alv-muted)', fontSize: 13.5 }}>
-            {fmtDate(report.period.from)} — {fmtDate(report.period.to)}. Faqat to‘langan
-            buyurtmalar hisobga olinadi.
+            {fmtDate(report.period.from)} — {fmtDate(report.period.to)}{t(". Faqat to‘langan buyurtmalar hisobga olinadi.")}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 14 }}>
@@ -193,7 +193,7 @@ export default function ReportsPage() {
             ))}
           </div>
 
-          <Section title="Top mahsulotlar" empty="Bu davrda sotuv bo‘lmagan.">
+          <Section title={t("Top mahsulotlar")} empty="Bu davrda sotuv bo‘lmagan.">
             {report.topProducts.map((p) => (
               <Row
                 key={p.productName}
@@ -203,7 +203,7 @@ export default function ReportsPage() {
             ))}
           </Section>
 
-          <Section title="Marketing atributsiyasi" empty="UTM belgilangan buyurtma yo‘q.">
+          <Section title={t("Marketing atributsiyasi")} empty="UTM belgilangan buyurtma yo‘q.">
             {report.attribution.map((row) => (
               <Row
                 key={row.utmSource ?? 'direct'}

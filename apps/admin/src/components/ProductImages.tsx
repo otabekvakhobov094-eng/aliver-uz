@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { adminApi, type AdminProductDetail } from '@/lib/api';
 
 type Image = AdminProductDetail['images'][number];
@@ -71,9 +72,7 @@ export function ProductImages({ productId, images, onChange }: Props) {
   if (!productId) {
     return (
       <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14, lineHeight: 1.6 }}>
-        Rasm yuklash uchun mahsulot avval saqlanishi kerak — yuklash manzili
-        mahsulot raqamiga bog‘langan. Pastdagi «Yaratish» tugmasini bosing,
-        shundan keyin shu yerda yuklash oynasi ochiladi.
+        {t("Rasm yuklash uchun mahsulot avval saqlanishi kerak — yuklash manzili mahsulot raqamiga bog‘langan. Pastdagi «Yaratish» tugmasini bosing, shundan keyin shu yerda yuklash oynasi ochiladi.")}
       </p>
     );
   }
@@ -171,18 +170,18 @@ export function ProductImages({ productId, images, onChange }: Props) {
                       borderRadius: 999,
                     }}
                   >
-                    Asosiy
+                    {t("Asosiy")}
                   </span>
                 ) : null}
               </div>
 
               <div style={{ padding: 10, display: 'grid', gap: 8 }}>
                 <div style={{ fontSize: 12, color: 'var(--alv-muted)', lineHeight: 1.45 }}>
-                  {KIND_LABEL[img.kind] ?? img.kind}
-                  {img.altUz ? ` · ${img.altUz}` : ' · alt matn yo‘q'}
+                  {t(KIND_LABEL[img.kind] ?? img.kind)}
+                  {img.altUz ? ` · ${img.altUz}` : t(" · alt matn yo‘q")}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  <button type="button" onClick={() => move(i, -1)} disabled={busy || i === 0} style={MINI} aria-label="Chapga surish">
+                  <button type="button" onClick={() => move(i, -1)} disabled={busy || i === 0} style={MINI} aria-label={t("Chapga surish")}>
                     ←
                   </button>
                   <button
@@ -190,7 +189,7 @@ export function ProductImages({ productId, images, onChange }: Props) {
                     onClick={() => move(i, 1)}
                     disabled={busy || i === order.length - 1}
                     style={MINI}
-                    aria-label="O‘ngga surish"
+                    aria-label={t("O‘ngga surish")}
                   >
                     →
                   </button>
@@ -201,7 +200,7 @@ export function ProductImages({ productId, images, onChange }: Props) {
                       disabled={busy}
                       style={MINI}
                     >
-                      Asosiy qilish
+                      {t("Asosiy qilish")}
                     </button>
                   ) : null}
                   <button
@@ -210,7 +209,7 @@ export function ProductImages({ productId, images, onChange }: Props) {
                     disabled={busy}
                     style={{ ...MINI, color: 'var(--alv-danger)' }}
                   >
-                    O‘chirish
+                    {t("O‘chirish")}
                   </button>
                 </div>
               </div>
@@ -219,7 +218,7 @@ export function ProductImages({ productId, images, onChange }: Props) {
         </ul>
       ) : (
         <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 14 }}>
-          Hali rasm yo‘q. Birinchi yuklangan rasm avtomatik «Asosiy» bo‘ladi.
+          {t("Hali rasm yo‘q. Birinchi yuklangan rasm avtomatik «Asosiy» bo‘ladi.")}
         </p>
       )}
 
@@ -236,39 +235,38 @@ export function ProductImages({ productId, images, onChange }: Props) {
           ref={fileRef}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/avif"
-          aria-label="Rasm fayli"
+          aria-label={t("Rasm fayli")}
           style={{ fontSize: 14 }}
         />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
           <label style={{ display: 'grid', gap: 4, fontSize: 13 }}>
             <span style={{ fontWeight: 600 }}>
-              Alt matn (o‘zbekcha) <span style={{ color: 'var(--alv-danger)' }}>*</span>
+              {t("Alt matn (o‘zbekcha)")} <span style={{ color: 'var(--alv-danger)' }}>*</span>
             </span>
             <input
               value={altUz}
               onChange={(e) => setAltUz(e.target.value)}
-              placeholder="Batana moyi, 60 ml shisha"
+              placeholder={t("Batana moyi, 60 ml shisha")}
               style={FIELD}
             />
           </label>
           <label style={{ display: 'grid', gap: 4, fontSize: 13 }}>
             <span style={{ fontWeight: 600 }}>
-              Alt matn (ruscha) <span style={{ color: 'var(--alv-danger)' }}>*</span>
+              {t("Alt matn (ruscha)")} <span style={{ color: 'var(--alv-danger)' }}>*</span>
             </span>
             <input
               value={altRu}
               onChange={(e) => setAltRu(e.target.value)}
-              placeholder="Масло батана, флакон 60 мл"
+              placeholder={t("Масло батана, флакон 60 мл")}
               style={FIELD}
             />
           </label>
         </div>
         <p style={{ margin: 0, fontSize: 12.5, color: 'var(--alv-muted)', lineHeight: 1.55 }}>
-          Yuklangach 320/640/1024/1600 o‘lchamlari va WebP hamda AVIF nusxalari
-          avtomatik yaratiladi — alohida tayyorlash shart emas.
+          {t("Yuklangach 320/640/1024/1600 o‘lchamlari va WebP hamda AVIF nusxalari avtomatik yaratiladi — alohida tayyorlash shart emas.")}
         </p>
         <button type="button" onClick={() => void upload()} disabled={busy} style={UPLOAD_BTN(busy)}>
-          {busy ? 'Yuklanmoqda…' : 'Rasmni yuklash'}
+          {busy ? t("Yuklanmoqda…") : t("Rasmni yuklash")}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { t } from '@/lib/i18n';
 
 /**
  * Xato chegarasi.
@@ -39,11 +40,10 @@ export default function AdminError({
         }}
       >
         <h1 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 22, margin: '0 0 8px' }}>
-          Sahifa ochilmadi
+          {t("Sahifa ochilmadi")}
         </h1>
         <p style={{ color: 'var(--alv-ink-2)', fontSize: 14.5, lineHeight: 1.65, margin: '0 0 16px' }}>
-          Bu sahifada xatolik yuz berdi. Ma’lumotlaringiz joyida — faqat shu ekran
-          chizilmadi. Qayta urinib ko‘ring yoki boshqa bo‘limga o‘ting.
+          {t("Bu sahifada xatolik yuz berdi. Ma’lumotlaringiz joyida — faqat shu ekran chizilmadi. Qayta urinib ko‘ring yoki boshqa bo‘limga o‘ting.")}
         </p>
 
         <pre
@@ -63,13 +63,13 @@ export default function AdminError({
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           <button type="button" onClick={reset} style={primary}>
-            Qayta urinish
+            {t("Qayta urinish")}
           </button>
           <a href="/" style={ghost}>
-            Dashboardga qaytish
+            {t("Dashboardga qaytish")}
           </a>
           <a href="/login" style={ghost}>
-            Qaytadan kirish
+            {t("Qaytadan kirish")}
           </a>
         </div>
       </div>

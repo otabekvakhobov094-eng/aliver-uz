@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { formatTiyin } from '@aliver/ui';
 import { adminApi } from '@/lib/api';
 
@@ -49,7 +50,7 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
   }, [id]);
 
   if (error) return <p style={{ padding: 24, color: '#c62134' }}>{error}</p>;
-  if (!data) return <p style={{ padding: 24 }}>Yuklanmoqda…</p>;
+  if (!data) return <p style={{ padding: 24 }}>{t("Yuklanmoqda…")}</p>;
 
   const address = [data.address.region, data.address.district, data.address.line]
     .filter(Boolean)
@@ -88,19 +89,19 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
             cursor: 'pointer',
           }}
         >
-          Chop etish
+          {t("Chop etish")}
         </button>
       </div>
 
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>ALIVER.UZ</div>
-          <div style={{ fontSize: 13, color: '#555' }}>Yetkazib berish varaqasi</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>{t("ALIVER.UZ")}</div>
+          <div style={{ fontSize: 13, color: '#555' }}>{t("Yetkazib berish varaqasi")}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>{data.number}</div>
           <div style={{ fontSize: 12, color: '#555' }}>
-            {new Date(data.placedAt).toLocaleString('ru-RU')}
+            {new Date(data.placedAt).toLocaleString("ru-RU")}
           </div>
         </div>
       </header>
@@ -117,8 +118,8 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: 13, letterSpacing: '0.06em' }}>MIJOZDAN OLINSIN</div>
-          <div style={{ fontSize: 30, fontWeight: 800 }}>{formatTiyin(data.collectCash)} so‘m</div>
+          <div style={{ fontSize: 13, letterSpacing: '0.06em' }}>{t("MIJOZDAN OLINSIN")}</div>
+          <div style={{ fontSize: 30, fontWeight: 800 }}>{formatTiyin(data.collectCash)} {t("so‘m")}</div>
         </div>
       ) : (
         <div
@@ -131,18 +132,18 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
             fontSize: 14,
           }}
         >
-          Oldindan to‘langan — kuryer pul olmaydi
+          {t("Oldindan to‘langan — kuryer pul olmaydi")}
         </div>
       )}
 
-      <Section title="Mijoz">
+      <Section title={t("Mijoz")}>
         <Row k="Ism" v={data.customer.name} />
         <Row k="Telefon" v={data.customer.phone} />
         <Row k="Manzil" v={address || '—'} />
         {data.address.landmark ? <Row k="Mo‘ljal" v={data.address.landmark} /> : null}
       </Section>
 
-      <Section title="Yetkazib berish">
+      <Section title={t("Yetkazib berish")}>
         <Row k="Usul" v={data.delivery.method} />
         {data.delivery.courierName ? <Row k="Kuryer" v={data.delivery.courierName} /> : null}
         {data.delivery.courierPhone ? <Row k="Kuryer tel." v={data.delivery.courierPhone} /> : null}
@@ -157,14 +158,14 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
         ) : null}
       </Section>
 
-      <Section title="Tarkib">
+      <Section title={t("Tarkib")}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-              <th style={{ padding: '6px 4px' }}>Mahsulot</th>
+              <th style={{ padding: '6px 4px' }}>{t("Mahsulot")}</th>
               <th style={{ padding: '6px 4px' }}>SKU</th>
-              <th style={{ padding: '6px 4px', textAlign: 'right' }}>Soni</th>
-              <th style={{ padding: '6px 4px', textAlign: 'right' }}>Summa</th>
+              <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t("Soni")}</th>
+              <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t("Summa")}</th>
             </tr>
           </thead>
           <tbody>
@@ -184,7 +185,7 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
         <div
           style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 14 }}
         >
-          <span>Yetkazib berish</span>
+          <span>{t("Yetkazib berish")}</span>
           <span>{formatTiyin(data.totals.shippingTotal)}</span>
         </div>
         <div
@@ -196,20 +197,20 @@ export default function WaybillPage({ params }: { params: Promise<{ id: string }
             fontWeight: 800,
           }}
         >
-          <span>Jami</span>
-          <span>{formatTiyin(data.totals.grandTotal)} so‘m</span>
+          <span>{t("Jami")}</span>
+          <span>{formatTiyin(data.totals.grandTotal)} {t("so‘m")}</span>
         </div>
       </Section>
 
       {data.comment ? (
-        <Section title="Mijoz izohi">
+        <Section title={t("Mijoz izohi")}>
           <p style={{ margin: 0, fontSize: 13 }}>{data.comment}</p>
         </Section>
       ) : null}
 
       <div style={{ display: 'flex', gap: 40, marginTop: 32, fontSize: 13 }}>
-        <SignLine label="Kuryer imzosi" />
-        <SignLine label="Mijoz imzosi" />
+        <SignLine label={t("Kuryer imzosi")} />
+        <SignLine label={t("Mijoz imzosi")} />
       </div>
     </main>
   );

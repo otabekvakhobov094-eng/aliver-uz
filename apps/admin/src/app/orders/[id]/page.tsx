@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { use, useCallback, useEffect, useState } from 'react';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -125,13 +126,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   if (!order) {
     return (
-      <AdminShell title="Buyurtma">
+      <AdminShell title={t("Buyurtma")}>
         {error ? (
           <p role="alert" style={{ color: 'var(--alv-danger)', fontWeight: 600 }}>
             {error}
           </p>
         ) : (
-          <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
         )}
       </AdminShell>
     );
@@ -143,7 +144,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     <AdminShell title={`Buyurtma ${order.number}`}>
       <div style={{ marginBottom: 16 }}>
         <Link href="/orders" style={{ fontSize: 13.5, color: 'var(--alv-muted)' }}>
-          ← Buyurtmalar ro‘yxati
+          {t("← Buyurtmalar ro‘yxati")}
         </Link>
       </div>
 
@@ -167,7 +168,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </span>
         {order.reservationExpiresAt ? (
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--alv-warn)' }}>
-            Rezerv: {fmtDateTime(order.reservationExpiresAt)} gacha
+            {t("Rezerv:")} {fmtDateTime(order.reservationExpiresAt)} {t("gacha")}
           </span>
         ) : null}
       </div>
@@ -188,17 +189,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       ) : null}
 
-      <Card title="Holatni o‘zgartirish">
+      <Card title={t("Holatni o‘zgartirish")}>
         {next.length === 0 ? (
           <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-            Bu holatdan boshqa holatga o‘tib bo‘lmaydi — buyurtma yakunlangan.
+            {t("Bu holatdan boshqa holatga o‘tib bo‘lmaydi — buyurtma yakunlangan.")}
           </p>
         ) : (
           <>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Izoh (ixtiyoriy) — tarixga va audit logga yoziladi"
+              placeholder={t("Izoh (ixtiyoriy) — tarixga va audit logga yoziladi")}
               rows={2}
               style={{
                 width: '100%',
@@ -223,24 +224,23 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               ))}
             </div>
             <p style={{ margin: 0, fontSize: 12.5, color: 'var(--alv-muted)', lineHeight: 1.5 }}>
-              «Yo‘lda» — rezerv haqiqiy hisobdan chiqariladi. «Bekor qilingan» — rezerv bo‘shatiladi
-              va chegirma limiti qaytariladi.
+              {t("«Yo‘lda» — rezerv haqiqiy hisobdan chiqariladi. «Bekor qilingan» — rezerv bo‘shatiladi va chegirma limiti qaytariladi.")}
             </p>
           </>
         )}
       </Card>
 
       <div className="alv-admin-cols">
-        <Card title="Pozitsiyalar">
+        <Card title={t("Pozitsiyalar")}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
               <thead>
                 <tr style={{ fontSize: 12.5, color: 'var(--alv-muted)', textAlign: 'left' }}>
-                  <th style={th}>Mahsulot</th>
-                  <th style={th}>IKPU / QQS</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Narx</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Soni</th>
-                  <th style={{ ...th, textAlign: 'right' }}>Jami</th>
+                  <th style={th}>{t("Mahsulot")}</th>
+                  <th style={th}>{t("IKPU / QQS")}</th>
+                  <th style={{ ...th, textAlign: 'right' }}>{t("Narx")}</th>
+                  <th style={{ ...th, textAlign: 'right' }}>{t("Soni")}</th>
+                  <th style={{ ...th, textAlign: 'right' }}>{t("Jami")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -270,8 +270,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           <p style={{ margin: 0, fontSize: 12, color: 'var(--alv-muted)', lineHeight: 1.5 }}>
-            Bu qiymatlar buyurtma yaratilganda MUZLATILGAN nusxa. Katalogda narx yoki IKPU o‘zgarsa
-            ham bu yerda o‘zgarmaydi.
+            {t("Bu qiymatlar buyurtma yaratilganda MUZLATILGAN nusxa. Katalogda narx yoki IKPU o‘zgarsa ham bu yerda o‘zgarmaydi.")}
           </p>
 
           <div style={{ display: 'grid', gap: 8, marginTop: 4 }}>
@@ -290,7 +289,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </Card>
 
         <div style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
-          <Card title="Mijoz va yetkazish">
+          <Card title={t("Mijoz va yetkazish")}>
             <dl style={{ margin: 0, display: 'grid', gap: 8, fontSize: 13.5 }}>
               <Line k="Ism" v={[order.firstName, order.lastName].filter(Boolean).join(' ')} />
               <Line k="Telefon" v={order.contactPhone} />
@@ -322,10 +321,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </dl>
           </Card>
 
-          <Card title="To‘lov">
+          <Card title={t("To‘lov")}>
             {order.payments.length === 0 ? (
               <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-                To‘lov yozuvi yo‘q.
+                {t("To‘lov yozuvi yo‘q.")}
               </p>
             ) : (
               <dl style={{ margin: 0, display: 'grid', gap: 8, fontSize: 13.5 }}>
@@ -340,9 +339,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </Card>
 
-          <Card title="Ombor rezervi">
+          <Card title={t("Ombor rezervi")}>
             {order.reservations.length === 0 ? (
-              <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>Rezerv yo‘q.</p>
+              <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>{t("Rezerv yo‘q.")}</p>
             ) : (
               <dl style={{ margin: 0, display: 'grid', gap: 8, fontSize: 13.5 }}>
                 {order.reservations.map((r) => (
@@ -356,16 +355,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </Card>
 
-          <Card title="Jo‘natma">
+          <Card title={t("Jo‘natma")}>
             {order.deliveryType === 'PICKUP' ? (
               <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-                Olib ketish buyurtmasi — kuryer kerak emas.
+                {t("Olib ketish buyurtmasi — kuryer kerak emas.")}
               </p>
             ) : (
               <>
                 <label style={{ display: 'grid', gap: 6 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>
-                    Tashuvchi
+                    {t("Tashuvchi")}
                   </span>
                   <select
                     value={carrier}
@@ -374,7 +373,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   >
                     {carriers.map((c) => (
                       <option key={c.code} value={c.code}>
-                        {c.label}
+                        {t(c.label)}
                       </option>
                     ))}
                   </select>
@@ -383,28 +382,28 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <input
                   value={courierName}
                   onChange={(e) => setCourierName(e.target.value)}
-                  placeholder="Kuryer ismi"
+                  placeholder={t("Kuryer ismi")}
                   style={field}
                 />
                 <input
                   value={courierPhone}
                   onChange={(e) => setCourierPhone(e.target.value)}
-                  placeholder="Kuryer telefoni"
+                  placeholder={t("Kuryer telefoni")}
                   style={field}
                 />
                 <input
                   value={trackingNo}
                   onChange={(e) => setTrackingNo(e.target.value)}
-                  placeholder="Trek raqami (bo‘lsa)"
+                  placeholder={t("Trek raqami (bo‘lsa)")}
                   style={field}
                 />
 
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <Button variant="primary" disabled={busy} onClick={() => void assignCourier()}>
-                    Kuryerni biriktirish
+                    {t("Kuryerni biriktirish")}
                   </Button>
                   <Button variant="ghost" onClick={printWaybill}>
-                    Varaqani chop etish
+                    {t("Varaqani chop etish")}
                   </Button>
                 </div>
 
@@ -437,7 +436,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         </div>
                         {s.trackingNo ? (
                           <div style={{ fontSize: 12.5 }}>
-                            Trek:{' '}
+                            {t("Trek:")}{' '}
                             {s.trackUrl ? (
                               <a
                                 href={s.trackUrl}
@@ -475,8 +474,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         lineHeight: 1.5,
                       }}
                     >
-                      «IN_TRANSIT» buyurtmani «Yo‘lda», «DELIVERED» esa «Yetkazilgan» holatiga
-                      o‘tkazadi — ikkalasini alohida bosish shart emas.
+                      {t("«IN_TRANSIT» buyurtmani «Yo‘lda», «DELIVERED» esa «Yetkazilgan» holatiga o‘tkazadi — ikkalasini alohida bosish shart emas.")}
                     </p>
                   </div>
                 ) : null}
@@ -484,10 +482,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </Card>
 
-          <Card title="Yuborilgan xabarlar">
+          <Card title={t("Yuborilgan xabarlar")}>
             {notifications.length === 0 ? (
               <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-                Hali xabar yuborilmagan.
+                {t("Hali xabar yuborilmagan.")}
               </p>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
@@ -515,7 +513,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </Card>
 
-          <Card title="Tarix">
+          <Card title={t("Tarix")}>
             <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 12 }}>
               {order.statusHistory.map((h) => (
                 <li key={h.id} style={{ fontSize: 13 }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { EntityForm, type FormField } from '@/components/EntityForm';
 import { adminApi, type AdminBrand } from '@/lib/api';
@@ -124,7 +125,7 @@ export default function BrandsPage() {
   }
 
   return (
-    <AdminShell title="Brendlar">
+    <AdminShell title={t("Brendlar")}>
       {error ? (
         <div role="alert" className="alv-card" style={{ padding: 14, marginBottom: 14, borderLeft: '3px solid var(--alv-danger)' }}>
           {error}
@@ -141,8 +142,8 @@ export default function BrandsPage() {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Brend nomi yoki slug"
-          aria-label="Brend qidirish"
+          placeholder={t("Brend nomi yoki slug")}
+          aria-label={t("Brend qidirish")}
           style={{ ...FIELD, flex: '1 1 240px', maxWidth: 340 }}
         />
         <button
@@ -154,22 +155,22 @@ export default function BrandsPage() {
           }}
           style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--alv-ink)', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
         >
-          + Yangi brend
+          {t("+ Yangi brend")}
         </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: panelOpen ? 'minmax(0,1fr) minmax(280px, 360px)' : '1fr', gap: 18, alignItems: 'start' }}>
         {loading ? (
-          <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
         ) : shown.length === 0 ? (
           <div className="alv-card" style={{ padding: 28, textAlign: 'center' }}>
             <strong style={{ display: 'block', marginBottom: 6 }}>
-              {items.length === 0 ? 'Hali brend yo‘q' : 'Bu so‘rovga mos brend topilmadi'}
+              {items.length === 0 ? t("Hali brend yo‘q") : t("Bu so‘rovga mos brend topilmadi")}
             </strong>
             <span style={{ color: 'var(--alv-muted)', fontSize: 14 }}>
               {items.length === 0
-                ? 'Birinchi brendni yuqoridagi tugma bilan qo‘shing.'
-                : 'Qidiruv so‘zini o‘zgartiring.'}
+                ? t("Birinchi brendni yuqoridagi tugma bilan qo‘shing.")
+                : t("Qidiruv so‘zini o‘zgartiring.")}
             </span>
           </div>
         ) : (
@@ -208,7 +209,7 @@ export default function BrandsPage() {
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{b.name}</span>
                 <span style={{ color: 'var(--alv-muted)', fontSize: 12 }}>/{b.slug}</span>
                 <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--alv-muted)' }}>
-                  {b.productCount ?? 0} mahsulot
+                  {b.productCount ?? 0} {t("mahsulot")}
                 </span>
               </button>
             ))}
@@ -231,8 +232,7 @@ export default function BrandsPage() {
 
       {editing && (editing.productCount ?? 0) > 0 ? (
         <p style={{ marginTop: 14, fontSize: 13, color: 'var(--alv-muted)', lineHeight: 1.6 }}>
-          Bu brend {editing.productCount} ta mahsulotda ishlatilyapti, shuning uchun
-          o‘chirish tugmasi yo‘q. Avval o‘sha mahsulotlarning brendini almashtiring.
+          {t("Bu brend")} {editing.productCount} {t("ta mahsulotda ishlatilyapti, shuning uchun o‘chirish tugmasi yo‘q. Avval o‘sha mahsulotlarning brendini almashtiring.")}
         </p>
       ) : null}
     </AdminShell>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { use, useCallback, useEffect, useState } from 'react';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -72,13 +73,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   if (!c) {
     return (
-      <AdminShell title="Mijoz">
+      <AdminShell title={t("Mijoz")}>
         {error ? (
           <p role="alert" style={{ color: 'var(--alv-danger)', fontWeight: 600 }}>
             {error}
           </p>
         ) : (
-          <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
         )}
       </AdminShell>
     );
@@ -90,7 +91,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     <AdminShell title={name}>
       <div style={{ marginBottom: 16 }}>
         <Link href="/customers" style={{ fontSize: 13.5, color: 'var(--alv-muted)' }}>
-          ← Mijozlar
+          {t("← Mijozlar")}
         </Link>
       </div>
 
@@ -105,13 +106,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       >
         <Badge tone={SEGMENT_TONE[c.segment] ?? 'neutral'}>{label(SEGMENT_LABEL, c.segment)}</Badge>
         <Badge tone={c.status === 'ACTIVE' ? 'mint' : 'low'}>
-          {c.status === 'ACTIVE' ? 'Faol' : 'Bloklangan'}
+          {c.status === 'ACTIVE' ? t("Faol") : t("Bloklangan")}
         </Badge>
         <span style={{ fontSize: 13.5 }}>{c.phone}</span>
         {c.email ? (
           <span style={{ fontSize: 13.5, color: 'var(--alv-muted)' }}>{c.email}</span>
         ) : null}
-        {c.telegramLinked ? <Badge tone="new">Telegram ulangan</Badge> : null}
+        {c.telegramLinked ? <Badge tone="new">{t("Telegram ulangan")}</Badge> : null}
         <Button
           variant="ghost"
           size="sm"
@@ -119,7 +120,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           style={{ marginLeft: 'auto' }}
           onClick={() => void toggleStatus()}
         >
-          {c.status === 'ACTIVE' ? 'Bloklash' : 'Blokdan chiqarish'}
+          {c.status === 'ACTIVE' ? t("Bloklash") : t("Blokdan chiqarish")}
         </Button>
       </div>
 
@@ -130,20 +131,20 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       ) : null}
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
-        <Stat label="Buyurtmalar" value={String(c.stats.ordersCount)} />
-        <Stat label="Sarflangan" value={formatTiyin(c.stats.totalSpent)} />
-        <Stat label="O‘rtacha chek" value={formatTiyin(c.stats.avgCheck)} />
+        <Stat label={t("Buyurtmalar")} value={String(c.stats.ordersCount)} />
+        <Stat label={t("Sarflangan")} value={formatTiyin(c.stats.totalSpent)} />
+        <Stat label={t("O‘rtacha chek")} value={formatTiyin(c.stats.avgCheck)} />
         <Stat
-          label="Oxirgi buyurtma"
+          label={t("Oxirgi buyurtma")}
           value={c.stats.lastOrderAt ? fmtDateTime(c.stats.lastOrderAt) : '—'}
         />
       </div>
 
       <div className="alv-admin-cols">
         <div>
-          <Card title="Buyurtmalar">
+          <Card title={t("Buyurtmalar")}>
             {c.orders.length === 0 ? (
-              <Empty>Buyurtma yo‘q.</Empty>
+              <Empty>{t("Buyurtma yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
                 {c.orders.map((o) => (
@@ -170,9 +171,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             )}
           </Card>
 
-          <Card title="Qaytarishlar">
+          <Card title={t("Qaytarishlar")}>
             {c.returns.length === 0 ? (
-              <Empty>Qaytarish yo‘q.</Empty>
+              <Empty>{t("Qaytarish yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
                 {c.returns.map((r) => (
@@ -194,15 +195,15 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             )}
           </Card>
 
-          <Card title="Ichki izohlar">
+          <Card title={t("Ichki izohlar")}>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--alv-muted)' }}>
-              Izohlar faqat operatorlarga ko‘rinadi.
+              {t("Izohlar faqat operatorlarga ko‘rinadi.")}
             </p>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              placeholder="Masalan: qo‘ng‘iroqda ertaga yetkazishni so‘radi"
+              placeholder={t("Masalan: qo‘ng‘iroqda ertaga yetkazishni so‘radi")}
               style={{ ...field, resize: 'vertical' }}
             />
             <Button
@@ -211,7 +212,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               disabled={busy || note.trim().length < 2}
               onClick={() => void addNote()}
             >
-              Qo‘shish
+              {t("Qo‘shish")}
             </Button>
 
             {c.notes.length > 0 ? (
@@ -230,16 +231,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         <div>
-          <Card title="Manzillar">
+          <Card title={t("Manzillar")}>
             {c.addresses.length === 0 ? (
-              <Empty>Saqlangan manzil yo‘q.</Empty>
+              <Empty>{t("Saqlangan manzil yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
                 {c.addresses.map((a) => (
                   <li key={a.id} style={{ fontSize: 13 }}>
                     <div style={{ fontWeight: 700 }}>
                       {a.label || a.recipient}
-                      {a.isDefault ? ' · standart' : ''}
+                      {a.isDefault ? t(" · standart") : ''}
                     </div>
                     <div style={{ color: 'var(--alv-ink-2)' }}>{a.address}</div>
                     <div style={{ color: 'var(--alv-muted)', fontSize: 12 }}>{a.phone}</div>
@@ -249,9 +250,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             )}
           </Card>
 
-          <Card title="Roziliklar">
+          <Card title={t("Roziliklar")}>
             {c.consents.length === 0 ? (
-              <Empty>Rozilik yozuvi yo‘q.</Empty>
+              <Empty>{t("Rozilik yozuvi yo‘q.")}</Empty>
             ) : (
               <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 }}>
                 {c.consents.map((k) => (
@@ -264,14 +265,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       fontSize: 13,
                     }}
                   >
-                    <span>{CONSENT_LABEL[k.type] ?? k.type}</span>
+                    <span>{t(CONSENT_LABEL[k.type] ?? k.type)}</span>
                     <span
                       style={{
                         color: k.granted ? 'var(--alv-mint)' : 'var(--alv-muted)',
                         fontWeight: 700,
                       }}
                     >
-                      {k.granted ? 'ha' : 'yo‘q'}
+                      {k.granted ? t("ha") : t("yo‘q")}
                     </span>
                   </li>
                 ))}
@@ -279,7 +280,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             )}
           </Card>
 
-          <Card title="Bonus ballar">
+          <Card title={t("Bonus ballar")}>
             <CustomerLoyalty customerId={id} />
           </Card>
         </div>

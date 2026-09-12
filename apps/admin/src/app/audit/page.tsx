@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AuditDetail, type AuditRow } from '@/lib/api';
@@ -81,7 +82,7 @@ export default function AuditPage() {
   };
 
   return (
-    <AdminShell title="Audit log">
+    <AdminShell title={t("Audit log")}>
       <div
         style={{
           display: 'flex',
@@ -92,7 +93,7 @@ export default function AuditPage() {
         }}
       >
         <Select
-          label="Modul"
+          label={t("Modul")}
           value={module}
           onChange={(v) => {
             setModule(v);
@@ -104,7 +105,7 @@ export default function AuditPage() {
           ]}
         />
         <Select
-          label="Harakat"
+          label={t("Harakat")}
           value={action}
           onChange={(v) => {
             setAction(v);
@@ -116,7 +117,7 @@ export default function AuditPage() {
           ]}
         />
         <DateField
-          label="Sanadan"
+          label={t("Sanadan")}
           value={dateFrom}
           onChange={(v) => {
             setDateFrom(v);
@@ -124,7 +125,7 @@ export default function AuditPage() {
           }}
         />
         <DateField
-          label="Sanagacha"
+          label={t("Sanagacha")}
           value={dateTo}
           onChange={(v) => {
             setDateTo(v);
@@ -132,7 +133,7 @@ export default function AuditPage() {
           }}
         />
         <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--alv-muted)' }}>
-          Jami: {total}
+          {t("Jami:")} {total}
         </span>
       </div>
 
@@ -147,10 +148,10 @@ export default function AuditPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
             <thead>
               <tr style={{ fontSize: 12.5, color: 'var(--alv-muted)', textAlign: 'left' }}>
-                <th style={th}>Vaqt</th>
-                <th style={th}>Kim</th>
-                <th style={th}>Nima</th>
-                <th style={th}>O‘zgargan maydonlar</th>
+                <th style={th}>{t("Vaqt")}</th>
+                <th style={th}>{t("Kim")}</th>
+                <th style={th}>{t("Nima")}</th>
+                <th style={th}>{t("O‘zgargan maydonlar")}</th>
                 <th style={th} />
               </tr>
             </thead>
@@ -165,7 +166,7 @@ export default function AuditPage() {
                 >
                   <td style={{ ...td, whiteSpace: 'nowrap' }}>{fmtDateTime(r.createdAt)}</td>
                   <td style={td}>
-                    <div style={{ fontWeight: 600 }}>{r.adminName ?? 'Tizim'}</div>
+                    <div style={{ fontWeight: 600 }}>{r.adminName ?? t("Tizim")}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--alv-muted)' }}>{r.ip ?? '—'}</div>
                   </td>
                   <td style={td}>
@@ -181,7 +182,7 @@ export default function AuditPage() {
                   </td>
                   <td style={{ ...td, textAlign: 'right' }}>
                     <Button variant="ghost" size="sm" onClick={() => void open(r.id)}>
-                      Ochish
+                      {t("Ochish")}
                     </Button>
                   </td>
                 </tr>
@@ -190,7 +191,7 @@ export default function AuditPage() {
           </table>
 
           {items.length === 0 ? (
-            <p style={{ color: 'var(--alv-muted)' }}>Yozuv topilmadi.</p>
+            <p style={{ color: 'var(--alv-muted)' }}>{t("Yozuv topilmadi.")}</p>
           ) : null}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 16, alignItems: 'center' }}>
@@ -200,16 +201,16 @@ export default function AuditPage() {
               onClick={() => setPage((p) => p - 1)}
               style={pager(page <= 1)}
             >
-              ← Oldingi
+              {t("← Oldingi")}
             </button>
-            <span style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{page}-sahifa</span>
+            <span style={{ fontSize: 13, color: 'var(--alv-muted)' }}>{page}{t("-sahifa")}</span>
             <button
               type="button"
               disabled={items.length < 50}
               onClick={() => setPage((p) => p + 1)}
               style={pager(items.length < 50)}
             >
-              Keyingi →
+              {t("Keyingi →")}
             </button>
           </div>
         </section>
@@ -226,13 +227,12 @@ export default function AuditPage() {
           }}
         >
           <h2 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 16, margin: 0 }}>
-            {detail ? `${detail.module} · ${detail.action}` : 'Yozuvni tanlang'}
+            {detail ? `${detail.module} · ${detail.action}` : t("Yozuvni tanlang")}
           </h2>
 
           {!detail ? (
             <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-              Chapdagi ro‘yxatdan yozuvni oching — oldingi va keyingi qiymatlar shu yerda yonma-yon
-              ko‘rinadi.
+              {t("Chapdagi ro‘yxatdan yozuvni oching — oldingi va keyingi qiymatlar shu yerda yonma-yon ko‘rinadi.")}
             </p>
           ) : (
             <>
@@ -248,7 +248,7 @@ export default function AuditPage() {
 
               {detail.diff.length === 0 ? (
                 <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13.5 }}>
-                  Maydonlar o‘zgarmagan.
+                  {t("Maydonlar o‘zgarmagan.")}
                 </p>
               ) : (
                 <div style={{ display: 'grid', gap: 10 }}>
@@ -332,7 +332,7 @@ function Select({
       <select value={value} onChange={(e) => onChange(e.target.value)} style={input}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </option>
         ))}
       </select>

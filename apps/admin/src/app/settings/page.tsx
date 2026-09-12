@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { AdminApiError, adminApi, type SettingItem, type SettingsPayload } from '@/lib/api';
 
@@ -55,7 +56,7 @@ function Field({
             onChange={(e) => onChange(e.target.checked)}
             style={{ width: 18, height: 18, accentColor: 'var(--alv-brand, #D6336C)' }}
           />
-          <span style={{ fontSize: 14 }}>{value === true ? 'Yoqilgan' : 'O‘chirilgan'}</span>
+          <span style={{ fontSize: 14 }}>{value === true ? t("Yoqilgan") : t("O‘chirilgan")}</span>
         </label>
       );
       break;
@@ -69,7 +70,7 @@ function Field({
         >
           {(item.options ?? []).map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(o.label)}
             </option>
           ))}
         </select>
@@ -108,7 +109,7 @@ function Field({
                 .filter((v) => v !== ''),
             )
           }
-          placeholder="Vergul bilan ajrating"
+          placeholder={t("Vergul bilan ajrating")}
           style={input}
         />
       );
@@ -140,14 +141,14 @@ function Field({
           htmlFor={id}
           style={{ fontSize: 14.5, fontWeight: 600, display: 'block', marginBottom: 4 }}
         >
-          {item.label}
+          {t(item.label)}
           {item.sensitive ? (
             <span
               className="alv-badge alv-badge--neutral"
               style={{ height: 18, fontSize: 9, marginLeft: 8, verticalAlign: 'middle' }}
-              title="Faqat Super Admin o‘zgartira oladi"
+              title={t("Faqat Super Admin o‘zgartira oladi")}
             >
-              nozik
+              {t("nozik")}
             </span>
           ) : null}
         </label>
@@ -162,7 +163,7 @@ function Field({
         {control}
         {item.missing ? (
           <p style={{ margin: '6px 0 0', fontSize: 12.5, color: 'var(--alv-amber, #9A5A12)' }}>
-            Bazada yo‘q — saqlasangiz yaratiladi
+            {t("Bazada yo‘q — saqlasangiz yaratiladi")}
           </p>
         ) : null}
         {error ? (
@@ -236,7 +237,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <AdminShell title="Sozlamalar">
+    <AdminShell title={t("Sozlamalar")}>
       {failure ? (
         <div
           role="alert"
@@ -260,7 +261,7 @@ export default function SettingsPage() {
       ) : null}
 
       {!data ? (
-        <p style={{ color: 'var(--alv-muted)' }}>Yuklanmoqda…</p>
+        <p style={{ color: 'var(--alv-muted)' }}>{t("Yuklanmoqda…")}</p>
       ) : (
         <>
           {data.groups.map((group) => {
@@ -268,7 +269,7 @@ export default function SettingsPage() {
             if (items.length === 0) return null;
             return (
               <section key={group.key} style={{ marginBottom: 34 }}>
-                <h2 style={{ fontSize: 18, margin: '0 0 2px' }}>{group.label}</h2>
+                <h2 style={{ fontSize: 18, margin: '0 0 2px' }}>{t(group.label)}</h2>
                 {group.help ? (
                   <p style={{ margin: '0 0 6px', color: 'var(--alv-muted)', fontSize: 13.5 }}>
                     {group.help}
@@ -308,7 +309,7 @@ export default function SettingsPage() {
                 borderRadius: 12,
               }}
             >
-              <strong style={{ fontSize: 14 }}>{changedCount} ta o‘zgarish saqlanmagan</strong>
+              <strong style={{ fontSize: 14 }}>{changedCount} {t("ta o‘zgarish saqlanmagan")}</strong>
               <div style={{ flex: 1 }} />
               <button
                 type="button"
@@ -323,7 +324,7 @@ export default function SettingsPage() {
                   fontSize: 14,
                 }}
               >
-                Bekor qilish
+                {t("Bekor qilish")}
               </button>
               <button
                 type="button"
@@ -340,7 +341,7 @@ export default function SettingsPage() {
                   fontSize: 14,
                 }}
               >
-                {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+                {saving ? t("Saqlanmoqda…") : t("Saqlash")}
               </button>
             </div>
           ) : null}

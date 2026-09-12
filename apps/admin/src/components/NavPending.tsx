@@ -1,6 +1,7 @@
 'use client';
 
 import { useLinkStatus } from 'next/link';
+import { t } from '@/lib/i18n';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 /**
@@ -49,5 +50,5 @@ export function LinkPending() {
     return () => report(false);
   }, [pending, report]);
 
-  return pending ? <span className="alv-nav__spin" aria-label="Yuklanmoqda" /> : null;
+  return pending ? <span className="alv-nav__spin" aria-label={t("Yuklanmoqda")} /> : null;
 }

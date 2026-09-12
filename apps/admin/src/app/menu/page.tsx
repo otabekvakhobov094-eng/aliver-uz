@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminMenuItem, type MenuOptions } from '@/lib/api';
 
@@ -206,10 +207,10 @@ export default function MenuPage() {
             <strong>{item.labelUz}</strong>
             <span style={{ fontSize: 12, color: 'var(--alv-muted)' }}>{item.labelRu}</span>
             {item.isHighlighted ? (
-              <span style={{ fontSize: 11, color: 'var(--alv-brand)' }}>ajratilgan</span>
+              <span style={{ fontSize: 11, color: 'var(--alv-brand)' }}>{t("ajratilgan")}</span>
             ) : null}
             {!item.isActive ? (
-              <span style={{ fontSize: 11, color: 'var(--alv-muted)' }}>o‘chirilgan</span>
+              <span style={{ fontSize: 11, color: 'var(--alv-muted)' }}>{t("o‘chirilgan")}</span>
             ) : null}
           </div>
           <div
@@ -220,21 +221,21 @@ export default function MenuPage() {
               overflowWrap: 'anywhere',
             }}
           >
-            {TYPE_LABELS[item.targetType] ?? item.targetType}
+            {t(TYPE_LABELS[item.targetType] ?? item.targetType)}
             {item.targetValue ? ` · ${item.targetValue}` : ''} → {item.href || '/'}
-            {item.broken ? ' · nishon topilmadi, saytda ko‘rinmaydi' : ''}
+            {item.broken ? t(" · nishon topilmadi, saytda ko‘rinmaydi") : ''}
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={() => void move(item, -1)} disabled={busy} aria-label="Yuqoriga" style={btn}>
+          <button type="button" onClick={() => void move(item, -1)} disabled={busy} aria-label={t("Yuqoriga")} style={btn}>
             ↑
           </button>
-          <button type="button" onClick={() => void move(item, 1)} disabled={busy} aria-label="Pastga" style={btn}>
+          <button type="button" onClick={() => void move(item, 1)} disabled={busy} aria-label={t("Pastga")} style={btn}>
             ↓
           </button>
           <button type="button" onClick={() => startEdit(item)} disabled={busy} style={btn}>
-            Tahrirlash
+            {t("Tahrirlash")}
           </button>
           <button
             type="button"
@@ -248,7 +249,7 @@ export default function MenuPage() {
               if (window.confirm(message)) void run(() => adminApi.deleteMenuItem(item.id), 'Band o‘chirildi');
             }}
           >
-            O‘chirish
+            {t("O‘chirish")}
           </button>
         </div>
       </div>
@@ -256,7 +257,7 @@ export default function MenuPage() {
   }
 
   return (
-    <AdminShell title="Sayt menyusi">
+    <AdminShell title={t("Sayt menyusi")}>
       {error ? (
         <div
           role="alert"
@@ -288,7 +289,7 @@ export default function MenuPage() {
               color: location === loc ? 'var(--alv-surface)' : 'var(--alv-ink)',
             }}
           >
-            {loc === 'HEADER' ? 'Sarlavha menyusi' : 'Footer menyusi'}
+            {loc === 'HEADER' ? t("Sarlavha menyusi") : t("Footer menyusi")}
           </button>
         ))}
       </div>
@@ -299,8 +300,7 @@ export default function MenuPage() {
           className="alv-card"
           style={{ padding: 14, marginBottom: 16, borderLeft: '3px solid var(--alv-danger,#C0392B)' }}
         >
-          {brokenCount} ta bandning nishoni topilmadi. Ular saytda ko‘rsatilmayapti — nishonini
-          tuzating yoki bandni o‘chiring.
+          {brokenCount} {t("ta bandning nishoni topilmadi. Ular saytda ko‘rsatilmayapti — nishonini tuzating yoki bandni o‘chiring.")}
         </div>
       ) : null}
 
@@ -309,20 +309,20 @@ export default function MenuPage() {
         className="alv-card"
         style={{ display: 'grid', gap: 12, padding: 18, marginBottom: 22 }}
       >
-        <strong>{editingId ? 'Bandni tahrirlash' : 'Yangi band'}</strong>
+        <strong>{editingId ? t("Bandni tahrirlash") : t("Yangi band")}</strong>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
           <label style={lbl}>
-            Nomi (uz)
+            {t("Nomi (uz)")}
             <input required maxLength={60} style={input} value={draft.labelUz} onChange={(e) => setDraft({ ...draft, labelUz: e.target.value })} />
           </label>
           <label style={lbl}>
-            Nomi (ru)
+            {t("Nomi (ru)")}
             <input required maxLength={60} style={input} value={draft.labelRu} onChange={(e) => setDraft({ ...draft, labelRu: e.target.value })} />
           </label>
 
           <label style={lbl}>
-            Nishon turi
+            {t("Nishon turi")}
             <select
               style={input}
               value={draft.targetType}
@@ -338,10 +338,10 @@ export default function MenuPage() {
 
           {needsValue ? (
             <label style={lbl}>
-              Nishon
+              {t("Nishon")}
               {draft.targetType === 'ROUTE' ? (
                 <select style={input} value={draft.targetValue} onChange={(e) => setDraft({ ...draft, targetValue: e.target.value })} required>
-                  <option value="">— tanlang —</option>
+                  <option value="">{t("— tanlang —")}</option>
                   {(options?.routes ?? []).map((r) => (
                     <option key={r} value={r}>
                       {r}
@@ -356,15 +356,15 @@ export default function MenuPage() {
                   required={draft.targetType !== 'BLOG'}
                 >
                   <option value="">
-                    {draft.targetType === 'BLOG' ? '— butun blog —' : '— tanlang —'}
+                    {draft.targetType === 'BLOG' ? t("— butun blog —") : t("— tanlang —")}
                   </option>
                   {valueChoices.map((c) => (
                     <option key={c.value} value={c.value}>
-                      {c.label} ({c.value})
+                      {t(c.label)} ({c.value})
                     </option>
                   ))}
                   {missingValue ? (
-                    <option value={draft.targetValue}>{draft.targetValue} — topilmadi</option>
+                    <option value={draft.targetValue}>{draft.targetValue} {t("— topilmadi")}</option>
                   ) : null}
                 </select>
               ) : (
@@ -383,9 +383,9 @@ export default function MenuPage() {
           ) : null}
 
           <label style={lbl}>
-            Ota band
+            {t("Ota band")}
             <select style={input} value={draft.parentId} onChange={(e) => setDraft({ ...draft, parentId: e.target.value })}>
-              <option value="">— yuqori daraja —</option>
+              <option value="">{t("— yuqori daraja —")}</option>
               {parents
                 .filter((p) => p.id !== editingId)
                 .map((p) => (
@@ -397,14 +397,14 @@ export default function MenuPage() {
           </label>
 
           <label style={lbl}>
-            Izoh (uz)
+            {t("Izoh (uz)")}
             <input maxLength={120} style={input} value={draft.noteUz} onChange={(e) => setDraft({ ...draft, noteUz: e.target.value })} />
             <span style={{ fontSize: 11, color: 'var(--alv-muted)', fontWeight: 400 }}>
-              Ochiluvchi menyuda nom ostida chiqadi
+              {t("Ochiluvchi menyuda nom ostida chiqadi")}
             </span>
           </label>
           <label style={lbl}>
-            Izoh (ru)
+            {t("Izoh (ru)")}
             <input maxLength={120} style={input} value={draft.noteRu} onChange={(e) => setDraft({ ...draft, noteRu: e.target.value })} />
           </label>
         </div>
@@ -412,17 +412,17 @@ export default function MenuPage() {
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
             <input type="checkbox" checked={draft.isActive} onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })} />
-            Saytda ko‘rsatilsin
+            {t("Saytda ko‘rsatilsin")}
           </label>
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
             <input type="checkbox" checked={draft.isHighlighted} onChange={(e) => setDraft({ ...draft, isHighlighted: e.target.checked })} />
-            Ajratib ko‘rsatilsin
+            {t("Ajratib ko‘rsatilsin")}
           </label>
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={busy} style={{ ...btn, background: 'var(--alv-ink)', color: 'var(--alv-surface)' }}>
-            {editingId ? 'Saqlash' : 'Qo‘shish'}
+            {editingId ? t("Saqlash") : t("Qo‘shish")}
           </button>
           {editingId ? (
             <button
@@ -433,7 +433,7 @@ export default function MenuPage() {
                 setDraft(EMPTY);
               }}
             >
-              Bekor qilish
+              {t("Bekor qilish")}
             </button>
           ) : null}
         </div>
@@ -441,7 +441,7 @@ export default function MenuPage() {
 
       <div style={{ display: 'grid', gap: 8 }}>
         {parents.length === 0 ? (
-          <p style={{ color: 'var(--alv-muted)' }}>Bu joylashuvda hali band yo‘q.</p>
+          <p style={{ color: 'var(--alv-muted)' }}>{t("Bu joylashuvda hali band yo‘q.")}</p>
         ) : null}
         {parents.map((p) => (
           <div key={p.id} style={{ display: 'grid', gap: 8 }}>

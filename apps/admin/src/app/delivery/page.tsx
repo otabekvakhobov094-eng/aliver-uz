@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import {
@@ -135,31 +136,31 @@ export default function DeliveryPage() {
   };
 
   return (
-    <AdminShell title="Yetkazib berish">
+    <AdminShell title={t("Yetkazib berish")}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <TabButton active={tab === 'methods'} onClick={() => setTab('methods')}>
-          Usullar va narxlar
+          {t("Usullar va narxlar")}
         </TabButton>
         <TabButton active={tab === 'regions'} onClick={() => setTab('regions')}>
-          Hududlar
+          {t("Hududlar")}
         </TabButton>
       </div>
 
       {error ? <Alert tone="danger">{error}</Alert> : null}
       {notice ? <Alert tone="mint">{notice}</Alert> : null}
 
-      {tab === 'methods' ? (
+      {tab === "methods" ? (
         <div className="alv-admin-cols">
           <section style={card}>
-            <h2 style={h2}>Usullar</h2>
+            <h2 style={h2}>{t("Usullar")}</h2>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
                 <thead>
                   <tr style={thRow}>
-                    <th style={th}>Usul</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Narx</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Bepul chegara</th>
-                    <th style={th}>Muddat</th>
+                    <th style={th}>{t("Usul")}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{t("Narx")}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{t("Bepul chegara")}</th>
+                    <th style={th}>{t("Muddat")}</th>
                     <th style={th} />
                   </tr>
                 </thead>
@@ -175,7 +176,7 @@ export default function DeliveryPage() {
                       <td style={td}>
                         <div style={{ fontWeight: 700 }}>{m.nameUz}</div>
                         <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
-                          {TYPE_LABEL[m.type] ?? m.type} · {m.code}
+                          {t(TYPE_LABEL[m.type] ?? m.type)} · {m.code}
                           {m.regionsConfigured > 0 ? ` · ${m.regionsConfigured} hudud` : ''}
                         </div>
                       </td>
@@ -184,15 +185,15 @@ export default function DeliveryPage() {
                         {m.freeThreshold ? formatTiyin(m.freeThreshold) : '—'}
                       </td>
                       <td style={td}>
-                        {m.estimatedDaysMin}–{m.estimatedDaysMax} kun
+                        {m.estimatedDaysMin}–{m.estimatedDaysMax} {t("kun")}
                       </td>
                       <td style={{ ...td, textAlign: 'right' }}>
                         <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
                           <Badge tone={m.isActive ? 'mint' : 'neutral'}>
-                            {m.isActive ? 'Faol' : 'O‘chirilgan'}
+                            {m.isActive ? t("Faol") : t("O‘chirilgan")}
                           </Badge>
                           <Button variant="ghost" size="sm" onClick={() => void openMatrix(m)}>
-                            Hududlar narxi
+                            {t("Hududlar narxi")}
                           </Button>
                           <Button
                             variant="ghost"
@@ -200,7 +201,7 @@ export default function DeliveryPage() {
                             disabled={busy}
                             onClick={() => void toggleMethod(m)}
                           >
-                            {m.isActive ? 'O‘chirish' : 'Yoqish'}
+                            {m.isActive ? t("O‘chirish") : t("Yoqish")}
                           </Button>
                         </div>
                       </td>
@@ -212,24 +213,21 @@ export default function DeliveryPage() {
           </section>
 
           <section style={card}>
-            <h2 style={h2}>{selected ? `${selected.nameUz} — hududlar` : 'Usulni tanlang'}</h2>
+            <h2 style={h2}>{selected ? `${selected.nameUz} — hududlar` : t("Usulni tanlang")}</h2>
 
             {!selected ? (
               <p style={muted}>
-                Chapdagi ro‘yxatdan usulni tanlang — hudud bo‘yicha narx, bepul chegara va muddat
-                shu yerda tahrirlanadi.
+                {t("Chapdagi ro‘yxatdan usulni tanlang — hudud bo‘yicha narx, bepul chegara va muddat shu yerda tahrirlanadi.")}
               </p>
             ) : (
               <>
                 {selected.type === 'EXPRESS' ? (
                   <p style={{ ...muted, color: 'var(--alv-warn)' }}>
-                    Ekspress faqat siz belgilagan hududlarda ishlaydi. «Mavjud» belgilanmagan
-                    hududda u checkout da umuman ko‘rinmaydi.
+                    {t("Ekspress faqat siz belgilagan hududlarda ishlaydi. «Mavjud» belgilanmagan hududda u checkout da umuman ko‘rinmaydi.")}
                   </p>
                 ) : (
                   <p style={muted}>
-                    Hudud uchun alohida narx belgilamasangiz standart narx ishlatiladi — tegilmagan
-                    qatorlar saqlanmaydi.
+                    {t("Hudud uchun alohida narx belgilamasangiz standart narx ishlatiladi — tegilmagan qatorlar saqlanmaydi.")}
                   </p>
                 )}
 
@@ -237,11 +235,11 @@ export default function DeliveryPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
                     <thead>
                       <tr style={thRow}>
-                        <th style={th}>Hudud</th>
-                        <th style={th}>Mavjud</th>
-                        <th style={th}>Narx (so‘m)</th>
-                        <th style={th}>Bepul chegara</th>
-                        <th style={th}>Muddat</th>
+                        <th style={th}>{t("Hudud")}</th>
+                        <th style={th}>{t("Mavjud")}</th>
+                        <th style={th}>{t("Narx (so‘m)")}</th>
+                        <th style={th}>{t("Bepul chegara")}</th>
+                        <th style={th}>{t("Muddat")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -250,12 +248,12 @@ export default function DeliveryPage() {
                           <td style={td}>
                             <div style={{ fontWeight: 600 }}>{r.regionNameUz}</div>
                             <div style={{ fontSize: 11.5, color: 'var(--alv-muted)' }}>
-                              {!r.regionActive ? 'hudud o‘chirilgan · ' : ''}
+                              {!r.regionActive ? t("hudud o‘chirilgan · ") : ''}
                               {touched.has(r.regionId)
-                                ? 'o‘zgartirildi'
+                                ? t("o‘zgartirildi")
                                 : r.configured
-                                  ? 'sozlangan'
-                                  : 'standart narx'}
+                                  ? t("sozlangan")
+                                  : t("standart narx")}
                             </div>
                           </td>
                           <td style={td}>
@@ -281,7 +279,7 @@ export default function DeliveryPage() {
                           <td style={td}>
                             <input
                               value={r.freeThreshold ? tiyinToSumInput(r.freeThreshold) : ''}
-                              placeholder="yo‘q"
+                              placeholder={t("yo‘q")}
                               onChange={(e) => {
                                 const raw = e.target.value.trim();
                                 if (raw === '') {
@@ -304,7 +302,7 @@ export default function DeliveryPage() {
                                 }
                                 inputMode="numeric"
                                 style={{ ...input, width: 56 }}
-                                aria-label="Minimal kun"
+                                aria-label={t("Minimal kun")}
                               />
                               <span>–</span>
                               <input
@@ -314,7 +312,7 @@ export default function DeliveryPage() {
                                 }
                                 inputMode="numeric"
                                 style={{ ...input, width: 56 }}
-                                aria-label="Maksimal kun"
+                                aria-label={t("Maksimal kun")}
                               />
                             </div>
                           </td>
@@ -329,7 +327,7 @@ export default function DeliveryPage() {
                   disabled={busy || touched.size === 0}
                   onClick={() => void saveMatrix()}
                 >
-                  {touched.size === 0 ? 'O‘zgarish yo‘q' : `Saqlash (${touched.size} ta hudud)`}
+                  {touched.size === 0 ? t("O‘zgarish yo‘q") : `Saqlash (${touched.size} ta hudud)`}
                 </Button>
               </>
             )}
@@ -337,10 +335,9 @@ export default function DeliveryPage() {
         </div>
       ) : (
         <section style={card}>
-          <h2 style={h2}>Viloyatlar va tumanlar</h2>
+          <h2 style={h2}>{t("Viloyatlar va tumanlar")}</h2>
           <p style={muted}>
-            Hudud o‘chirilsa checkout da ko‘rinmaydi, lekin eski buyurtmalarda saqlanib qoladi —
-            yozuv hech qachon o‘chirilmaydi.
+            {t("Hudud o‘chirilsa checkout da ko‘rinmaydi, lekin eski buyurtmalarda saqlanib qoladi — yozuv hech qachon o‘chirilmaydi.")}
           </p>
 
           <div style={{ display: 'grid', gap: 12 }}>
@@ -357,10 +354,10 @@ export default function DeliveryPage() {
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                   <strong>{r.nameUz}</strong>
                   <span style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
-                    {r.code} · {r.districtsCount} tuman
+                    {r.code} · {r.districtsCount} {t("tuman")}
                   </span>
                   <Badge tone={r.isActive ? 'mint' : 'neutral'}>
-                    {r.isActive ? 'Faol' : 'O‘chirilgan'}
+                    {r.isActive ? t("Faol") : t("O‘chirilgan")}
                   </Badge>
                   <Button
                     variant="ghost"
@@ -369,7 +366,7 @@ export default function DeliveryPage() {
                     style={{ marginLeft: 'auto' }}
                     onClick={() => void toggleRegion(r)}
                   >
-                    {r.isActive ? 'O‘chirish' : 'Yoqish'}
+                    {r.isActive ? t("O‘chirish") : t("Yoqish")}
                   </Button>
                 </div>
 

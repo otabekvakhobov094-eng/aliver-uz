@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminDiscount } from '@/lib/api';
 import { fmtDate, fmtNumber } from '@/lib/order-labels';
@@ -44,7 +45,7 @@ const EMPTY = {
 
 function money(tiyin: string | null): string {
   if (!tiyin) return '—';
-  return `${fmtNumber(Number(tiyin) / 100)} so‘m`;
+  return `${fmtNumber(Number(tiyin) / 100)} ${t('so‘m')}`;
 }
 
 function valueText(d: AdminDiscount): string {
@@ -107,7 +108,7 @@ export default function DiscountsPage() {
   };
 
   return (
-    <AdminShell title="Chegirmalar">
+    <AdminShell title={t("Chegirmalar")}>
       {error ? (
         <div
           role="alert"
@@ -144,7 +145,7 @@ export default function DiscountsPage() {
               cursor: 'pointer',
             }}
           >
-            {s.label}
+            {t(s.label)}
           </button>
         ))}
         <div style={{ flex: 1 }} />
@@ -161,7 +162,7 @@ export default function DiscountsPage() {
             cursor: 'pointer',
           }}
         >
-          {open ? 'Yopish' : 'Yangi chegirma'}
+          {open ? t("Yopish") : t("Yangi chegirma")}
         </button>
       </div>
 
@@ -200,20 +201,20 @@ export default function DiscountsPage() {
           >
             <input
               required
-              placeholder="Nomi (o‘zbekcha)"
+              placeholder={t("Nomi (o‘zbekcha)")}
               value={form.nameUz}
               onChange={(e) => setForm({ ...form, nameUz: e.target.value })}
               style={input}
             />
             <input
               required
-              placeholder="Nomi (ruscha)"
+              placeholder={t("Nomi (ruscha)")}
               value={form.nameRu}
               onChange={(e) => setForm({ ...form, nameRu: e.target.value })}
               style={input}
             />
             <input
-              placeholder="Promokod (bo‘sh = avtomatik)"
+              placeholder={t("Promokod (bo‘sh = avtomatik)")}
               value={form.code}
               onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
               style={input}
@@ -222,7 +223,7 @@ export default function DiscountsPage() {
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
               style={input}
-              aria-label="Chegirma turi"
+              aria-label={t("Chegirma turi")}
             >
               {TYPES.map((t) => (
                 <option key={t.value} value={t.value}>
@@ -245,18 +246,18 @@ export default function DiscountsPage() {
               value={form.scope}
               onChange={(e) => setForm({ ...form, scope: e.target.value })}
               style={input}
-              aria-label="Qamrov"
+              aria-label={t("Qamrov")}
             >
               {SCOPES.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
             <input
               type="number"
               min={0}
-              placeholder="Minimal summa (so‘m)"
+              placeholder={t("Minimal summa (so‘m)")}
               value={form.minOrderAmount}
               onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
               style={input}
@@ -264,7 +265,7 @@ export default function DiscountsPage() {
             <input
               type="number"
               min={1}
-              placeholder="Umumiy chegara"
+              placeholder={t("Umumiy chegara")}
               value={form.usageLimit}
               onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
               style={input}
@@ -272,13 +273,13 @@ export default function DiscountsPage() {
             <input
               type="number"
               min={1}
-              placeholder="Bitta mijozga"
+              placeholder={t("Bitta mijozga")}
               value={form.usagePerCustomer}
               onChange={(e) => setForm({ ...form, usagePerCustomer: e.target.value })}
               style={input}
             />
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Boshlanish</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Boshlanish")}</span>
               <input
                 type="date"
                 value={form.startsAt}
@@ -287,7 +288,7 @@ export default function DiscountsPage() {
               />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5 }}>
-              <span style={{ color: 'var(--alv-muted)' }}>Tugash</span>
+              <span style={{ color: 'var(--alv-muted)' }}>{t("Tugash")}</span>
               <input
                 type="date"
                 value={form.endsAt}
@@ -304,11 +305,10 @@ export default function DiscountsPage() {
               onChange={(e) => setForm({ ...form, stackable: e.target.checked })}
               style={{ width: 17, height: 17, accentColor: 'var(--alv-brand,#D6336C)' }}
             />
-            Boshqa chegirmalar bilan birga ishlaydi
+            {t("Boshqa chegirmalar bilan birga ishlaydi")}
           </label>
           <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
-            Birlashtirishni yoqishdan oldin Sozlamalardagi «Maksimal umumiy chegirma» qiymatini
-            tekshiring — u yakuniy chegani ushlab turadi.
+            {t("Birlashtirishni yoqishdan oldin Sozlamalardagi «Maksimal umumiy chegirma» qiymatini tekshiring — u yakuniy chegani ushlab turadi.")}
           </p>
 
           <button
@@ -325,7 +325,7 @@ export default function DiscountsPage() {
               cursor: busy ? 'wait' : 'pointer',
             }}
           >
-            Yaratish
+            {t("Yaratish")}
           </button>
         </form>
       ) : null}
@@ -334,7 +334,7 @@ export default function DiscountsPage() {
         <table style={{ width: '100%', minWidth: 820, borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
             <tr>
-              {['Nomi', 'Kod', 'Qiymat', 'Shart', 'Muddat', 'Ishlatilgan', ''].map((h) => (
+              {[t("Nomi"), t("Kod"), t("Qiymat"), t("Shart"), t("Muddat"), t("Ishlatilgan"), ''].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -359,14 +359,14 @@ export default function DiscountsPage() {
                   <strong>{d.nameUz}</strong>
                   <div style={{ color: 'var(--alv-muted)', fontSize: 13 }}>
                     {SCOPES.find((s) => s.value === d.scope)?.label}
-                    {d.stackable ? ' · birlashadi' : ''}
+                    {d.stackable ? t(" · birlashadi") : ''}
                   </div>
                 </td>
                 <td style={{ padding: '14px 16px', borderBottom: '1px solid var(--alv-line)' }}>
                   {d.code ? (
                     <code style={{ fontSize: 13 }}>{d.code}</code>
                   ) : (
-                    <span style={{ color: 'var(--alv-muted)' }}>avtomatik</span>
+                    <span style={{ color: 'var(--alv-muted)' }}>{t("avtomatik")}</span>
                   )}
                 </td>
                 <td
@@ -435,7 +435,7 @@ export default function DiscountsPage() {
                       fontSize: 13,
                     }}
                   >
-                    {d.isActive ? 'To‘xtatish' : 'Yoqish'}
+                    {d.isActive ? t("To‘xtatish") : t("Yoqish")}
                   </button>
                 </td>
               </tr>
@@ -443,7 +443,7 @@ export default function DiscountsPage() {
             {items.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ padding: 28, textAlign: 'center', color: 'var(--alv-muted)' }}>
-                  {state ? 'Bu holatda chegirma yo‘q' : 'Hali chegirma yaratilmagan'}
+                  {state ? t("Bu holatda chegirma yo‘q") : t("Hali chegirma yaratilmagan")}
                 </td>
               </tr>
             ) : null}

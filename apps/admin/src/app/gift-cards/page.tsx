@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
@@ -57,7 +58,7 @@ const COLUMNS: Array<DataColumn<GiftCardRow>> = [
     key: 'status',
     label: 'Holat',
     render: (c) => (
-      <Badge tone={STATUS_TONE[c.status] ?? 'neutral'}>{STATUS_LABEL[c.status] ?? c.status}</Badge>
+      <Badge tone={STATUS_TONE[c.status] ?? 'neutral'}>{t(STATUS_LABEL[c.status] ?? c.status)}</Badge>
     ),
   },
   {
@@ -95,7 +96,7 @@ const COLUMNS: Array<DataColumn<GiftCardRow>> = [
           {fmtDate(c.expiresAt)}
         </span>
       ) : (
-        <span style={{ color: 'var(--alv-muted)' }}>muddatsiz</span>
+        <span style={{ color: 'var(--alv-muted)' }}>{t("muddatsiz")}</span>
       ),
   },
   {
@@ -222,7 +223,7 @@ export default function GiftCardsPage() {
   }
 
   return (
-    <AdminShell title="Sovg‘a sertifikatlari">
+    <AdminShell title={t("Sovg‘a sertifikatlari")}>
       {expiring.length > 0 ? (
         <div
           className="alv-card"
@@ -233,25 +234,24 @@ export default function GiftCardsPage() {
           }}
         >
           <strong style={{ display: 'block', marginBottom: 4 }}>
-            30 kun ichida {expiring.length} ta sertifikat muddati tugaydi —{' '}
+            {t("30 kun ichida")} {expiring.length} {t("ta sertifikat muddati tugaydi —")}{' '}
             {formatTiyin(BigInt(expiringSum))}
           </strong>
           <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--alv-muted)' }}>
-            Mijozga 30 va 7 kun qolganda SMS yuboriladi. Muddatni uzaytirish kerak bo‘lsa —
-            sertifikatni qayta chiqaring.
+            {t("Mijozga 30 va 7 kun qolganda SMS yuboriladi. Muddatni uzaytirish kerak bo‘lsa — sertifikatni qayta chiqaring.")}
           </p>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.8 }}>
             {expiring.slice(0, 8).map((c) => (
               <li key={c.id}>
                 <code>{c.masked}</code> · {formatTiyin(BigInt(c.remaining))} ·{' '}
-                {c.daysLeft} kun qoldi
+                {c.daysLeft} {t("kun qoldi")}
                 {c.recipientPhone ? ` · ${c.recipientPhone}` : ''}
               </li>
             ))}
           </ul>
           {expiring.length > 8 ? (
             <p style={{ margin: '8px 0 0', fontSize: 12.5, color: 'var(--alv-muted)' }}>
-              va yana {expiring.length - 8} ta.
+              {t("va yana")} {expiring.length - 8} {t("ta.")}
             </p>
           ) : null}
         </div>
@@ -300,24 +300,23 @@ export default function GiftCardsPage() {
               onClick={() => void navigator.clipboard?.writeText(issued.code)}
               style={GHOST}
             >
-              Nusxa olish
+              {t("Nusxa olish")}
             </button>
             <button type="button" onClick={() => setIssued(null)} style={GHOST}>
-              Yopish
+              {t("Yopish")}
             </button>
           </div>
           <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--alv-ink-2)', lineHeight: 1.6 }}>
-            Kod bazada ochiq saqlanmaydi — faqat xeshi. Bu oyna yopilgach uni hech qayerdan
-            topib bo‘lmaydi.
+            {t("Kod bazada ochiq saqlanmaydi — faqat xeshi. Bu oyna yopilgach uni hech qayerdan topib bo‘lmaydi.")}
           </p>
         </div>
       ) : null}
 
       <div className="alv-card" style={{ padding: 16, marginBottom: 16, display: 'grid', gap: 12 }}>
-        <strong style={{ fontSize: 15 }}>Yangi sertifikat</strong>
+        <strong style={{ fontSize: 15 }}>{t("Yangi sertifikat")}</strong>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
           <label style={{ display: 'grid', gap: 4, fontSize: 12.5 }}>
-            <span style={{ color: 'var(--alv-muted)' }}>Nominal, so‘m</span>
+            <span style={{ color: 'var(--alv-muted)' }}>{t("Nominal, so‘m")}</span>
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
@@ -326,21 +325,21 @@ export default function GiftCardsPage() {
             />
           </label>
           <label style={{ display: 'grid', gap: 4, fontSize: 12.5 }}>
-            <span style={{ color: 'var(--alv-muted)' }}>Kimga (ixtiyoriy)</span>
+            <span style={{ color: 'var(--alv-muted)' }}>{t("Kimga (ixtiyoriy)")}</span>
             <input value={name} onChange={(e) => setName(e.target.value)} style={FIELD} />
           </label>
           <label style={{ display: 'grid', gap: 4, fontSize: 12.5 }}>
-            <span style={{ color: 'var(--alv-muted)' }}>Telefon (ixtiyoriy)</span>
+            <span style={{ color: 'var(--alv-muted)' }}>{t("Telefon (ixtiyoriy)")}</span>
             <input value={phone} onChange={(e) => setPhone(e.target.value)} style={FIELD} />
           </label>
           <button type="button" onClick={() => void issue()} disabled={busy} style={PRIMARY(busy)}>
-            {busy ? 'Chiqarilmoqda…' : 'Chiqarish'}
+            {busy ? t("Chiqarilmoqda…") : t("Chiqarish")}
           </button>
         </div>
       </div>
 
       <p style={{ margin: '0 0 14px', color: 'var(--alv-muted)', fontSize: 14 }}>
-        Jami {total} ta sertifikat
+        {t("Jami")} {total} {t("ta sertifikat")}
       </p>
 
       <DataList<GiftCardRow>
@@ -354,16 +353,16 @@ export default function GiftCardsPage() {
         bulkActions={bulkActions}
         onDone={load}
         onClearFilters={() => setFilters(EMPTY)}
-        emptyTitle="Hali sertifikat yo‘q"
-        emptyHint="Yuqoridagi forma bilan birinchisini chiqaring."
-        noResultsTitle="Bu oxirgi belgilar bilan sertifikat topilmadi"
+        emptyTitle={t("Hali sertifikat yo‘q")}
+        emptyHint={t("Yuqoridagi forma bilan birinchisini chiqaring.")}
+        noResultsTitle={t("Bu oxirgi belgilar bilan sertifikat topilmadi")}
         filterBar={
           <input
             type="search"
             value={tail}
             onChange={(e) => setFilters({ tail: e.target.value })}
-            placeholder="Kodning oxirgi 4 belgisi"
-            aria-label="Sertifikat qidirish"
+            placeholder={t("Kodning oxirgi 4 belgisi")}
+            aria-label={t("Sertifikat qidirish")}
             style={{ ...FIELD, maxWidth: 260 }}
           />
         }

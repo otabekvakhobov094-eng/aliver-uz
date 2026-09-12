@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge, Button, Input } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type CmsRecord } from '@/lib/api';
@@ -125,27 +126,27 @@ export default function ContentPage() {
     try { await adminApi.deleteCms(active, item.id); await load(active); } catch (e) { setError((e as Error).message); }
   }
 
-  return <AdminShell title="Kontent va SEO">
-    <p style={{ color: 'var(--alv-muted)', marginTop: -10, lineHeight: 1.6 }}>Ikki tildagi CMS kontenti, banner muddatlari va SEO redirectlari bitta markazda boshqariladi.</p>
+  return <AdminShell title={t("Kontent va SEO")}>
+    <p style={{ color: 'var(--alv-muted)', marginTop: -10, lineHeight: 1.6 }}>{t("Ikki tildagi CMS kontenti, banner muddatlari va SEO redirectlari bitta markazda boshqariladi.")}</p>
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '22px 0' }}>
       {(Object.keys(labels) as Section[]).map((key) => <button key={key} onClick={() => { selectSection(key); setEditing(undefined); }} className={`alv-btn ${active === key ? 'alv-btn--primary' : 'alv-btn--outline'}`}>{labels[key]}</button>)}
-      <span style={{ marginLeft: 'auto' }}><Button onClick={openCreate}>Yangi qo‘shish</Button></span>
+      <span style={{ marginLeft: 'auto' }}><Button onClick={openCreate}>{t("Yangi qo‘shish")}</Button></span>
     </div>
     {error ? <p role="alert" style={{ color: '#b42318' }}>{error}</p> : null}
     {editing !== undefined ? <section className="alv-card" style={{ padding: 22, marginBottom: 22 }}>
       <h2 style={{ marginTop: 0 }}>{title}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 }}>
-        {fields[active].map((field) => <label key={field.key} style={{ display: 'grid', gap: 7, gridColumn: field.type === 'textarea' ? '1 / -1' : undefined, fontWeight: 600, fontSize: 13 }}>{field.label}
-          {field.type === 'textarea' ? <textarea required={field.required} value={String(form[field.key] ?? '')} onChange={(e) => update(field.key, e.target.value)} rows={field.key.startsWith('body') ? 10 : 4} style={{ border: '1px solid var(--alv-line)', borderRadius: 10, padding: 12, resize: 'vertical', font: 'inherit' }} />
-          : field.type === 'checkbox' ? <input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => update(field.key, e.target.checked)} style={{ width: 20, height: 20 }} />
-          : field.type === 'select' ? <select value={String(form[field.key] ?? '')} onChange={(e) => update(field.key, e.target.value)} style={{ border: '1px solid var(--alv-line)', borderRadius: 10, padding: 11 }}>{field.options?.map((option) => <option key={option}>{option}</option>)}</select>
+        {fields[active].map((field) => <label key={field.key} style={{ display: 'grid', gap: 7, gridColumn: field.type === 'textarea' ? '1 / -1' : undefined, fontWeight: 600, fontSize: 13 }}>{t(field.label)}
+          {field.type === "textarea" ? <textarea required={field.required} value={String(form[field.key] ?? '')} onChange={(e) => update(field.key, e.target.value)} rows={field.key.startsWith('body') ? 10 : 4} style={{ border: '1px solid var(--alv-line)', borderRadius: 10, padding: 12, resize: 'vertical', font: 'inherit' }} />
+          : field.type === "checkbox" ? <input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => update(field.key, e.target.checked)} style={{ width: 20, height: 20 }} />
+          : field.type === "select" ? <select value={String(form[field.key] ?? '')} onChange={(e) => update(field.key, e.target.value)} style={{ border: '1px solid var(--alv-line)', borderRadius: 10, padding: 11 }}>{field.options?.map((option) => <option key={option}>{option}</option>)}</select>
           : <Input required={field.required} type={field.type === 'date' ? 'datetime-local' : field.type ?? 'text'} value={String(form[field.key] ?? '')} onChange={(e) => update(field.key, e.target.value)} />}
         </label>)}
       </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}><Button disabled={saving} onClick={() => void save()}>{saving ? 'Saqlanmoqda…' : 'Saqlash'}</Button><Button variant="outline" onClick={() => setEditing(undefined)}>Bekor qilish</Button></div>
+      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}><Button disabled={saving} onClick={() => void save()}>{saving ? t("Saqlanmoqda…") : t("Saqlash")}</Button><Button variant="outline" onClick={() => setEditing(undefined)}>{t("Bekor qilish")}</Button></div>
     </section> : null}
-    {loading ? <p>Yuklanmoqda…</p> : <div className="alv-card" style={{ overflow: 'hidden' }}>
-      {items.length === 0 ? <p style={{ padding: 22, color: 'var(--alv-muted)' }}>Hozircha yozuv yo‘q.</p> : items.map((item, index) => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderTop: index ? '1px solid var(--alv-line)' : undefined }}><div><strong>{item.titleUz ?? item.questionUz ?? item.fromPath ?? item.placement ?? item.slug}</strong><div style={{ fontSize: 12, color: 'var(--alv-muted)', marginTop: 3 }}>{item.slug ? `/${item.slug}` : item.toPath ?? item.placement}</div></div><span style={{ marginLeft: 'auto' }}><Badge tone={(item.isPublished ?? item.isActive) ? 'mint' : 'neutral'}>{(item.isPublished ?? item.isActive) ? 'Faol' : 'Qoralama'}</Badge></span><Button size="sm" variant="outline" onClick={() => openEdit(item)}>Tahrirlash</Button><Button size="sm" variant="outline" onClick={() => void remove(item)}>O‘chirish</Button></div>)}
+    {loading ? <p>{t("Yuklanmoqda…")}</p> : <div className="alv-card" style={{ overflow: 'hidden' }}>
+      {items.length === 0 ? <p style={{ padding: 22, color: 'var(--alv-muted)' }}>{t("Hozircha yozuv yo‘q.")}</p> : items.map((item, index) => <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderTop: index ? '1px solid var(--alv-line)' : undefined }}><div><strong>{item.titleUz ?? item.questionUz ?? item.fromPath ?? item.placement ?? item.slug}</strong><div style={{ fontSize: 12, color: 'var(--alv-muted)', marginTop: 3 }}>{item.slug ? `/${item.slug}` : item.toPath ?? item.placement}</div></div><span style={{ marginLeft: 'auto' }}><Badge tone={(item.isPublished ?? item.isActive) ? 'mint' : 'neutral'}>{(item.isPublished ?? item.isActive) ? t("Faol") : t("Qoralama")}</Badge></span><Button size="sm" variant="outline" onClick={() => openEdit(item)}>{t("Tahrirlash")}</Button><Button size="sm" variant="outline" onClick={() => void remove(item)}>{t("O‘chirish")}</Button></div>)}
     </div>}
   </AdminShell>;
 }

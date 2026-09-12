@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -109,13 +110,13 @@ export default function NotificationsPage() {
   };
 
   return (
-    <AdminShell title="Bildirishnomalar">
+    <AdminShell title={t("Bildirishnomalar")}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <TabButton active={tab === 'log'} onClick={() => setTab('log')}>
-          Jurnal
+          {t("Jurnal")}
         </TabButton>
         <TabButton active={tab === 'templates'} onClick={() => setTab('templates')}>
-          Shablonlar
+          {t("Shablonlar")}
         </TabButton>
       </div>
 
@@ -133,19 +134,19 @@ export default function NotificationsPage() {
             lineHeight: 1.55,
           }}
         >
-          MAKET rejimi:{' '}
-          {[mocks.sms ? 'SMS' : null, mocks.telegram ? 'Telegram' : null]
+          {t("MAKET rejimi:")}{' '}
+          {[mocks.sms ? 'SMS' : null, mocks.telegram ? t("Telegram") : null]
             .filter(Boolean)
-            .join(' va ')}{' '}
-          haqiqatda yuborilmayapti — xabar matni server logiga chiqadi. Provayder kalitlari kelganda{' '}
-          <code>SMS_PROVIDER</code> va <code>TELEGRAM_BOT_TOKEN</code> to‘ldiriladi.
+            .join(t(" va "))}{' '}
+          {t("haqiqatda yuborilmayapti — xabar matni server logiga chiqadi. Provayder kalitlari kelganda")}{' '}
+          <code>SMS_PROVIDER</code> {t("va")} <code>TELEGRAM_BOT_TOKEN</code> {t("to‘ldiriladi.")}
         </div>
       ) : null}
 
       {error ? <Alert tone="danger">{error}</Alert> : null}
       {notice ? <Alert tone="mint">{notice}</Alert> : null}
 
-      {tab === 'log' ? (
+      {tab === "log" ? (
         <>
           <div
             style={{
@@ -156,9 +157,9 @@ export default function NotificationsPage() {
               marginBottom: 18,
             }}
           >
-            <Select label="Kanal" value={channel} options={CHANNELS} onChange={setChannel} />
+            <Select label={t("Kanal")} value={channel} options={CHANNELS} onChange={setChannel} />
             <Select
-              label="Holat"
+              label={t("Holat")}
               value={status}
               options={[
                 { value: '', label: 'Hammasi' },
@@ -167,10 +168,10 @@ export default function NotificationsPage() {
               onChange={setStatus}
             />
             <Button variant="outline" disabled={busy} onClick={() => void runQueue()}>
-              Navbatni ishga tushirish
+              {t("Navbatni ishga tushirish")}
             </Button>
             <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--alv-muted)' }}>
-              Jami: {total}
+              {t("Jami:")} {total}
             </span>
           </div>
 
@@ -178,11 +179,11 @@ export default function NotificationsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
               <thead>
                 <tr style={{ fontSize: 12.5, color: 'var(--alv-muted)', textAlign: 'left' }}>
-                  <th style={th}>Qabul qiluvchi</th>
-                  <th style={th}>Shablon</th>
-                  <th style={th}>Holat</th>
-                  <th style={th}>Matn</th>
-                  <th style={th}>Vaqt</th>
+                  <th style={th}>{t("Qabul qiluvchi")}</th>
+                  <th style={th}>{t("Shablon")}</th>
+                  <th style={th}>{t("Holat")}</th>
+                  <th style={th}>{t("Matn")}</th>
+                  <th style={th}>{t("Vaqt")}</th>
                   <th style={th} />
                 </tr>
               </thead>
@@ -212,7 +213,7 @@ export default function NotificationsPage() {
                     </td>
                     <td style={td}>
                       <Badge tone={STATUS_TONE[n.status] ?? 'neutral'}>
-                        {STATUS_LABEL[n.status] ?? n.status}
+                        {t(STATUS_LABEL[n.status] ?? n.status)}
                       </Badge>
                       {n.error ? (
                         <div style={{ fontSize: 11.5, color: 'var(--alv-danger)', marginTop: 4 }}>
@@ -221,7 +222,7 @@ export default function NotificationsPage() {
                       ) : null}
                       {n.attempts > 0 ? (
                         <div style={{ fontSize: 11.5, color: 'var(--alv-muted)', marginTop: 2 }}>
-                          {n.attempts} urinish
+                          {n.attempts} {t("urinish")}
                         </div>
                       ) : null}
                     </td>
@@ -229,7 +230,7 @@ export default function NotificationsPage() {
                       {n.body}
                       {n.smsParts && n.smsParts > 1 ? (
                         <div style={{ color: 'var(--alv-warn)', fontWeight: 700, marginTop: 4 }}>
-                          {n.smsParts} ta SMS
+                          {n.smsParts} {t("ta SMS")}
                         </div>
                       ) : null}
                     </td>
@@ -238,7 +239,7 @@ export default function NotificationsPage() {
                         fmtDateTime(n.sentAt)
                       ) : (
                         <span style={{ color: 'var(--alv-muted)' }}>
-                          {fmtDateTime(n.scheduledAt)} dan
+                          {fmtDateTime(n.scheduledAt)} {t("dan")}
                         </span>
                       )}
                     </td>
@@ -250,7 +251,7 @@ export default function NotificationsPage() {
                           disabled={busy}
                           onClick={() => void retry(n.id)}
                         >
-                          Qayta yuborish
+                          {t("Qayta yuborish")}
                         </Button>
                       ) : null}
                     </td>
@@ -261,14 +262,13 @@ export default function NotificationsPage() {
           </div>
 
           {items.length === 0 ? (
-            <p style={{ color: 'var(--alv-muted)' }}>Bildirishnoma topilmadi.</p>
+            <p style={{ color: 'var(--alv-muted)' }}>{t("Bildirishnoma topilmadi.")}</p>
           ) : null}
         </>
       ) : (
         <div style={{ display: 'grid', gap: 14 }}>
           <p style={{ margin: 0, color: 'var(--alv-muted)', fontSize: 13, lineHeight: 1.55 }}>
-            SMS narxi belgilar soniga bog‘liq: lotin yozuvida 160, kirill yozuvida 70 belgi bitta
-            SMS. Ikki qismli xabar ikki barobar turadi — matn uzunligini shu yerda ko‘rib turing.
+            {t("SMS narxi belgilar soniga bog‘liq: lotin yozuvida 160, kirill yozuvida 70 belgi bitta SMS. Ikki qismli xabar ikki barobar turadi — matn uzunligini shu yerda ko‘rib turing.")}
           </p>
 
           {templates.map((t) => (
@@ -347,7 +347,7 @@ function Select({
       <select value={value} onChange={(e) => onChange(e.target.value)} style={input}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </option>
         ))}
       </select>

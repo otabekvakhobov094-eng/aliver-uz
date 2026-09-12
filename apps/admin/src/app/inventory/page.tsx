@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
@@ -211,7 +212,7 @@ export default function InventoryPage() {
     comment.trim().length >= 3;
 
   return (
-    <AdminShell title="Ombor">
+    <AdminShell title={t("Ombor")}>
       <div
         style={{
           display: 'flex',
@@ -222,18 +223,18 @@ export default function InventoryPage() {
         }}
       >
         <p style={{ margin: 0, fontSize: 13.5, color: 'var(--alv-muted)', flexGrow: 1 }}>
-          Qoldig‘i chegaradan past mahsulotlar
+          {t("Qoldig‘i chegaradan past mahsulotlar")}
           {rows.length > 0 ? (
             <>
               {' — '}
-              <b style={{ color: 'var(--alv-ink)' }}>{rows.length} ta</b>
-              {rows.length >= 500 ? ' (birinchi 500 tasi)' : ''}
+              <b style={{ color: 'var(--alv-ink)' }}>{rows.length} {t("ta")}</b>
+              {rows.length >= 500 ? t(" (birinchi 500 tasi)") : ''}
             </>
           ) : null}
-          . Qoldiq faqat harakat orqali o‘zgaradi.
+          {t(". Qoldiq faqat harakat orqali o‘zgaradi.")}
         </p>
         <Button variant="outline" disabled={busy} onClick={() => void expire()}>
-          Muddati o‘tgan rezervlarni bo‘shatish
+          {t("Muddati o‘tgan rezervlarni bo‘shatish")}
         </Button>
       </div>
 
@@ -248,17 +249,16 @@ export default function InventoryPage() {
         style={{ padding: 18, marginBottom: 18, display: 'grid', gap: 12 }}
       >
         <div>
-          <h2 style={{ margin: 0, fontSize: 16 }}>Fayldan qoldiq kiritish</h2>
+          <h2 style={{ margin: 0, fontSize: 16 }}>{t("Fayldan qoldiq kiritish")}</h2>
           <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--alv-muted)', maxWidth: '72ch' }}>
-            CSV fayl: <code>SKU</code> va <code>Qoldiq</code> ustunlari. Ma’no —{' '}
-            <b>«shu son bo‘lsin»</b>, qo‘shish emas: faylni ikki marta yuklasangiz qoldiq ikki
-            barobar bo‘lib ketmaydi. Har bir o‘zgarish ombor harakati sifatida yoziladi.
+            {t("CSV fayl:")} <code>SKU</code> {t("va")} <code>{t("Qoldiq")}</code> {t("ustunlari. Ma’no —")}{' '}
+            <b>{t("«shu son bo‘lsin»")}</b>{t(", qo‘shish emas: faylni ikki marta yuklasangiz qoldiq ikki barobar bo‘lib ketmaydi. Har bir o‘zgarish ombor harakati sifatida yoziladi.")}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <label className="alv-btn alv-btn--outline alv-btn--md" style={{ cursor: 'pointer' }}>
-            {stockFile ? stockFile.name : 'Fayl tanlash'}
+            {stockFile ? stockFile.name : t("Fayl tanlash")}
             <input
               type="file"
               accept=".csv,text/csv"
@@ -290,7 +290,7 @@ export default function InventoryPage() {
                 .finally(() => setStockBusy(false));
             }}
           >
-            {stockBusy ? 'Tekshirilmoqda…' : 'Ko‘rib chiqish'}
+            {stockBusy ? t("Tekshirilmoqda…") : t("Ko‘rib chiqish")}
           </Button>
 
           {/* Yozish tugmasi FAQAT ko'rib chiqilgandan keyin ochiladi:
@@ -314,7 +314,7 @@ export default function InventoryPage() {
                 .finally(() => setStockBusy(false));
             }}
           >
-            Yozish
+            {t("Yozish")}
           </Button>
         </div>
 
@@ -343,7 +343,7 @@ export default function InventoryPage() {
                 ))}
                 {stockResult.changes.length > 12 ? (
                   <li style={{ color: 'var(--alv-muted)' }}>
-                    va yana {stockResult.changes.length - 12} ta
+                    {t("va yana")} {stockResult.changes.length - 12} {t("ta")}
                   </li>
                 ) : null}
               </ul>
@@ -351,7 +351,7 @@ export default function InventoryPage() {
 
             {stockResult.unknownSkus.length > 0 ? (
               <p style={{ margin: '8px 0 0', color: 'var(--alv-warn)' }}>
-                Topilmadi yoki o‘tkazib yuborildi: {stockResult.unknownSkus.slice(0, 8).join(', ')}
+                {t("Topilmadi yoki o‘tkazib yuborildi:")} {stockResult.unknownSkus.slice(0, 8).join(', ')}
                 {stockResult.unknownSkus.length > 8
                   ? ` va yana ${stockResult.unknownSkus.length - 8} ta`
                   : ''}
@@ -362,7 +362,7 @@ export default function InventoryPage() {
               <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: 'var(--alv-warn)' }}>
                 {stockResult.parse.problems.slice(0, 6).map((p) => (
                   <li key={p.line}>
-                    {p.line}-qator: {p.reason}
+                    {p.line}{t("-qator:")} {p.reason}
                   </li>
                 ))}
               </ul>
@@ -417,17 +417,17 @@ export default function InventoryPage() {
             onDone={load}
             onClearFilters={() => setFilters(EMPTY_FILTERS)}
             onRowClick={(r) => void open(r)}
-            emptyTitle="Qoldig‘i kam mahsulot yo‘q"
-            emptyHint="Hammasi chegaradan yuqori — bu yaxshi xabar."
-            noResultsTitle="Bu shartlarga mos mahsulot topilmadi"
+            emptyTitle={t("Qoldig‘i kam mahsulot yo‘q")}
+            emptyHint={t("Hammasi chegaradan yuqori — bu yaxshi xabar.")}
+            noResultsTitle={t("Bu shartlarga mos mahsulot topilmadi")}
             filterBar={
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
                 <input
                   type="search"
                   value={(filters as Record<string, string>).q ?? ''}
                   onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-                  placeholder="Mahsulot nomi yoki SKU"
-                  aria-label="Ombor qidirish"
+                  placeholder={t("Mahsulot nomi yoki SKU")}
+                  aria-label={t("Ombor qidirish")}
                   style={{ ...field, minHeight: 38, flex: '1 1 220px', maxWidth: 320 }}
                 />
                 <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13.5 }}>
@@ -438,7 +438,7 @@ export default function InventoryPage() {
                       setFilters({ ...filters, onlyZero: e.target.checked ? 'yes' : '' })
                     }
                   />
-                  Faqat tugaganlari
+                  {t("Faqat tugaganlari")}
                 </label>
               </div>
             }
@@ -456,14 +456,14 @@ export default function InventoryPage() {
           }}
         >
           <h2 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 16, margin: 0 }}>
-            {selected ? selected.productName : 'Variantni tanlang'}
+            {selected ? selected.productName : t("Variantni tanlang")}
           </h2>
 
           {selected ? (
             <>
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>
-                  O‘zgarish (musbat — kirim, manfiy — chiqim)
+                  {t("O‘zgarish (musbat — kirim, manfiy — chiqim)")}
                 </span>
                 <input
                   value={delta}
@@ -476,12 +476,12 @@ export default function InventoryPage() {
 
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>
-                  Sabab
+                  {t("Sabab")}
                 </span>
                 <select value={reason} onChange={(e) => setReason(e.target.value)} style={field}>
                   {REASONS.map((r) => (
                     <option key={r.value} value={r.value}>
-                      {r.label}
+                      {t(r.label)}
                     </option>
                   ))}
                 </select>
@@ -489,27 +489,27 @@ export default function InventoryPage() {
 
               <label style={{ display: 'grid', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--alv-ink-2)' }}>
-                  Izoh (majburiy, kamida 3 belgi)
+                  {t("Izoh (majburiy, kamida 3 belgi)")}
                 </span>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={2}
-                  placeholder="Masalan: 12.09 sanadagi yetkazib berish, hujjat №442"
+                  placeholder={t("Masalan: 12.09 sanadagi yetkazib berish, hujjat №442")}
                   style={{ ...field, resize: 'vertical' }}
                 />
               </label>
 
               <Button variant="primary" disabled={!canSubmit} onClick={() => void submit()}>
-                Qoldiqni o‘zgartirish
+                {t("Qoldiqni o‘zgartirish")}
               </Button>
 
               <div style={{ height: 1, background: 'var(--alv-line)' }} />
 
-              <h3 style={{ fontSize: 14, margin: 0 }}>Harakatlar jurnali</h3>
+              <h3 style={{ fontSize: 14, margin: 0 }}>{t("Harakatlar jurnali")}</h3>
               {movements.length === 0 ? (
                 <p style={{ color: 'var(--alv-muted)', fontSize: 13.5, margin: 0 }}>
-                  Harakatlar yo‘q.
+                  {t("Harakatlar yo‘q.")}
                 </p>
               ) : (
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
@@ -517,7 +517,7 @@ export default function InventoryPage() {
                     <li key={m.id} style={{ fontSize: 13 }}>
                       <div style={{ fontWeight: 700 }}>
                         {m.delta > 0 ? `+${m.delta}` : m.delta} ·{' '}
-                        {MOVEMENT_LABEL[m.reason] ?? m.reason}
+                        {t(MOVEMENT_LABEL[m.reason] ?? m.reason)}
                       </div>
                       <div style={{ color: 'var(--alv-muted)', fontSize: 12.5 }}>
                         {fmtDateTime(m.createdAt)}
@@ -531,8 +531,7 @@ export default function InventoryPage() {
             </>
           ) : (
             <p style={{ color: 'var(--alv-muted)', fontSize: 13.5, margin: 0 }}>
-              Chapdagi ro‘yxatdan mahsulotni tanlang — qoldiqni o‘zgartirish va harakatlar jurnali
-              shu yerda ochiladi.
+              {t("Chapdagi ro‘yxatdan mahsulotni tanlang — qoldiqni o‘zgartirish va harakatlar jurnali shu yerda ochiladi.")}
             </p>
           )}
         </section>

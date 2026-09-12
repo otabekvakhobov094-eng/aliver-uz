@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { t } from '@/lib/i18n';
 import { Button } from '@aliver/ui';
 import { adminApi, type ShopifyImportResult, type ShopifyPreview } from '@/lib/api';
 import { fmtNumber } from '@/lib/order-labels';
@@ -51,18 +52,16 @@ export function ShopifyImport() {
     <section className="alv-card" style={{ padding: 20, display: 'grid', gap: 14 }}>
       <div>
         <h2 style={{ margin: 0, fontSize: 17, fontFamily: 'var(--alv-font-display)' }}>
-          Boshqa do‘kondan import
+          {t("Boshqa do‘kondan import")}
         </h2>
         <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--alv-muted)', maxWidth: 640 }}>
-          Shopify asosidagi do‘kon manzilini kiriting. Mahsulotlar, variantlar, rasmlar,
-          kategoriyalar va brendlar ko‘chiriladi. Narxlar USD dan so‘mga kursga ko‘ra
-          hisoblanadi — Uzum yoki boshqa marketpleys komissiyasi qo‘shilmaydi.
+          {t("Shopify asosidagi do‘kon manzilini kiriting. Mahsulotlar, variantlar, rasmlar, kategoriyalar va brendlar ko‘chiriladi. Narxlar USD dan so‘mga kursga ko‘ra hisoblanadi — Uzum yoki boshqa marketpleys komissiyasi qo‘shilmaydi.")}
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
         <label style={lbl}>
-          Do‘kon manzili
+          {t("Do‘kon manzili")}
           <input
             style={input}
             value={sourceUrl}
@@ -71,7 +70,7 @@ export function ShopifyImport() {
           />
         </label>
         <label style={lbl}>
-          1 USD = ? so‘m
+          {t("1 USD = ? so‘m")}
           <input
             style={input}
             value={rate}
@@ -80,7 +79,7 @@ export function ShopifyImport() {
             placeholder="12800"
           />
           <span style={{ fontSize: 11, color: 'var(--alv-muted)', fontWeight: 400 }}>
-            Bugungi kurs. Narxlar shunga ko‘ra hisoblanadi.
+            {t("Bugungi kurs. Narxlar shunga ko‘ra hisoblanadi.")}
           </span>
         </label>
       </div>
@@ -103,7 +102,7 @@ export function ShopifyImport() {
             })
           }
         >
-          {busy === 'preview' ? 'Tekshirilmoqda…' : 'Ko‘rib chiqish'}
+          {busy === "preview" ? t("Tekshirilmoqda…") : t("Ko‘rib chiqish")}
         </Button>
         <Button
           size="sm"
@@ -120,11 +119,11 @@ export function ShopifyImport() {
             });
           }}
         >
-          {busy === 'run' ? 'Import qilinmoqda…' : 'Import qilish'}
+          {busy === "run" ? t("Import qilinmoqda…") : t("Import qilish")}
         </Button>
         {!preview ? (
           <span style={{ alignSelf: 'center', fontSize: 12.5, color: 'var(--alv-muted)' }}>
-            Avval ko‘rib chiqing
+            {t("Avval ko‘rib chiqing")}
           </span>
         ) : null}
       </div>
@@ -132,16 +131,16 @@ export function ShopifyImport() {
       {preview ? (
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
-            <Stat label="Topildi" value={preview.total} />
-            <Stat label="Yangi" value={preview.willCreate} />
-            <Stat label="Yangilanadi" value={preview.willUpdate} />
-            <Stat label="Variant" value={preview.variants} />
-            <Stat label="Rasm" value={preview.images} />
+            <Stat label={t("Topildi")} value={preview.total} />
+            <Stat label={t("Yangi")} value={preview.willCreate} />
+            <Stat label={t("Yangilanadi")} value={preview.willUpdate} />
+            <Stat label={t("Variant")} value={preview.variants} />
+            <Stat label={t("Rasm")} value={preview.images} />
           </div>
 
           <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', fontSize: 13 }}>
             <div>
-              <div style={head}>Brendlar</div>
+              <div style={head}>{t("Brendlar")}</div>
               {preview.brands.map((b) => (
                 <div key={b.name}>
                   {b.name} <span style={{ color: 'var(--alv-muted)' }}>· {fmt(b.count)}</span>
@@ -149,7 +148,7 @@ export function ShopifyImport() {
               ))}
             </div>
             <div>
-              <div style={head}>Kategoriyalar</div>
+              <div style={head}>{t("Kategoriyalar")}</div>
               {preview.categories.map((c) => (
                 <div key={c.name}>
                   {c.name} <span style={{ color: 'var(--alv-muted)' }}>· {fmt(c.count)}</span>
@@ -162,7 +161,7 @@ export function ShopifyImport() {
             <table style={{ borderCollapse: 'collapse', fontSize: 12.5, minWidth: 620 }}>
               <thead>
                 <tr>
-                  {['Mahsulot', 'Brend', 'Kategoriya', 'Variant', 'Rasm', 'Narx (so‘m)'].map((h) => (
+                  {[t("Mahsulot"), t("Brend"), t("Kategoriya"), t("Variant"), t("Rasm"), t("Narx (so‘m)")].map((h) => (
                     <th key={h} style={th}>
                       {h}
                     </th>
@@ -188,8 +187,7 @@ export function ShopifyImport() {
             </table>
           </div>
           <p style={{ margin: 0, fontSize: 12, color: 'var(--alv-muted)' }}>
-            Jadvalda birinchi {preview.sample.length} ta ko‘rsatilgan. Narxlarni tekshiring:
-            kurs noto‘g‘ri bo‘lsa hamma narx xato chiqadi.
+            {t("Jadvalda birinchi")} {preview.sample.length} {t("ta ko‘rsatilgan. Narxlarni tekshiring: kurs noto‘g‘ri bo‘lsa hamma narx xato chiqadi.")}
           </p>
         </div>
       ) : null}
@@ -197,14 +195,14 @@ export function ShopifyImport() {
       {result ? (
         <div style={{ display: 'grid', gap: 8 }}>
           <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
-            <Stat label="Yaratildi" value={result.created} />
-            <Stat label="Yangilandi" value={result.updated} />
-            <Stat label="Xato" value={result.failed} />
+            <Stat label={t("Yaratildi")} value={result.created} />
+            <Stat label={t("Yangilandi")} value={result.updated} />
+            <Stat label={t("Xato")} value={result.failed} />
           </div>
           {result.errors.length > 0 ? (
             <details>
               <summary style={{ cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                Xatolar ({result.failed})
+                {t("Xatolar (")}{result.failed})
               </summary>
               <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 12.5 }}>
                 {result.errors.map((e) => (

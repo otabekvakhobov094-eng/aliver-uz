@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { t } from '@/lib/i18n';
 import { AdminShell } from '@/components/AdminShell';
 import { adminApi, type AdminReview } from '@/lib/api';
 import { fmtDate } from '@/lib/order-labels';
@@ -85,7 +86,7 @@ export default function ReviewsPage() {
   });
 
   return (
-    <AdminShell title="Sharhlar">
+    <AdminShell title={t("Sharhlar")}>
       {error ? (
         <div
           role="alert"
@@ -147,7 +148,7 @@ export default function ReviewsPage() {
             borderRadius: 12,
           }}
         >
-          <strong style={{ fontSize: 14 }}>{selected.size} ta tanlandi</strong>
+          <strong style={{ fontSize: 14 }}>{selected.size} {t("ta tanlandi")}</strong>
           <div style={{ flex: 1 }} />
           <button
             type="button"
@@ -160,7 +161,7 @@ export default function ReviewsPage() {
             }
             style={action('var(--alv-mint,#1F7A5C)')}
           >
-            Tasdiqlash
+            {t("Tasdiqlash")}
           </button>
           <button
             type="button"
@@ -173,7 +174,7 @@ export default function ReviewsPage() {
             }
             style={action('var(--alv-danger,#C0392B)')}
           >
-            Rad etish
+            {t("Rad etish")}
           </button>
         </div>
       ) : null}
@@ -204,21 +205,21 @@ export default function ReviewsPage() {
                         fontSize: 10,
                         height: 18,
                       }}
-                      title="Yetkazilgan buyurtma egasi"
+                      title={t("Yetkazilgan buyurtma egasi")}
                     >
-                      tasdiqlangan xarid
+                      {t("tasdiqlangan xarid")}
                     </span>
                   ) : null}
                 </div>
                 <div style={{ color: 'var(--alv-muted)', fontSize: 13, margin: '4px 0 8px' }}>
-                  {r.customer.fullName ?? 'Mijoz'} · {fmtDate(r.createdAt)}
+                  {r.customer.fullName ?? t("Mijoz")} · {fmtDate(r.createdAt)}
                 </div>
                 {r.body ? (
                   <p style={{ margin: '0 0 10px', lineHeight: 1.6, overflowWrap: 'break-word' }}>
                     {r.body}
                   </p>
                 ) : (
-                  <p style={{ margin: '0 0 10px', color: 'var(--alv-muted)' }}>Faqat baho qo‘yilgan</p>
+                  <p style={{ margin: '0 0 10px', color: 'var(--alv-muted)' }}>{t("Faqat baho qo‘yilgan")}</p>
                 )}
 
                 {r.mediaUrls.length > 0 ? (
@@ -238,7 +239,7 @@ export default function ReviewsPage() {
                 <input
                   value={replies[r.id] ?? r.adminReply ?? ''}
                   onChange={(e) => setReplies({ ...replies, [r.id]: e.target.value })}
-                  placeholder="Javob yozish (ixtiyoriy) — saytda sharh ostida ko‘rinadi"
+                  placeholder={t("Javob yozish (ixtiyoriy) — saytda sharh ostida ko‘rinadi")}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -264,7 +265,7 @@ export default function ReviewsPage() {
                       }
                       style={action('var(--alv-mint,#1F7A5C)')}
                     >
-                      Tasdiqlash
+                      {t("Tasdiqlash")}
                     </button>
                   ) : null}
                   {r.status !== 'REJECTED' ? (
@@ -276,7 +277,7 @@ export default function ReviewsPage() {
                       }
                       style={action('var(--alv-danger,#C0392B)')}
                     >
-                      Rad etish
+                      {t("Rad etish")}
                     </button>
                   ) : null}
                 </div>
@@ -288,8 +289,8 @@ export default function ReviewsPage() {
         {items.length === 0 ? (
           <div className="alv-card" style={{ padding: 34, textAlign: 'center', color: 'var(--alv-muted)' }}>
             {status === 'PENDING'
-              ? 'Moderatsiya navbati bo‘sh — hamma sharh ko‘rib chiqilgan'
-              : 'Bu holatda sharh yo‘q'}
+              ? t("Moderatsiya navbati bo‘sh — hamma sharh ko‘rib chiqilgan")
+              : t("Bu holatda sharh yo‘q")}
           </div>
         ) : null}
       </div>

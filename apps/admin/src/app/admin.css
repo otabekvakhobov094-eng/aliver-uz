@@ -744,3 +744,183 @@ textarea:focus-visible {
     transform: none;
   }
 }
+
+/* ---- til tugmalari ---- */
+
+.alv-adm__lang {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-left: 4px;
+}
+.alv-adm__langBtn {
+  padding: 3px 9px;
+  border: 0;
+  background: transparent;
+  color: var(--adm-top-ink);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.alv-adm__langBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.alv-adm__langBtn--on {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  /* Telefonda yuqori qator tor: til tugmalari qoladi, «Admin»
+     yozuvi esa ortiqcha — u baribir har sahifada takrorlanadi. */
+  .alv-adm__env {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   RO'YXAT JADVALI — Shopify/Shoplazza uslubidagi tuzatishlar
+   --------------------------------------------------------------- */
+
+/* Sarlavha qatori skrollda joyida qoladi. */
+.alv-dl thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--adm-surface);
+  box-shadow: inset 0 -1px 0 var(--adm-line);
+}
+
+/* Qator ustida sichqoncha — butun qator yoritiladi, ya'ni ko'z
+   uzun qatorning oxirigacha yetib borganda ham adashmaydi. */
+.alv-dl tbody tr:hover td {
+  background: var(--adm-surface-2);
+}
+
+/* Skelet «tirik» ko'rinsin: statik kulrang chiziq osilib qolgandek
+   tuyuladi, harakatdagi esa yuklanayotganini aytadi. */
+.alv-dl tbody span[style*='border-radius: 6px'],
+.alv-dl tbody span[style*='border-radius:6px'] {
+  background: linear-gradient(
+    90deg,
+    var(--adm-line) 0%,
+    var(--adm-surface-2) 40%,
+    var(--adm-line) 80%
+  ) !important;
+  background-size: 300% 100% !important;
+  animation: adm-shimmer 1.2s ease-in-out infinite;
+}
+@keyframes adm-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+/* ---- fokus va bosish ---- */
+
+/*
+   Fokus halqasi KO'K. Qora halqa qora matn va qora tugma ustida
+   ko'rinmasdi — klaviatura bilan ishlaydigan odam qayerda turganini
+   bilmasdi.
+*/
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--adm-accent);
+  outline-offset: 1px;
+  border-radius: var(--adm-radius-sm);
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--adm-muted);
+}
+
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alv-dl tbody span {
+    animation: none !important;
+  }
+  button:not(:disabled):active {
+    transform: none;
+  }
+}
+
+/* Kirish ekrani oq fonda: yuqori qator uchun mo'ljallangan och rang
+   bu yerda ko'rinmaydi, shuning uchun ranglar almashtiriladi. */
+.alv-adm__langHost--light .alv-adm__lang {
+  margin-left: 0;
+  border-color: var(--adm-line-strong);
+}
+.alv-adm__langHost--light .alv-adm__langBtn {
+  color: var(--adm-muted);
+}
+.alv-adm__langHost--light .alv-adm__langBtn:hover {
+  background: var(--adm-surface-2);
+}
+.alv-adm__langHost--light .alv-adm__langBtn--on {
+  background: var(--adm-ink);
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------
+   TELEFONDAGI YUQORI QATOR
+   ---------------------------------------------------------------
+   390 px da qatorga logotip, til tugmalari, ism va «Chiqish»
+   sig'masdi — til tugmalari yarmigacha kesilib qolardi. Ism
+   qisqartiriladi, rol esa olib tashlanadi: u har sahifada
+   takrorlanadigan, lekin kamdan-kam kerak bo'ladigan ma'lumot.
+   --------------------------------------------------------------- */
+
+@media (max-width: 560px) {
+  .alv-adm__whoRole {
+    display: none;
+  }
+  .alv-adm__whoName {
+    max-width: 9ch;
+  }
+  .alv-adm__lang {
+    flex: none;
+  }
+  .alv-adm__who {
+    gap: 6px;
+  }
+  .alv-adm__top {
+    gap: 8px;
+    padding: 0 10px;
+  }
+}
+
+/* ---- dashboard ko'rsatkichlari ---- */
+
+/*
+ * Ustunlar soni SHU YERDA, sahifaning inline uslubida emas: inline
+ * uslub media so'rovlaridan kuchli va bitta qiymat ikkala ekranga
+ * ham to'g'ri kelmasdi. 190 px da monitorda oltita kartochka bir
+ * qatorga tiqilardi, 150 px da esa telefonda ikki ustun chiqardi-yu,
+ * monitorda son uch qatorga bo'linib ketardi.
+ */
+.alv-kpi {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+@media (max-width: 620px) {
+  .alv-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

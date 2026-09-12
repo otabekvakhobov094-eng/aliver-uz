@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { Badge, Button, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
@@ -88,7 +89,7 @@ export default function ReconcilePage() {
   const difference = report ? BigInt(report.totals.difference) : 0n;
 
   return (
-    <AdminShell title="To‘lovlarni moslashtirish">
+    <AdminShell title={t("To‘lovlarni moslashtirish")}>
       <div
         style={{
           display: 'flex',
@@ -98,16 +99,16 @@ export default function ReconcilePage() {
           marginBottom: 18,
         }}
       >
-        <Field label="Provayder">
+        <Field label={t("Provayder")}>
           <select value={provider} onChange={(e) => setProvider(e.target.value)} style={input}>
             {PROVIDERS.map((p) => (
               <option key={p.value} value={p.value}>
-                {p.label}
+                {t(p.label)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Sanadan">
+        <Field label={t("Sanadan")}>
           <input
             type="date"
             value={dateFrom}
@@ -115,7 +116,7 @@ export default function ReconcilePage() {
             style={input}
           />
         </Field>
-        <Field label="Sanagacha">
+        <Field label={t("Sanagacha")}>
           <input
             type="date"
             value={dateTo}
@@ -124,14 +125,14 @@ export default function ReconcilePage() {
           />
         </Field>
         <Button variant="primary" disabled={busy} onClick={() => void run()}>
-          {busy ? 'Solishtirilmoqda…' : 'Solishtirish'}
+          {busy ? t("Solishtirilmoqda…") : t("Solishtirish")}
         </Button>
         {/*
           Vypiska fayli — yagona mustaqil manba. Tugma har doim
           ko'rinadi: aynan shu yo'l kalitlarsiz ham ishlaydi.
         */}
         <label className="alv-btn alv-btn--outline alv-btn--md" style={{ cursor: 'pointer' }}>
-          Vypiska fayli (CSV)
+          {t("Vypiska fayli (CSV)")}
           <input
             type="file"
             accept=".csv,text/csv"
@@ -148,7 +149,7 @@ export default function ReconcilePage() {
         </label>
         {report && report.mismatches.length > 0 ? (
           <Button variant="ghost" onClick={exportCsv}>
-            CSV yuklab olish
+            {t("CSV yuklab olish")}
           </Button>
         ) : null}
       </div>
@@ -181,10 +182,7 @@ export default function ReconcilePage() {
                 lineHeight: 1.55,
               }}
             >
-              Manba: {report.source}. Bu bizning o‘z yozuvimiz, ya’ni «farq yo‘q» degan xulosa
-              hech narsani isbotlamaydi: webhook umuman kelmagan bo‘lsa, ikkala tomonda ham
-              yozuv yo‘q. Haqiqiy tekshiruv uchun provayder kabinetidan vypiskani yuklab,
-              yuqoridagi «Vypiska fayli» tugmasidan foydalaning.
+              {t("Manba:")} {report.source}{t(". Bu bizning o‘z yozuvimiz, ya’ni «farq yo‘q» degan xulosa hech narsani isbotlamaydi: webhook umuman kelmagan bo‘lsa, ikkala tomonda ham yozuv yo‘q. Haqiqiy tekshiruv uchun provayder kabinetidan vypiskani yuklab, yuqoridagi «Vypiska fayli» tugmasidan foydalaning.")}
             </div>
           ) : null}
 
@@ -199,13 +197,13 @@ export default function ReconcilePage() {
                 lineHeight: 1.6,
               }}
             >
-              Faylda {report.parse.rows} qator o‘qildi
+              {t("Faylda")} {report.parse.rows} {t("qator o‘qildi")}
               {report.parse.skipped > 0 ? `, ${report.parse.skipped} tasi o‘tkazib yuborildi` : ''}.
               {report.parse.problems.length > 0 ? (
                 <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
                   {report.parse.problems.slice(0, 5).map((p) => (
                     <li key={p.line}>
-                      {p.line}-qator: {p.reason}
+                      {p.line}{t("-qator:")} {p.reason}
                     </li>
                   ))}
                 </ul>
@@ -214,16 +212,16 @@ export default function ReconcilePage() {
           ) : null}
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
-            <Stat label="Bizda (to‘langan)" value={formatTiyin(report.totals.localPaid)} />
-            <Stat label="Provayderda" value={formatTiyin(report.totals.providerPerformed)} />
+            <Stat label={t("Bizda (to‘langan)")} value={formatTiyin(report.totals.localPaid)} />
+            <Stat label={t("Provayderda")} value={formatTiyin(report.totals.providerPerformed)} />
             <Stat
-              label="Farq"
+              label={t("Farq")}
               value={formatTiyin(report.totals.difference)}
               tone={difference === 0n ? 'mint' : 'low'}
             />
-            <Stat label="Mos kelgan" value={String(report.matched)} />
+            <Stat label={t("Mos kelgan")} value={String(report.matched)} />
             <Stat
-              label="Farqlar"
+              label={t("Farqlar")}
               value={String(report.mismatches.length)}
               tone={report.mismatches.length === 0 ? 'mint' : 'low'}
             />
@@ -240,20 +238,19 @@ export default function ReconcilePage() {
                 textAlign: 'center',
               }}
             >
-              Farq topilmadi — {report.checkedLocal} ta yozuv va {report.checkedProvider} ta
-              tranzaksiya to‘liq mos keldi.
+              {t("Farq topilmadi —")} {report.checkedLocal} {t("ta yozuv va")} {report.checkedProvider} {t("ta tranzaksiya to‘liq mos keldi.")}
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
                 <thead>
                   <tr style={{ fontSize: 12.5, color: 'var(--alv-muted)', textAlign: 'left' }}>
-                    <th style={th}>Turi</th>
-                    <th style={th}>Buyurtma</th>
-                    <th style={th}>Tranzaksiya</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Bizda</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Provayderda</th>
-                    <th style={th}>Izoh</th>
+                    <th style={th}>{t("Turi")}</th>
+                    <th style={th}>{t("Buyurtma")}</th>
+                    <th style={th}>{t("Tranzaksiya")}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{t("Bizda")}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{t("Provayderda")}</th>
+                    <th style={th}>{t("Izoh")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -302,7 +299,7 @@ export default function ReconcilePage() {
         </>
       ) : (
         <p style={{ color: 'var(--alv-muted)' }}>
-          Davr va provayderni tanlab «Solishtirish» tugmasini bosing.
+          {t("Davr va provayderni tanlab «Solishtirish» tugmasini bosing.")}
         </p>
       )}
     </AdminShell>
