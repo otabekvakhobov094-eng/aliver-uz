@@ -96,7 +96,7 @@ function RevenueChart({ series }: { series?: DashboardData['series'] }) {
   if (!Array.isArray(series) || series.length === 0) {
     return (
       <p style={{ color: 'var(--alv-muted)', margin: 0 }}>
-        {t("Bu davrda to&apos;langan buyurtma yo&apos;q.")}
+        {t("Bu davrda to‘langan buyurtma yo‘q.")}
       </p>
     );
   }
@@ -227,7 +227,7 @@ export default function AdminHome() {
           className="alv-card"
           style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}
         >
-          <strong>{t("Ma&apos;lumot yuklanmadi")}</strong>
+          <strong>{t("Ma’lumot yuklanmadi")}</strong>
           <span style={{ color: 'var(--alv-muted)', fontSize: 14 }}>{error}</span>
           <button
             type="button"
