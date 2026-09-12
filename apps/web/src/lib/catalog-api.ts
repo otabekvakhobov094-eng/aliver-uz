@@ -1,6 +1,7 @@
 import type { Tiyin, Uuid } from '@aliver/types';
 
 import { apiBase } from './api-base';
+import { serverGet } from './server-get';
 
 /* ---------- Server javob tiplari ---------- */
 
@@ -134,15 +135,11 @@ export interface Suggestion {
  * Katalog ma'lumotlari kamdan-kam o'zgaradi, shuning uchun sahifalar
  * ISR bilan keshlanadi (Next.js `revalidate`). Bu ekspertizadagi
  * arxitektura tavsiyasi: hamma sahifada to'liq SSR shart emas.
+ *
+ * Uyg'onish va qayta urinish `server-get.ts` da — u saytning hamma
+ * server tomonidagi o'qishlari uchun umumiy.
  */
-async function get<T>(path: string, revalidate = 120): Promise<T> {
-  const res = await fetch(`${apiBase()}${path}`, { next: { revalidate } });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `API xatosi: ${res.status}`);
-  }
-  return (await res.json()) as T;
-}
+const get = serverGet;
 
 export interface CatalogFacets {
   brands: Array<{ slug: string; name: string; count: number }>;

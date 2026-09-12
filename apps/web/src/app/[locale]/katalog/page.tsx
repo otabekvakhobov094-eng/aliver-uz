@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { catalogApi } from '@/lib/catalog-api';
+import { ApiAsleepError } from '@/lib/server-get';
 import { ProductCardView } from '@/components/ProductCard';
 import { CatalogFilters, CatalogToolbar } from '@/components/CatalogFilters';
 import { SiteHeader } from '@/components/SiteHeader';
@@ -50,7 +51,7 @@ export default async function CatalogPage({
    *
    * Endi xato tushunarli xabarga aylanadi va sayt ochiq qoladi.
    */
-  const [categories, facets, data] = await Promise.all([
+  const [categories, facets, result] = await Promise.all([
     catalogApi.categories().catch(() => []),
     catalogApi.facets({ category: one(sp.category), collection: one(sp.collection) }),
     catalogApi.products({
@@ -66,24 +67,55 @@ export default async function CatalogPage({
       sort: one(sp.sort) ?? 'popular',
       page,
       perPage: 24,
-    }).catch(() => null),
+    })
+      .then((r) => ({ ok: true as const, data: r }))
+      .catch((e: unknown) => ({ ok: false as const, asleep: e instanceof ApiAsleepError })),
   ]);
+
+  const data = result.ok ? result.data : null;
+  const asleep = !result.ok && result.asleep;
 
   if (!data) {
     return (
       <>
         <SiteHeader locale={locale} />
         <main className="alv-page" style={{ padding: '64px 0', textAlign: 'center' }}>
+          {/*
+            IKKI XIL HOLAT, ikki xil xabar.
+
+            Ilgari ikkalasiga bitta matn chiqardi va u mijozni
+            adashtirardi: server uxlab qolgan paytda «filtr noto'g'ri»
+            deb turardi, filtrda esa hech qanday ayb yo'q edi.
+          */}
           <h1 className="alv-h2" style={{ marginBottom: 10 }}>
-            {locale === 'ru' ? 'Каталог не загрузился' : 'Katalog yuklanmadi'}
+            {asleep
+              ? locale === 'ru'
+                ? 'Сервер просыпается'
+                : 'Server uyg‘onmoqda'
+              : locale === 'ru'
+                ? 'Каталог не загрузился'
+                : 'Katalog yuklanmadi'}
           </h1>
           <p style={{ color: 'var(--alv-muted)', marginBottom: 22 }}>
-            {locale === 'ru'
-              ? 'Не удалось связаться с сервером или фильтр указан неверно.'
-              : 'Server bilan bog‘lanib bo‘lmadi yoki filtr noto‘g‘ri ko‘rsatilgan.'}
+            {asleep
+              ? locale === 'ru'
+                ? 'Это занимает до минуты. Обновите страницу через несколько секунд.'
+                : 'Bu bir daqiqagacha ketishi mumkin. Bir necha soniyadan so‘ng sahifani yangilang.'
+              : locale === 'ru'
+                ? 'Не удалось связаться с сервером или фильтр указан неверно.'
+                : 'Server bilan bog‘lanib bo‘lmadi yoki filtr noto‘g‘ri ko‘rsatilgan.'}
           </p>
-          <Link href={`/${locale}/katalog`} className="alv-btn alv-btn--primary alv-btn--md">
-            {locale === 'ru' ? 'Сбросить фильтры' : 'Filtrlarni tozalash'}
+          <Link
+            href={asleep ? `/${locale}/katalog?t=${Date.now()}` : `/${locale}/katalog`}
+            className="alv-btn alv-btn--primary alv-btn--md"
+          >
+            {asleep
+              ? locale === 'ru'
+                ? 'Обновить'
+                : 'Yangilash'
+              : locale === 'ru'
+                ? 'Сбросить фильтры'
+                : 'Filtrlarni tozalash'}
           </Link>
         </main>
         <SiteFooter locale={locale} />

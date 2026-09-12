@@ -1,4 +1,4 @@
-import { apiBase } from './api-base';
+import { serverGet } from './server-get';
 
 export interface ContentPage {
   slug: string;
@@ -42,11 +42,8 @@ export interface Banner {
 
 export interface Faq { id: string; category: string | null; questionUz: string; questionRu: string; answerUz: string; answerRu: string; }
 
-async function get<T>(path: string, revalidate = 120): Promise<T> {
-  const response = await fetch(`${apiBase()}${path}`, { next: { revalidate } });
-  if (!response.ok) throw new Error(`Content API: ${response.status}`);
-  return response.json() as Promise<T>;
-}
+/** Uyg'onish va qayta urinish `server-get.ts` da — umumiy qoida. */
+const get = serverGet;
 
 export interface MenuNode {
   id: string;
