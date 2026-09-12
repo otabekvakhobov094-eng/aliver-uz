@@ -56,6 +56,7 @@ export default async function CatalogPage({
     catalogApi.products({
       category: one(sp.category),
       collection: one(sp.collection),
+      brand: one(sp.brand),
       q: one(sp.q),
       tags: one(sp.tags),
       minPrice: one(sp.minPrice),

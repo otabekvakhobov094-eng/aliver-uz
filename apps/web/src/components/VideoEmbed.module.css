@@ -1,0 +1,112 @@
+.frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  /* 16:9 — `padding-top` hiylasi kerak emas, va joy oldindan band
+     bo'ladi, ya'ni sahifa sakramaydi. */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  border-radius: var(--alv-radius-lg);
+  /* Surat yuklanmasa ham ko'rinadigan zaxira fon. */
+  background: var(--alv-grad-deep);
+  box-shadow: var(--alv-shadow-md);
+  cursor: pointer;
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* `hqdefault` 4:3 — yon tomonlari kesiladi, cho'zilmaydi. */
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.frame:hover .poster {
+  transform: scale(1.04);
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12, 8, 14, 0.12) 0%, rgba(12, 8, 14, 0.62) 100%);
+}
+
+.play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.93);
+  color: var(--alv-brand-deep);
+  /* Uchburchak optik markazda tursin: u o'ngga qaragan. */
+  padding-left: 4px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.frame:hover .play {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.label {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 18px;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  color: #fff;
+  font-family: var(--alv-font-body);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+.label span {
+  font-size: 12.5px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.player {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 560px) {
+  .play {
+    width: 56px;
+    height: 56px;
+  }
+  .label {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster,
+  .play {
+    transition: none;
+  }
+  .frame:hover .poster,
+  .frame:hover .play {
+    transform: none;
+  }
+  .frame:hover .play {
+    transform: translate(-50%, -50%);
+  }
+}

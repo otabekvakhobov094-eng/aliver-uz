@@ -1,0 +1,94 @@
+.strip {
+  padding: 26px 0 4px;
+  border-top: 1px solid var(--alv-line);
+  border-bottom: 1px solid var(--alv-line);
+}
+
+.title {
+  margin: 0 0 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--alv-muted);
+  text-align: center;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0 0 22px;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  /* Qat'iy o'lcham: nomlar har xil uzunlikda va bo'lmasa qator
+     notekis ko'rinadi. */
+  width: 180px;
+  min-height: 74px;
+  padding: 12px 14px;
+  border-radius: var(--alv-radius-md);
+  color: var(--alv-ink);
+  transition: background 0.18s, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.item:hover {
+  color: var(--alv-ink);
+  background: var(--alv-blush);
+  transform: translateY(-2px);
+}
+
+/*
+  Nom logotip o'rnida turadi, shuning uchun u TIPOGRAFIK tarzda
+  yoziladi: ingichka, keng oraliqli bosh harflar — kosmetika
+  brendlarining odatiy uslubi.
+*/
+.word {
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(17px, 2vw, 21px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.item img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.count {
+  font-size: 11.5px;
+  color: var(--alv-muted);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 560px) {
+  .item {
+    width: 148px;
+    min-height: 66px;
+  }
+  .word {
+    font-size: 16px;
+    letter-spacing: 0.07em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    transition: none;
+  }
+  .item:hover {
+    transform: none;
+  }
+}

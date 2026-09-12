@@ -145,6 +145,7 @@ async function get<T>(path: string, revalidate = 120): Promise<T> {
 }
 
 export interface CatalogFacets {
+  brands: Array<{ slug: string; name: string; count: number }>;
   colors: Array<{ value: string; count: number }>;
   sizes: Array<{ value: string; count: number }>;
   minPrice: number;
@@ -162,10 +163,30 @@ export const catalogApi = {
     const qs = new URLSearchParams();
     if (params.category) qs.set('category', params.category);
     if (params.collection) qs.set('collection', params.collection);
+    const empty: CatalogFacets = { brands: [], colors: [], sizes: [], minPrice: 0, maxPrice: 0 };
     try {
-      return await get<CatalogFacets>(`/catalog/facets${qs.size ? `?${qs}` : ''}`, 300);
+      const raw = await get<Partial<CatalogFacets>>(`/catalog/facets${qs.size ? `?${qs}` : ''}`, 300);
+      /*
+       * Javob MAYDONMA-MAYDON tekshiriladi.
+       *
+       * Bu ortiqcha ehtiyotkorlik emas: web va API alohida deploy
+       * qilinadi. Yangi sayt eski API bilan bir necha daqiqa ishlashi
+       * mumkin, va o'sha API da hali `brands` yo'q. Shunda
+       * `facets.brands.length` butun bosh sahifani 500 bilan yiqitardi
+       * — men buni aynan shu yerda ko'rdim.
+       *
+       * Yetishmagan maydon — bo'sh ro'yxat: blok chizilmaydi, sayt
+       * ochiq qoladi.
+       */
+      return {
+        brands: Array.isArray(raw?.brands) ? raw.brands : [],
+        colors: Array.isArray(raw?.colors) ? raw.colors : [],
+        sizes: Array.isArray(raw?.sizes) ? raw.sizes : [],
+        minPrice: typeof raw?.minPrice === 'number' ? raw.minPrice : 0,
+        maxPrice: typeof raw?.maxPrice === 'number' ? raw.maxPrice : 0,
+      };
     } catch {
-      return { colors: [], sizes: [], minPrice: 0, maxPrice: 0 };
+      return empty;
     }
   },
   collections: () => get<CollectionItem[]>('/catalog/collections', 300),

@@ -269,7 +269,38 @@ console.log(JSON.stringify({ mode: commit ? 'commit' : 'dry-run', sourceUrl, usd
 if (commit) {
   const prisma = new PrismaClient();
   try {
-    const brand = await prisma.brand.upsert({ where: { slug: 'aliver' }, update: { name: 'ALIVER' }, create: { slug: 'aliver', name: 'ALIVER' } });
+    /*
+     * Brend mahsulotning O'ZIDAN olinadi, qat'iy yozilmaydi.
+     *
+     * Ilgari bu yerda hamma mahsulotga `aliver` brendi qo'yilardi.
+     * aliver.com uchun bu to'g'ri edi — u yerda bitta brend bor. Lekin
+     * aliverbeauty.eu da ELAIMEI, SEFUDUN va ONE1X ham sotiladi, va
+     * o'sha katalogni import qilganda ularning HAMMASI «ALIVER» bo'lib
+     * qolardi: mijoz brend bo'yicha filtrlasa noto'g'ri natija olardi,
+     * va buni hech narsa ko'rsatmasdi.
+     *
+     * Endi har bir mahsulotning `vendor` maydoni o'qiladi va shu nomli
+     * brend yaratiladi. `vendor` bo'sh bo'lsa — ALIVER, chunki asosiy
+     * katalog shu.
+     */
+    const brandBySlug = new Map();
+    const brandFor = async (vendor) => {
+      const name = (vendor ?? '').trim() || 'ALIVER';
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'aliver';
+      if (brandBySlug.has(slug)) return brandBySlug.get(slug);
+      const brand = await prisma.brand.upsert({
+        where: { slug },
+        // Mavjud brend nomiga TEGILMAYDI: adminda to'g'rilangan bo'lishi
+        // mumkin (masalan «One1X» → «ONE1X»).
+        update: {},
+        create: { slug, name },
+      });
+      brandBySlug.set(slug, brand.id);
+      return brand.id;
+    };
     const warehouse = await prisma.warehouse.findUnique({ where: { code: warehouseCode } });
     if (!warehouse) throw new Error(`Ombor topilmadi: ${warehouseCode}`);
     const categoryIds = new Map();
@@ -291,10 +322,15 @@ if (commit) {
       collectionIds.set(item.slug, collection.id);
     }
     for (const [index, product] of products.entries()) {
-      await prisma.$transaction((tx) => importProduct(tx, product, brand.id, warehouse.id, categoryIds, collectionIds), { timeout: 30_000 });
+      const brandId = await brandFor(product.vendor);
+      await prisma.$transaction((tx) => importProduct(tx, product, brandId, warehouse.id, categoryIds, collectionIds), { timeout: 30_000 });
       if ((index + 1) % 25 === 0 || index + 1 === products.length) console.log(`${index + 1}/${products.length}`);
     }
-    console.log(`ALIVER katalog importi yakunlandi: ${taxonomy.length} kategoriya, ${curatedCollections.length} kolleksiya.`);
+    console.log(
+      `Katalog importi yakunlandi: ${taxonomy.length} kategoriya, ` +
+        `${curatedCollections.length} kolleksiya, ${brandBySlug.size} brend ` +
+        `(${[...brandBySlug.keys()].join(', ')}).`,
+    );
   } finally {
     await prisma.$disconnect();
   }

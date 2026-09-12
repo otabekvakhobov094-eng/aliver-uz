@@ -97,6 +97,13 @@ export class ProductQueryDto {
   @ArrayMaxSize(20)
   volume?: string[];
 
+  @ApiPropertyOptional({ example: ['aliver', 'elaimei'], description: 'Brend slug' })
+  @IsOptional()
+  @toStringArray()
+  @IsArray()
+  @ArrayMaxSize(20)
+  brand?: string[];
+
   @ApiPropertyOptional({ example: ['Rose Nude', 'Coral'], description: 'Variant rangi' })
   @IsOptional()
   @toStringArray()

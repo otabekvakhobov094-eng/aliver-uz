@@ -348,12 +348,24 @@ export async function seedCatalog(prisma: PrismaClient): Promise<void> {
     tagIdBySlug.set(slug, t.id);
   }
 
-  // --- brend ---
-  const brand = await prisma.brand.upsert({
-    where: { slug: 'aliver' },
-    update: {},
-    create: { slug: 'aliver', name: 'ALIVER' },
-  });
+  // --- brendlar ---
+  //
+  // aliverbeauty.eu da ALIVER dan tashqari uchta brend ham sotiladi.
+  // Ular shu yerda yaratiladi, mahsulotlar esa import paytida o'z
+  // `vendor` maydoniga qarab biriktiriladi.
+  //
+  // Brend YARATILADI, lekin nomi qayta yozilmaydi: adminda to'g'rilangan
+  // yozuv (masalan «One1X» → «ONE1X») seed qayta ishga tushganda
+  // yo'qolmasligi kerak.
+  for (const [slug, name] of [
+    ['aliver', 'ALIVER'],
+    ['elaimei', 'ELAIMEI'],
+    ['sefudun', 'SEFUDUN'],
+    ['one1x', 'ONE1X'],
+  ] as const) {
+    await prisma.brand.upsert({ where: { slug }, update: {}, create: { slug, name } });
+  }
+  const brand = (await prisma.brand.findUniqueOrThrow({ where: { slug: 'aliver' } }));
 
   const warehouse = await prisma.warehouse.findFirst({ where: { code: 'MAIN' } });
   if (!warehouse) throw new Error('MAIN ombori topilmadi — avval asosiy seed ishga tushirilsin');

@@ -4,6 +4,7 @@ import { ProductCardView } from '@/components/ProductCard';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
+import { BrandStrip } from '@/components/BrandStrip';
 import {
   CampaignBanner,
   LIP_CAMPAIGN,
@@ -29,7 +30,7 @@ const FALLBACK = [
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
-  const [categories, best, fresh, banners, promos, summerItems, lipItems, posts] = await Promise.all([
+  const [categories, best, fresh, banners, promos, summerItems, lipItems, facets, posts] = await Promise.all([
     catalogApi.categories().catch(() => []),
     catalogApi.products({ collection: 'best-sellers', perPage: 4 }).catch(() => ({ items: [] })),
     catalogApi.products({ sort: 'newest', perPage: 4 }).catch(() => ({ items: [] })),
@@ -40,6 +41,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     // Kampaniya bannerlaridagi suratlar — HAQIQIY katalogdan.
     catalogApi.products({ category: 'soch-parvarishi', perPage: 3, inStock: true }).catch(() => ({ items: [] })),
     catalogApi.products({ category: 'makiyaj', perPage: 3, inStock: true }).catch(() => ({ items: [] })),
+    // Sotuvdagi brendlar — fasetlardan, ya'ni haqiqiy katalogdan.
+    catalogApi.facets(),
     // Blog bloki uchun. Xato bo'lsa blok shunchaki chizilmaydi.
     contentApi.posts().catch(() => []),
   ]);
@@ -109,6 +112,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </div>
         </div>
       </section>
+
+      <Reveal as="section" className={styles.shell} style={{ marginTop: 54 }}>
+        <BrandStrip brands={facets.brands} locale={locale} />
+      </Reveal>
 
       <Reveal as="section" className={`${styles.shell} ${styles.promises}`}>
         <Benefit icon="✦" title={locale === 'ru' ? 'Только оригинал' : 'Faqat original'} text={locale === 'ru' ? 'Прямые официальные поставки' : 'Rasmiy va to‘g‘ridan-to‘g‘ri ta’minot'} />

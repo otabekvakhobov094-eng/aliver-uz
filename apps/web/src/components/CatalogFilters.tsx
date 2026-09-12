@@ -86,6 +86,7 @@ export function CatalogFilters({
 
   const activeCount = [
     'category',
+    'brand',
     'tags',
     'color',
     'volume',
@@ -113,6 +114,28 @@ export function CatalogFilters({
           />
         ))}
       </div>
+
+      {/*
+        Brend filtri. aliverbeauty.eu da ALIVER dan tashqari ELAIMEI,
+        SEFUDUN va ONE1X ham sotiladi — ular import qilingan zahoti bu
+        guruh O'ZI paydo bo'ladi, chunki ro'yxat bazadagi haqiqiy
+        brendlardan quriladi. Bitta brend bo'lsa guruh ko'rinmaydi:
+        tanlovi yo'q filtr faqat joy egallaydi.
+      */}
+      {facets.brands.length > 1 ? (
+        <div className="alv-filter-group">
+          <div className="alv-filter-group__title">{locale === 'ru' ? 'Бренд' : 'Brend'}</div>
+          {facets.brands.map((b) => (
+            <Check
+              key={b.slug}
+              label={b.name}
+              count={b.count}
+              on={has('brand', b.slug)}
+              onClick={() => toggleInList('brand', b.slug)}
+            />
+          ))}
+        </div>
+      ) : null}
 
       <div className="alv-filter-group">
         <div className="alv-filter-group__title">{locale === 'ru' ? 'Наличие' : 'Mavjudlik'}</div>

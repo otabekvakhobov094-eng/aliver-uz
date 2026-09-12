@@ -543,6 +543,25 @@
 
 /* Mobil / desktop ko'rinish */
 /*
+  Faqat ekran o'quvchi uchun matn.
+
+  `display: none` YARAMAYDI — u matnni ekran o'quvchidan ham
+  yashiradi. Shuning uchun element bir piksel o'lchamda qoladi va
+  kesib tashlanadi: ko'rinmaydi, lekin o'qiladi.
+*/
+.alv-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
   YASHIRISH utilitasi `!important` bilan.
 
   Sababi konkret: `<div class="alv-mobile-only" style="display:flex">`

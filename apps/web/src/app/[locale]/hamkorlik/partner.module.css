@@ -1,0 +1,88 @@
+.intro {
+  max-width: 640px;
+  margin-top: 14px;
+}
+.lead {
+  margin-top: 12px;
+  color: var(--alv-ink-2);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* --- Video bloki -------------------------------------------------- */
+
+.videoRow {
+  display: grid;
+  /* `minmax(0, …)` ikkala ustunda ham: aks holda video ustuni o'z
+     tarkibidan kichrayolmay, qatorni kengaytirib yuboradi. */
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 32px;
+  align-items: center;
+  margin-top: 44px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--alv-brand-deep);
+}
+.videoTitle {
+  margin: 0;
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+}
+.videoNote {
+  margin: 12px 0 0;
+  color: var(--alv-muted);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.videoBox {
+  min-width: 0;
+}
+
+/* --- Shartlar ----------------------------------------------------- */
+
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 12px;
+  margin-top: 48px;
+}
+.benefit {
+  padding: 20px;
+  border-radius: var(--alv-radius-lg);
+  background: var(--alv-surface);
+  box-shadow: var(--alv-shadow-sm);
+}
+.benefit strong {
+  display: block;
+  font-size: 15.5px;
+}
+.benefit p {
+  margin: 7px 0 0;
+  color: var(--alv-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* --- Ariza -------------------------------------------------------- */
+
+.formBox {
+  max-width: 760px;
+  margin-top: 56px;
+}
+
+@media (max-width: 900px) {
+  .videoRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+}

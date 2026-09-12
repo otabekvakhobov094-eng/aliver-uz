@@ -61,10 +61,37 @@ export class ProductService {
       productWhere.collections = { some: { collection: { slug: query.collection } } };
     }
 
-    const variants = await this.prisma.productVariant.findMany({
-      where: { isActive: true, deletedAt: null, product: productWhere },
-      select: { options: true, price: true },
-    });
+    const [variants, brandRows] = await Promise.all([
+      this.prisma.productVariant.findMany({
+        where: { isActive: true, deletedAt: null, product: productWhere },
+        select: { options: true, price: true },
+      }),
+      // Shu bo'limda haqiqatan mahsuloti bor brendlar.
+      this.prisma.product.groupBy({
+        by: ['brandId'],
+        where: productWhere,
+        _count: { _all: true },
+      }),
+    ]);
+
+    const brandIds = brandRows.map((b) => b.brandId).filter((id): id is string => Boolean(id));
+    // Tur aniq yoziladi: bo'sh massiv shoxi tufayli u `{}[]` bo'lib
+    // chiqardi va `b.slug` ni TypeScript ko'rmasdi.
+    type BrandRow = { id: string; slug: string; name: string };
+    const brandNames: BrandRow[] = brandIds.length
+      ? ((await this.prisma.brand.findMany({
+          where: { id: { in: brandIds } },
+          select: { id: true, slug: true, name: true },
+        })) as BrandRow[])
+      : [];
+    const brandById = new Map(brandNames.map((b) => [b.id, b]));
+    const brands = brandRows
+      .map((row) => {
+        const b = row.brandId ? brandById.get(row.brandId) : undefined;
+        return b ? { slug: b.slug, name: b.name, count: row._count._all } : null;
+      })
+      .filter((b): b is { slug: string; name: string; count: number } => b !== null)
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
     const colors = new Map<string, number>();
     const sizes = new Map<string, number>();
@@ -88,6 +115,7 @@ export class ProductService {
         .map(([value, count]) => ({ value, count }));
 
     return {
+      brands,
       colors: sorted(colors),
       sizes: sorted(sizes),
       // Tiyinda emas, SO'MDA: filtr maydonlariga mijoz so'm yozadi.
@@ -112,6 +140,9 @@ export class ProductService {
     }
     if (query.collection) {
       where.collections = { some: { collection: { slug: query.collection } } };
+    }
+    if (query.brand && query.brand.length > 0) {
+      where.brand = { slug: { in: query.brand } };
     }
     if (query.tags && query.tags.length > 0) {
       where.tags = { some: { tag: { slug: { in: query.tags } } } };
