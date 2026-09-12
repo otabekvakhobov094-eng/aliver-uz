@@ -2,6 +2,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { fmtNumber } from '@/lib/format-date';
 import { SiteFooter } from '@/components/SiteFooter';
 import { shopApi } from '@/lib/shop-api';
+import { asList } from '@/lib/server-get';
 import { isLocale } from '@/i18n/messages';
 
 /**
@@ -24,6 +25,7 @@ export const metadata = {
 };
 
 type Region = { id: string; nameUz: string; nameRu: string };
+type Tariff = Awaited<ReturnType<typeof shopApi.tariffs>>[number];
 
 const PAYMENTS = [
   {
@@ -71,9 +73,9 @@ export default async function DeliveryPage({ params }: { params: Promise<{ local
   // Hudud ro'yxati bo'lmasa sahifa baribir ochiladi — to'lov qismi
   // mustaqil va mijozga kerak.
   const [regions, tariffs] = await Promise.all([
-    shopApi.regions().catch((): Region[] => []),
+    shopApi.regions().then(asList<Region>).catch((): Region[] => []),
     // Tariflar adminda o'zgaradi — sahifa ularni serverdan oladi.
-    shopApi.tariffs().catch(() => []),
+    shopApi.tariffs().then(asList<Tariff>).catch((): Tariff[] => []),
   ]);
 
   return (

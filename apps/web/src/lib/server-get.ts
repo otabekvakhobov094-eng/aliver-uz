@@ -52,3 +52,31 @@ export async function serverGet<T>(path: string, revalidate = 120): Promise<T> {
 
   throw new ApiAsleepError(lastStatus);
 }
+
+/**
+ * Ro'yxat kutilgan joyda — HAR DOIM ro'yxat.
+ *
+ * NEGA. Web va API alohida deploy qilinadi: yangi sayt bir necha
+ * daqiqa eski API bilan ishlashi mumkin, uxlab qolgan servis esa
+ * JSON o'rniga proksi xato sahifasini qaytaradi. Shunda
+ * `categories.map(...)` butun sahifani 500 ga aylantiradi va mijoz
+ * «Sayt vaqtincha ishlamayapti» degan ekranni ko'radi — bitta blok
+ * o'rniga BUTUN sahifa yo'qoladi.
+ *
+ * Kutilmagan javob — bo'sh ro'yxat: shu blok chizilmaydi, qolgan
+ * sahifa ochiq qoladi. Bu tekshiruv `catalog/facets` da allaqachon
+ * bor edi; qolgan ro'yxatlarda esa yo'q edi.
+ */
+export async function serverList<T>(path: string, revalidate = 120): Promise<T[]> {
+  try {
+    const raw = await serverGet<unknown>(path, revalidate);
+    return Array.isArray(raw) ? (raw as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Kutilmagan javob — bo'sh ro'yxat. `serverList` ning sinxron ko'rinishi. */
+export function asList<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}

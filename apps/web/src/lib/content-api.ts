@@ -1,4 +1,4 @@
-import { serverGet } from './server-get';
+import { serverGet, serverList } from './server-get';
 
 export interface ContentPage {
   slug: string;
@@ -63,17 +63,12 @@ export const contentApi = {
    * o'rnini o'rnatilgan menyu bilan to'ldiradi. Sarlavhasiz sayt
    * eskirgan menyuli saytdan yomonroq.
    */
-  menu: async (location: 'HEADER' | 'FOOTER'): Promise<MenuNode[]> => {
-    try {
-      return await get<MenuNode[]>(`/content/menu?location=${location}`, 300);
-    } catch {
-      return [];
-    }
-  },
+  menu: (location: 'HEADER' | 'FOOTER') =>
+    serverList<MenuNode>(`/content/menu?location=${location}`, 300),
   page: (slug: string) => get<ContentPage>(`/content/pages/${encodeURIComponent(slug)}`, 300),
-  posts: () => get<BlogPost[]>('/content/blog', 120),
+  posts: () => serverList<BlogPost>('/content/blog', 120),
   post: (slug: string) => get<BlogPost>(`/content/blog/${encodeURIComponent(slug)}`, 120),
   banners: (placement: string) =>
-    get<Banner[]>(`/content/banners?placement=${encodeURIComponent(placement)}`, 60),
-  faqs: () => get<Faq[]>('/content/faq', 300),
+    serverList<Banner>(`/content/banners?placement=${encodeURIComponent(placement)}`, 60),
+  faqs: () => serverList<Faq>('/content/faq', 300),
 };

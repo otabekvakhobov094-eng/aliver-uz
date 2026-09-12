@@ -1,7 +1,7 @@
 import type { Tiyin, Uuid } from '@aliver/types';
 
 import { apiBase } from './api-base';
-import { serverGet } from './server-get';
+import { serverGet, serverList } from './server-get';
 
 /* ---------- Server javob tiplari ---------- */
 
@@ -150,7 +150,7 @@ export interface CatalogFacets {
 }
 
 export const catalogApi = {
-  categories: () => get<CategoryNode[]>('/catalog/categories', 300),
+  categories: () => serverList<CategoryNode>('/catalog/categories', 300),
 
   /**
    * Filtr qiymatlari. Xato bo'lsa BO'SH ro'yxat — filtr paneli
@@ -186,7 +186,7 @@ export const catalogApi = {
       return empty;
     }
   },
-  collections: () => get<CollectionItem[]>('/catalog/collections', 300),
+  collections: () => serverList<CollectionItem>('/catalog/collections', 300),
 
   products: (params: Record<string, string | number | boolean | undefined>) => {
     const qs = new URLSearchParams();
