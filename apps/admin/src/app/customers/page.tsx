@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { Pager } from '@/components/Pager';
 import { DataList, type DataColumn } from '@/components/DataList';
 import { adminApi, type AdminCustomerRow } from '@/lib/api';
 import { SEGMENT_LABEL, SEGMENT_TONE, fmtDate, fmtDateTime, label } from '@/lib/order-labels';
@@ -119,6 +120,10 @@ const EMPTY_FILTERS = { q: '', segment: '', status: '' };
 export default function CustomersPage() {
   const [items, setItems] = useState<AdminCustomerRow[]>([]);
   const [total, setTotal] = useState(0);
+  // Sahifa va uning hajmi — hajm serverdan keladi.
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+
   const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,15 +140,17 @@ export default function CustomersPage() {
         q: q || undefined,
         segment: segment || undefined,
         status: status || undefined,
+        page,
       });
       setItems(res.items);
       setTotal(res.total);
+      if (res.perPage) setPerPage(res.perPage);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     } finally {
       setLoading(false);
     }
-  }, [q, segment, status]);
+  }, [q, segment, status, page]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), 250);
@@ -224,6 +231,7 @@ export default function CustomersPage() {
             </select>
           </div>
         }
+        footer={<Pager page={page} total={total} perPage={perPage} onChange={setPage} />}
       />
     </AdminShell>
   );

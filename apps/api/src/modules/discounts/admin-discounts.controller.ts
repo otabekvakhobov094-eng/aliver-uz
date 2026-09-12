@@ -15,6 +15,7 @@ import {
 import type { Request } from 'express';
 import { Audit, RequirePermissions } from '../../common/decorators';
 import { PrismaService } from '../../prisma/prisma.service';
+import { endOfLocalDay, startOfLocalDay } from '../reports/period';
 
 /**
  * Chegirmalarni boshqarish — TZ 47, TZ-2 4.7.
@@ -79,8 +80,19 @@ export class AdminDiscountsController {
     // FREE_SHIPPING uchun qiymat ma'nosiz — chalkashmasligi uchun nolga tushiriladi.
     const finalValue = type === 'FREE_SHIPPING' ? 0 : Math.round(value);
 
-    const startsAt = body.startsAt ? new Date(body.startsAt) : null;
-    const endsAt = body.endsAt ? new Date(body.endsAt) : null;
+    /*
+     * SANA — KUN CHEGARASI BO'YICHA.
+     *
+     * Forma `type="date"` beradi, ya'ni «2026-09-30». `new Date` uni
+     * 00:00 UTC deb o'qiydi — Toshkentda 05:00. Natijada «30-sentabrgacha»
+     * deb qo'yilgan aksiya 30-sentabr tongida TO'XTARDI: mijozlar kun
+     * bo'yi to'liq narxda to'lardi, jadvalda esa «30.09.2026» yozuvi
+     * turardi. Xato chiqmaydi — chegirma shunchaki tushmaydi.
+     *
+     * Shuning uchun boshlanish kun BOSHIDAN, tugash kun OXIRIGACHA.
+     */
+    const startsAt = body.startsAt ? startOfLocalDay(new Date(body.startsAt)) : null;
+    const endsAt = body.endsAt ? endOfLocalDay(new Date(body.endsAt)) : null;
     if (startsAt && endsAt && endsAt <= startsAt) {
       // Bu tekshiruvsiz "hech qachon ishlamaydigan" aksiya yaratiladi va
       // sababi ko'rinmaydi: kod xato bermaydi, chegirma shunchaki tushmaydi.

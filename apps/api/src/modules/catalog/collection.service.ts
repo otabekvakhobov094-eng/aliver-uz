@@ -63,15 +63,26 @@ export class CollectionService {
     const slug =
       dto.slug && dto.slug !== current.slug ? await this.resolveSlug(dto.slug, id) : current.slug;
 
+    /*
+     * KELMAGAN maydon TEGILMAYDI.
+     *
+     * Ilgari `descUz: dto.descUz ?? null` turardi — ya'ni maydon
+     * yuborilmagan bo'lsa u NOLGA aylanardi. Ro'yxatdagi
+     * «Yashirish» tugmasi esa faqat nom va `isActive` ni yuboradi:
+     * kolleksiyani bir haftaga yashirib, keyin qaytargan xodim
+     * uning tavsifi va rasmini yo'qotardi. Ekranda «Faollashtirildi»
+     * yozuvi chiqardi va jadvalda tavsif ustuni yo'q, ya'ni yo'qotish
+     * ko'rinmasdi.
+     */
     return this.prisma.collection.update({
       where: { id },
       data: {
         slug,
         nameUz: dto.nameUz,
         nameRu: dto.nameRu,
-        descUz: dto.descUz ?? null,
-        descRu: dto.descRu ?? null,
-        imageUrl: dto.imageUrl ?? null,
+        ...(dto.descUz === undefined ? {} : { descUz: dto.descUz || null }),
+        ...(dto.descRu === undefined ? {} : { descRu: dto.descRu || null }),
+        ...(dto.imageUrl === undefined ? {} : { imageUrl: dto.imageUrl || null }),
         sortOrder: dto.sortOrder ?? current.sortOrder,
         isActive: dto.isActive ?? current.isActive,
       },

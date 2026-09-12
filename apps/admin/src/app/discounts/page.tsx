@@ -232,15 +232,38 @@ export default function DiscountsPage() {
               ))}
             </select>
             {form.type !== 'FREE_SHIPPING' ? (
-              <input
-                required
-                type="number"
-                min={0}
-                placeholder={form.type === 'PERCENT' ? 'Foiz' : 'Summa (tiyin)'}
-                value={form.value}
-                onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
-                style={input}
-              />
+              /*
+               * SUMMA SO'MDA kiritiladi.
+               *
+               * Ilgari maydon tiyin kutardi va buni faqat
+               * placeholder aytardi — u esa hech qachon
+               * ko'rinmasdi, chunki maydon `10` qiymati bilan
+               * to'ldirilgan holda ochilardi. Ya'ni «50 000»
+               * yozgan xodim 500 so'mlik chegirma yaratardi:
+               * yuz barobar kam, hech qanday xatosiz.
+               *
+               * Endi birlik yorliqda yozilgan va tiyinga o'girish
+               * shu yerda bajariladi.
+               */
+              <label style={{ display: 'grid', gap: 4, fontSize: 12 }}>
+                <span style={{ color: 'var(--alv-muted)' }}>
+                  {form.type === 'PERCENT' ? t('Foiz, %') : t('Summa, so‘m')}
+                </span>
+                <input
+                  required
+                  type="number"
+                  min={0}
+                  value={form.type === 'PERCENT' ? form.value : form.value / 100}
+                  onChange={(e) => {
+                    const entered = Number(e.target.value);
+                    setForm({
+                      ...form,
+                      value: form.type === 'PERCENT' ? entered : Math.round(entered * 100),
+                    });
+                  }}
+                  style={input}
+                />
+              </label>
             ) : null}
             <select
               value={form.scope}

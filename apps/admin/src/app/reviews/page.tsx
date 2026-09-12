@@ -267,7 +267,32 @@ export default function ReviewsPage() {
                     >
                       {t("Tasdiqlash")}
                     </button>
-                  ) : null}
+                  ) : (
+                    /*
+                     * TASDIQLANGAN sharhga javob yozish yo'li.
+                     *
+                     * Ilgari javob maydoni har bir kartochkada
+                     * ko'rinardi, lekin uni saqlaydigan tugma faqat
+                     * «Tasdiqlash» edi — u esa tasdiqlangan sharhda
+                     * ko'rsatilmasdi. Ya'ni xodim javob yozib,
+                     * saqlashning iloji yo'qligini ko'rardi: yagona
+                     * tugma «Rad etish» bo'lib, u matnni tashlab,
+                     * sharhni saytdan olib tashlardi.
+                     */
+                    <button
+                      type="button"
+                      disabled={busy || (replies[r.id] ?? r.adminReply ?? '') === (r.adminReply ?? '')}
+                      onClick={() =>
+                        void run(
+                          () => adminApi.moderateReview(r.id, 'APPROVED', replies[r.id] ?? ''),
+                          'Javob saqlandi',
+                        )
+                      }
+                      style={action('var(--alv-ink)')}
+                    >
+                      {t("Javobni saqlash")}
+                    </button>
+                  )}
                   {r.status !== 'REJECTED' ? (
                     <button
                       type="button"

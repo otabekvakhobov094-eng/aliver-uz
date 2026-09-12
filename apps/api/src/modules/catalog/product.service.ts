@@ -975,35 +975,55 @@ export class ProductService {
     };
   }
 
+  /**
+   * Aloqalarni sinxronlash.
+   *
+   * QOIDA: maydon KELMAGAN bo'lsa (`undefined`) — TEGILMAYDI.
+   * Bo'sh massiv kelsa — tozalanadi.
+   *
+   * NEGA MUHIM. Ilgari uchala aloqa ham shartsiz o'chirilardi va
+   * faqat DTO da kelgani qayta yozilardi. Mahsulot formasi esa
+   * kolleksiya va teglarni UMUMAN yubormaydi — ya'ni tavsifdagi
+   * bitta harfni tuzatib «Saqlash» bosgan xodim o'sha mahsulotni
+   * BARCHA kolleksiyalardan chiqarib yuborardi va teglarini o'chirib
+   * tashlardi. Ekranda «Saqlandi» yozuvi chiqardi, mahsulot sahifasi
+   * o'zgarmagandek ko'rinardi — chunki forma kolleksiyani umuman
+   * ko'rsatmaydi. Import qo'ygan teglar ham shu bilan yo'qolardi va
+   * saytdagi «Vosita tanlash» yana bo'sh natija bera boshlardi.
+   */
   private async syncRelations(tx: Tx, productId: string, dto: UpsertProductDto): Promise<void> {
     const client = tx;
 
-    await client.productCategory.deleteMany({ where: { productId } });
-    if (dto.categoryIds?.length) {
-      await client.productCategory.createMany({
-        data: dto.categoryIds.map((categoryId, i) => ({
-          productId,
-          categoryId,
-          isPrimary: i === 0,
-        })),
-        skipDuplicates: true,
-      });
+    if (dto.categoryIds !== undefined) {
+      await client.productCategory.deleteMany({ where: { productId } });
+      if (dto.categoryIds.length > 0) {
+        await client.productCategory.createMany({
+          data: dto.categoryIds.map((categoryId, i) => ({
+            productId,
+            categoryId,
+            isPrimary: i === 0,
+          })),
+          skipDuplicates: true,
+        });
+      }
     }
 
-    await client.collectionProduct.deleteMany({ where: { productId } });
-    if (dto.collectionIds?.length) {
-      await client.collectionProduct.createMany({
-        data: dto.collectionIds.map((collectionId, i) => ({
-          productId,
-          collectionId,
-          sortOrder: i,
-        })),
-        skipDuplicates: true,
-      });
+    if (dto.collectionIds !== undefined) {
+      await client.collectionProduct.deleteMany({ where: { productId } });
+      if (dto.collectionIds.length > 0) {
+        await client.collectionProduct.createMany({
+          data: dto.collectionIds.map((collectionId, i) => ({
+            productId,
+            collectionId,
+            sortOrder: i,
+          })),
+          skipDuplicates: true,
+        });
+      }
     }
 
-    await client.productTag.deleteMany({ where: { productId } });
-    if (dto.tagSlugs?.length) {
+    if (dto.tagSlugs !== undefined) {
+      await client.productTag.deleteMany({ where: { productId } });
       for (const slug of dto.tagSlugs) {
         const tag = await client.tag.upsert({
           where: { slug },

@@ -29,6 +29,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [transitions, setTransitions] = useState<Record<string, string[]>>({});
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
+  // Bekor qilishning ikkinchi bosqichi — tasdiq.
+  const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -211,15 +213,34 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 resize: 'vertical',
               }}
             />
+            {/*
+              BEKOR QILISH ikki bosqichli.
+
+              Holat tugmalari bitta qatorda turadi va «Bekor qilingan»
+              odatdagi keyingi qadamning qo'shnisi bo'lib qoladi.
+              Bitta noto'g'ri bosish rezervni bo'shatadi va chegirma
+              limitini qaytaradi — orqaga yo'l yo'q, iz esa faqat
+              o'zgargan holat belgisi.
+            */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {next.map((s) => (
                 <Button
                   key={s}
                   variant={s === 'CANCELLED' ? 'outline' : 'primary'}
                   disabled={busy}
-                  onClick={() => void change(s)}
+                  onClick={() => {
+                    if (s === 'CANCELLED' && confirmCancel !== s) {
+                      setConfirmCancel(s);
+                      return;
+                    }
+                    setConfirmCancel(null);
+                    void change(s);
+                  }}
+                  onBlur={() => setConfirmCancel(null)}
                 >
-                  {label(ORDER_STATUS_LABEL, s)}
+                  {s === 'CANCELLED' && confirmCancel === s
+                    ? t('Ha, bekor qilinsin')
+                    : label(ORDER_STATUS_LABEL, s)}
                 </Button>
               ))}
             </div>

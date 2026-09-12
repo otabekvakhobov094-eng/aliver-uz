@@ -206,14 +206,20 @@ export class CategoryService {
         slug,
         nameUz: dto.nameUz,
         nameRu: dto.nameRu,
-        descUz: dto.descUz ?? null,
-        descRu: dto.descRu ?? null,
-        imageUrl: dto.imageUrl ?? null,
-        iconUrl: dto.iconUrl ?? null,
-        seoTitleUz: dto.seoTitleUz ?? null,
-        seoTitleRu: dto.seoTitleRu ?? null,
-        seoDescUz: dto.seoDescUz ?? null,
-        seoDescRu: dto.seoDescRu ?? null,
+        /*
+         * KELMAGAN maydon TEGILMAYDI — kolleksiyadagi bilan bir xil
+         * qoida. Aks holda kategoriyani faqat yashirish uchun
+         * yuborilgan so'rov uning tavsifi, rasmi va SEO matnini
+         * nolga aylantirardi.
+         */
+        ...(dto.descUz === undefined ? {} : { descUz: dto.descUz || null }),
+        ...(dto.descRu === undefined ? {} : { descRu: dto.descRu || null }),
+        ...(dto.imageUrl === undefined ? {} : { imageUrl: dto.imageUrl || null }),
+        ...(dto.iconUrl === undefined ? {} : { iconUrl: dto.iconUrl || null }),
+        ...(dto.seoTitleUz === undefined ? {} : { seoTitleUz: dto.seoTitleUz || null }),
+        ...(dto.seoTitleRu === undefined ? {} : { seoTitleRu: dto.seoTitleRu || null }),
+        ...(dto.seoDescUz === undefined ? {} : { seoDescUz: dto.seoDescUz || null }),
+        ...(dto.seoDescRu === undefined ? {} : { seoDescRu: dto.seoDescRu || null }),
         sortOrder: dto.sortOrder ?? current.sortOrder,
         isActive: dto.isActive ?? current.isActive,
         depth,

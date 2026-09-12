@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { Pager } from '@/components/Pager';
 import { adminApi, type NotificationRow } from '@/lib/api';
 import { fmtDateTime } from '@/lib/order-labels';
 
@@ -34,6 +35,10 @@ export default function NotificationsPage() {
   const [tab, setTab] = useState<Tab>('log');
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [total, setTotal] = useState(0);
+  // Sahifa va uning hajmi — hajm serverdan keladi.
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+
   const [channel, setChannel] = useState('');
   const [status, setStatus] = useState('');
   const [mocks, setMocks] = useState({ sms: false, telegram: false });
@@ -60,14 +65,16 @@ export default function NotificationsPage() {
       const res = await adminApi.notifications({
         channel: channel || undefined,
         status: status || undefined,
+        page,
       });
       setItems(res.items);
       setTotal(res.total);
+      if (res.perPage) setPerPage(res.perPage);
       setMocks({ sms: res.smsMock, telegram: res.telegramMock });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     }
-  }, [channel, status]);
+  }, [channel, status, page]);
 
   useEffect(() => {
     void load();
@@ -264,6 +271,10 @@ export default function NotificationsPage() {
           {items.length === 0 ? (
             <p style={{ color: 'var(--alv-muted)' }}>{t("Bildirishnoma topilmadi.")}</p>
           ) : null}
+
+          <div style={{ marginTop: 14 }}>
+            <Pager page={page} total={total} perPage={perPage} onChange={setPage} />
+          </div>
         </>
       ) : (
         <div style={{ display: 'grid', gap: 14 }}>

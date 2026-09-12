@@ -48,6 +48,7 @@ export function EntityForm({
   deleteLabel = 'O‘chirish',
 }: Props) {
   const [values, setValues] = useState<Record<string, unknown>>(initial);
+  const [confirming, setConfirming] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -154,13 +155,39 @@ export function EntityForm({
           {busy ? t("Saqlanmoqda…") : t("Saqlash")}
         </button>
         {onDelete ? (
+          /*
+           * O'CHIRISH IKKI BOSQICHLI.
+           *
+           * Ilgari bitta bosishda bajarilardi va tugma «Saqlash» ning
+           * yonida turardi — ya'ni bir necha piksel xato butun
+           * brendni yoki kategoriyani o'chirib yuborardi. Bekor
+           * qilish yo'li yo'q.
+           *
+           * `window.confirm` ataylab EMAS: u brauzer oynasini
+           * bloklaydi va bu panelda boshqa joyda ham ishlatilmaydi.
+           * Ikkinchi bosish — tugmaning o'zida, matni o'zgargan
+           * holda; boshqa joyga bosilsa bekor bo'ladi.
+           */
           <button
             type="button"
-            onClick={() => void onDelete()}
+            onClick={() => {
+              if (!confirming) {
+                setConfirming(true);
+                return;
+              }
+              setConfirming(false);
+              void onDelete();
+            }}
+            onBlur={() => setConfirming(false)}
             disabled={busy}
-            style={{ ...GHOST, color: 'var(--alv-danger)' }}
+            style={{
+              ...GHOST,
+              color: confirming ? '#fff' : 'var(--alv-danger)',
+              background: confirming ? 'var(--alv-danger)' : GHOST.background,
+              borderColor: 'var(--alv-danger)',
+            }}
           >
-            {deleteLabel}
+            {confirming ? t('Ha, o‘chirilsin') : deleteLabel}
           </button>
         ) : null}
       </div>

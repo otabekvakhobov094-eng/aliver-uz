@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { Pager } from '@/components/Pager';
 import { DataList, type DataColumn } from '@/components/DataList';
 import { adminApi, type AdminProduct } from '@/lib/api';
 import { fmtDate } from '@/lib/order-labels';
@@ -162,6 +163,10 @@ const COLUMNS: Array<DataColumn<AdminProduct>> = [
 export default function ProductsPage() {
   const [items, setItems] = useState<AdminProduct[]>([]);
   const [total, setTotal] = useState(0);
+  // Sahifa va uning hajmi — hajm serverdan keladi.
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+
   const [filters, setFilters] = useState<Record<string, unknown>>({ q: '', status: '' });
   /*
    * O'chirilganlar ro'yxati ALOHIDA: ro'yxat ularni doim yashirardi,
@@ -184,15 +189,17 @@ export default function ProductsPage() {
         q: q || undefined,
         status: showDeleted ? undefined : status || undefined,
         deleted: showDeleted || undefined,
+        page,
       });
       setItems(res.items);
       setTotal(res.total);
+      if (res.perPage) setPerPage(res.perPage);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     } finally {
       setLoading(false);
     }
-  }, [q, status, showDeleted]);
+  }, [q, status, showDeleted, page]);
 
   /**
    * O'chirilganlar ro'yxati boshqa ustunlar bilan ko'rsatiladi: narx
@@ -386,6 +393,7 @@ export default function ProductsPage() {
             </label>
           </div>
         }
+        footer={<Pager page={page} total={total} perPage={perPage} onChange={setPage} />}
       />
     </AdminShell>
   );

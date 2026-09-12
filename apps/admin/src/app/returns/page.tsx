@@ -82,6 +82,8 @@ const EMPTY = { q: '', status: '' };
 export default function ReturnsPage() {
   const [items, setItems] = useState<AdminReturnRow[]>([]);
   const [total, setTotal] = useState(0);
+  // Server qaytargan haqiqiy sahifa hajmi.
+  const [perPage, setPerPage] = useState(30);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -100,6 +102,7 @@ export default function ReturnsPage() {
       });
       setItems(res.items);
       setTotal(res.total);
+      if (res.perPage) setPerPage(res.perPage);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     } finally {
@@ -117,7 +120,13 @@ export default function ReturnsPage() {
     setPage(1);
   }
 
-  const pages = Math.max(1, Math.ceil(total / 20));
+  /*
+   * Sahifa hajmi SERVERDAN. Ilgari u mijozda 20 deb yozilgan edi,
+   * server esa 30 ta qaytaradi: 100 ta yozuvda ro'yxat «1 / 5» deb
+   * ko'rsatardi, beshinchi sahifa esa bo'sh chiqardi va operator
+   * buni «oxirgilari o'chib ketibdi» deb tushunardi.
+   */
+  const pages = Math.max(1, Math.ceil(total / perPage));
   const input: React.CSSProperties = {
     padding: '9px 12px',
     borderRadius: 10,

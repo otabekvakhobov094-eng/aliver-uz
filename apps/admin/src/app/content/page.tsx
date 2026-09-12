@@ -111,11 +111,24 @@ export default function ContentPage() {
   async function save() {
     setSaving(true); setError('');
     try {
+      /*
+       * BO'SHATILGAN MAYDON `null` bo'lib ketadi, `undefined` emas.
+       *
+       * Ilgari bo'sh qiymat `undefined` qilinardi va u JSON ga
+       * umuman tushmasdi — server esa kelmagan maydonga tegmaydi.
+       * Natijada bannerning «Tugash» sanasini tozalab «Saqlash»
+       * bosgan xodim hech narsani o'zgartirmagan bo'lardi: forma
+       * yopilardi, xato chiqmasdi, banner esa eski sanada yo'qolib
+       * ketaverardi. Xodim buni «saqlashni unutibman» deb tushunardi.
+       */
       const payload: Record<string, unknown> = {};
       for (const field of fields[active]) {
-        let value = form[field.key];
-        if (field.type === 'number' || field.key === 'code') value = Number(value);
-        payload[field.key] = value === '' ? undefined : value;
+        const raw = form[field.key];
+        if (field.type === 'number' || field.key === 'code') {
+          payload[field.key] = raw === '' ? null : Number(raw);
+          continue;
+        }
+        payload[field.key] = raw === '' ? null : raw;
       }
       if (editing?.id) await adminApi.updateCms(active, editing.id, payload); else await adminApi.createCms(active, payload);
       setEditing(undefined); await load(active);

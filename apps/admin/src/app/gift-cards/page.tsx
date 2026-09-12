@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { t } from '@/lib/i18n';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { Pager } from '@/components/Pager';
 import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
 import {
   adminApi,
@@ -116,6 +117,10 @@ const EMPTY = { tail: '' };
 export default function GiftCardsPage() {
   const [items, setItems] = useState<GiftCardRow[]>([]);
   const [total, setTotal] = useState(0);
+  // Sahifa va uning hajmi — hajm serverdan keladi.
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+
   const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,15 +138,16 @@ export default function GiftCardsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await adminApi.giftCards({ tail: tail || undefined });
+      const res = await adminApi.giftCards({ tail: tail || undefined, page });
       setItems(res.items);
       setTotal(res.total);
+      if (res.perPage) setPerPage(res.perPage);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     } finally {
       setLoading(false);
     }
-  }, [tail]);
+  }, [tail, page]);
 
   useEffect(() => {
     void load();
@@ -366,6 +372,7 @@ export default function GiftCardsPage() {
             style={{ ...FIELD, maxWidth: 260 }}
           />
         }
+        footer={<Pager page={page} total={total} perPage={perPage} onChange={setPage} />}
       />
     </AdminShell>
   );

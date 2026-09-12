@@ -41,6 +41,14 @@ export default function RolesPage() {
 
   const selected = useMemo(() => roles.find((r) => r.id === selectedId) ?? null, [roles, selectedId]);
 
+  /*
+   * Rol almashganda qoralama qaytadan yuklanadi. Saqlanmagan
+   * o'zgarishlar shu yerda YO'QOLARDI: xodim o'nta katakchani
+   * o'zgartirib, boshqa rolni ko'rish uchun bosardi va qaytganda
+   * hammasi joyida turardi — «saqlanibdi» degan taassurot bilan.
+   * Endi chipkani bosish oldidan ogohlantiriladi (pastga qarang),
+   * bu yerda esa faqat yuklash qoladi.
+   */
   useEffect(() => {
     setDraft(new Set(selected?.permissions ?? []));
   }, [selected]);
@@ -126,7 +134,13 @@ export default function RolesPage() {
             <button
               key={r.id}
               type="button"
-              onClick={() => setSelectedId(r.id)}
+              onClick={() => {
+                // Saqlanmagan o'zgarishlar jimgina yo'qolmasin.
+                if (dirty && !window.confirm(t('Saqlanmagan o‘zgarishlar yo‘qoladi. Davom etamizmi?'))) {
+                  return;
+                }
+                setSelectedId(r.id);
+              }}
               aria-pressed={active}
               style={{
                 padding: '8px 16px',

@@ -285,6 +285,18 @@ export default function ProductEditPage() {
     if (f.warningsRu.trim().length < 2) return 'Ogohlantirish (ruscha) majburiy.';
     if (!/^\d{6,20}$/.test(f.ikpuCode.trim()))
       return 'IKPU (MXIK) kodi 6–20 raqamdan iborat bo‘lishi kerak. Uni buxgalter beradi.';
+    /*
+     * QQS bo'sh qolsa server 12 ni qo'yadi. Ya'ni nol foizli
+     * mahsulotda maydonni tozalab saqlagan xodim uni jimgina 12%
+     * ga o'tkazib yuborardi va keyingi fiskal chek noto'g'ri
+     * stavka bilan ketardi.
+     */
+    {
+      const vat = num(f.vatRate);
+      if (vat === undefined || vat < 0 || vat > 100) {
+        return 'QQS foizi 0 dan 100 gacha son bo‘lishi kerak.';
+      }
+    }
     if (f.variants.length === 0) return 'Kamida bitta variant kerak.';
     for (const [i, v] of f.variants.entries()) {
       if (v.sku.trim() === '') return `${i + 1}-variant: SKU to‘ldirilmagan.`;

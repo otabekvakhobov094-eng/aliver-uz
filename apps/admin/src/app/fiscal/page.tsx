@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, formatTiyin } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { Pager } from '@/components/Pager';
 import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
 import { adminApi, type FiscalReceiptRow } from '@/lib/api';
 import {
@@ -138,6 +139,10 @@ const EMPTY = { status: '' };
 export default function FiscalPage() {
   const [items, setItems] = useState<FiscalReceiptRow[]>([]);
   const [total, setTotal] = useState(0);
+  // Sahifa va uning hajmi — hajm serverdan keladi.
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(30);
+
   const [mock, setMock] = useState(false);
   const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -151,16 +156,17 @@ export default function FiscalPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await adminApi.fiscalReceipts({ status: status || undefined });
+      const res = await adminApi.fiscalReceipts({ status: status || undefined, page });
       setItems(res.items);
       setTotal(res.total);
+      if (res.perPage) setPerPage(res.perPage);
       setMock(res.mock);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
     } finally {
       setLoading(false);
     }
-  }, [status]);
+  }, [status, page]);
 
   useEffect(() => {
     void load();
@@ -322,6 +328,7 @@ export default function FiscalPage() {
             </select>
           </label>
         }
+        footer={<Pager page={page} total={total} perPage={perPage} onChange={setPage} />}
       />
     </AdminShell>
   );
