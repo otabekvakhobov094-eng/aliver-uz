@@ -269,6 +269,18 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/*
+ * Mahsulot kartochkasi.
+ *
+ * Hajm hissi uchta narsadan yig'iladi va hech biri alohida sezilmaydi:
+ * kartochka biroz ko'tariladi, ORQAGA egiladi (perspektiva), va surat
+ * kartochkadan tezroq kattalashadi. Oxirgisi asosiy — ichkaridagi
+ * qatlam boshqa tezlikda harakatlansa, ko'z buni chuqurlik deb o'qiydi.
+ *
+ * `perspective` ota elementga emas, kartochkaning O'ZIGA qo'yilgan:
+ * grid ichida ota-perspektiva chekka kartochkalarni qiyshaytirib
+ * yuboradi, chunki yo'qolish nuqtasi ular uchun yon tomonda qoladi.
+ */
 .alv-pcard {
   display: flex;
   flex-direction: column;
@@ -277,13 +289,15 @@
   overflow: hidden;
   box-shadow: var(--alv-shadow-sm);
   color: inherit;
+  transform-style: preserve-3d;
+  perspective: 900px;
   transition:
-    box-shadow 0.15s,
-    transform 0.15s;
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .alv-pcard:hover {
-  box-shadow: var(--alv-shadow-md);
-  transform: translateY(-2px);
+  box-shadow: 0 22px 48px rgba(50, 27, 38, 0.16);
+  transform: translateY(-6px) rotateX(2.2deg);
   color: inherit;
 }
 
@@ -775,4 +789,132 @@
   .alv-pcard__hover {
     transition: none;
   }
+}
+
+
+/* ============================================================
+   Kartochka ichidagi qatlam — chuqurlik shu yerdan keladi.
+
+   Surat kartochkadan TEZROQ kattalashadi. Ikkalasi bir xil tezlikda
+   harakatlansa tekis blok bo'lib qoladi; tezliklar farq qilganda ko'z
+   buni qatlam deb o'qiydi. Bu parallaks va u go'zallik savdosida
+   mahsulot suratini "ushlab ko'rish mumkin" qilib ko'rsatadi.
+   ============================================================ */
+.alv-pcard__media img {
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.alv-pcard:hover .alv-pcard__media img {
+  transform: scale(1.06);
+}
+
+/* Hover'dagi ikkinchi surat kartochkadan biroz sekinroq — almashish
+   keskin emas, erib o'tgandek bo'ladi. */
+.alv-pcard__hover {
+  transition:
+    opacity 0.45s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Nom ostidan chiqadigan yupqa chiziq — bosilishi mumkinligini aytadi. */
+.alv-pcard__name {
+  position: relative;
+  display: inline-block;
+}
+.alv-pcard__name::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.35;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.alv-pcard:hover .alv-pcard__name::after {
+  transform: scaleX(1);
+}
+
+/*
+ * Harakatga sezgir foydalanuvchi uchun hammasi o'chadi.
+ *
+ * Egilish ham, kattalashish ham — ular bezak, ma'lumot emas, ya'ni
+ * ularsiz sahifa hech narsa yo'qotmaydi.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .alv-pcard,
+  .alv-pcard__media img,
+  .alv-pcard__hover,
+  .alv-pcard__name::after {
+    transition: none;
+  }
+  .alv-pcard:hover {
+    transform: none;
+  }
+  .alv-pcard:hover .alv-pcard__media img {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Sodiqlik bandi — Sephora ning «Beauty Insider» naqshi.
+
+   Sephora buni bosh sahifaning eng ustiga qo'yadi va sababi bor:
+   ball dasturi mijoz UNI BILGANDAGINA xatti-harakatni o'zgartiradi.
+   Bizda dastur ishlaydi, lekin u haqida faqat checkout'da bilinardi —
+   ya'ni qaror allaqachon qabul qilingandan keyin.
+   ============================================================ */
+.alv-loyalty-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(22px, 3vw, 34px) clamp(20px, 4vw, 48px);
+  border-radius: var(--alv-radius-xl, 24px);
+  background: linear-gradient(118deg, #2a1a22 0%, #5d2b40 55%, #a8385d 100%);
+  color: #fff;
+  overflow: hidden;
+  position: relative;
+}
+.alv-loyalty-band::before {
+  content: '';
+  position: absolute;
+  inset: -50% -20%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.16), transparent 70%);
+  animation: alvBandSheen 16s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes alvBandSheen {
+  from {
+    transform: translate3d(-14%, -8%, 0);
+  }
+  to {
+    transform: translate3d(16%, 10%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alv-loyalty-band::before {
+    animation: none;
+  }
+}
+.alv-loyalty-band__copy {
+  position: relative;
+  max-width: 56ch;
+}
+.alv-loyalty-band__copy p {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+.alv-loyalty-band__copy strong {
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(22px, 3vw, 32px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }

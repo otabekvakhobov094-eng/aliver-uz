@@ -6,9 +6,9 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
 import { contentApi } from '@/lib/content-api';
 import { HeroCanvas } from '@/components/HeroCanvas';
-import { HeroVisual } from '@/components/HeroVisual';
 import { Reveal } from '@aliver/ui';
 import styles from './home.module.css';
+import hero_ from './hero.module.css';
 
 export const revalidate = 120;
 
@@ -35,33 +35,51 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return <>
     <SiteHeader locale={locale} />
     <main className={styles.main}>
-      <section className={`${styles.hero} ${hero?.imageUrl ? '' : 'alv-hero-fallback'}`}>
+      {/*
+        Hero — TO'LIQ kenglikdagi banner.
+
+        Ilgari rasm o'ng tomonda kichik blok bo'lib turardi va matn
+        bilan joy talashardi. Go'zallik savdosida bu ishlamaydi:
+        mahsulot surati asosiy dalil va u ekranni egallashi kerak,
+        matn esa uning ustida turadi.
+      */}
+      <section className={`${hero_.banner} ${hero?.imageUrl ? '' : hero_.plain}`}>
         {hero?.imageUrl ? (
-          <div className={styles.heroImage} style={{ backgroundImage: `url(${hero.imageUrl})` }} />
+          <div className={hero_.bannerImage} style={{ backgroundImage: `url(${hero.imageUrl})` }} />
         ) : (
-          /*
-           * Admin banner rasmi bo'lmasa — jonli shader foni.
-           * Rasm bo'lsa unga tegmaymiz: marketing tanlagan surat
-           * bezakdan ustun turadi.
-           */
-          <HeroCanvas />
+          <>
+            {/* Admin banner rasmi bo'lmasa — jonli shader foni. Rasm
+                bo'lsa unga tegmaymiz: marketing tanlagan surat
+                bezakdan ustun turadi. */}
+            <HeroCanvas />
+            <span className={hero_.sheen} aria-hidden />
+          </>
         )}
-        <div className={`${styles.shell} ${styles.heroGrid}`}>
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>{locale === 'ru' ? 'Официальный магазин ALIVER' : 'ALIVER rasmiy do‘koni'}</p>
-            <h1>{title}</h1><p className={styles.lead}>{subtitle}</p>
-            <div className={styles.actions}>
-              <Link className={`${styles.primaryAction} alv-lift`} href={hero?.ctaUrl ?? `/${locale}/katalog`}>{(locale === 'ru' ? hero?.ctaLabelRu : hero?.ctaLabelUz) ?? (locale === 'ru' ? 'Смотреть каталог' : 'Katalogni ko‘rish')} <span>↗</span></Link>
-              <Link className={styles.textAction} href={`/${locale}/katalog?collection=best-sellers`}>{locale === 'ru' ? 'Бестселлеры' : 'Bestsellerlar'} <span>→</span></Link>
+
+        <div className="alv-page">
+          <div className={hero_.copy}>
+            <p className={hero_.eyebrow}>
+              {locale === 'ru' ? 'Официальный магазин ALIVER' : 'ALIVER rasmiy do‘koni'}
+            </p>
+            <h1 className={hero_.title}>{title}</h1>
+            <p className={hero_.lead}>{subtitle}</p>
+            <div className={hero_.actions}>
+              <Link className={hero_.cta} href={hero?.ctaUrl ?? `/${locale}/katalog`}>
+                {(locale === 'ru' ? hero?.ctaLabelRu : hero?.ctaLabelUz) ??
+                  (locale === 'ru' ? 'Смотреть каталог' : 'Katalogni ko‘rish')}
+                <span aria-hidden>↗</span>
+              </Link>
+              <Link className={hero_.ghost} href={`/${locale}/tanlagich`}>
+                {locale === 'ru' ? 'Подобрать средство' : 'Vosita tanlash'}
+                <span aria-hidden>→</span>
+              </Link>
             </div>
-            <div className={styles.heroNotes}><span>{locale === 'ru' ? '100% оригинал' : '100% original'}</span><span>{locale === 'ru' ? 'Быстрая доставка' : 'Tezkor yetkazish'}</span><span>{locale === 'ru' ? 'Удобная оплата' : 'Qulay to‘lov'}</span></div>
+            <div className={hero_.notes}>
+              <span>{locale === 'ru' ? '100% оригинал' : '100% original'}</span>
+              <span>{locale === 'ru' ? 'Быстрая доставка' : 'Tezkor yetkazish'}</span>
+              <span>{locale === 'ru' ? 'Click • Payme • Uzum' : 'Click • Payme • Uzum'}</span>
+            </div>
           </div>
-          {/*
-            Admin panelda banner surati bo'lsa — u fon bo'lib to'liq
-            ekranni egallaydi va bu yerda hech narsa chizilmaydi.
-            Aks holda standart ALIVER mahsulot surati ko'rsatiladi.
-          */}
-          {!hero?.imageUrl ? <HeroVisual /> : null}
         </div>
       </section>
 
@@ -82,6 +100,35 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </Reveal>
 
       <ProductRow title={locale === 'ru' ? 'Выбор покупателей' : 'Xaridorlar tanlovi'} kicker={locale === 'ru' ? 'Бестселлеры' : 'Bestsellerlar'} href={`/${locale}/katalog?collection=best-sellers`} items={best.items} locale={locale} />
+      {/*
+        Sodiqlik bandi — Sephora ning «Beauty Insider» naqshi.
+
+        Sephora buni bosh sahifaning yuqorisiga qo'yadi va sababi bor:
+        ball dasturi mijoz UNI BILGANDAGINA xatti-harakatni
+        o'zgartiradi. Bizda dastur ishlaydi, lekin u haqida faqat
+        checkout'da bilinardi — ya'ni qaror allaqachon qabul
+        qilingandan keyin.
+      */}
+      <Reveal as="section" className={styles.shell} style={{ marginTop: 90 }}>
+        <div className="alv-loyalty-band">
+          <div className="alv-loyalty-band__copy">
+            <strong>
+              {locale === 'ru'
+                ? 'Баллы за каждую покупку'
+                : 'Har bir xariddan ball'}
+            </strong>
+            <p>
+              {locale === 'ru'
+                ? 'Каждые 1 000 сум — 1 балл. Баллами можно оплатить до половины следующего заказа, а при заказе от 300 000 сум пробник в подарок.'
+                : 'Har 1 000 so‘mga 1 ball. Ballar bilan keyingi buyurtmaning yarmigacha qismini qoplash mumkin, 300 000 so‘mdan yuqori buyurtmaga esa namuna bepul.'}
+            </p>
+          </div>
+          <Link className={`${styles.lightAction} alv-lift`} href={`/${locale}/kabinet/ballar`}>
+            {locale === 'ru' ? 'Мои баллы' : 'Ballarim'} <span aria-hidden>→</span>
+          </Link>
+        </div>
+      </Reveal>
+
       <Reveal as="section" className={`${styles.shell} ${styles.story}`}><div className={styles.storyArt}><span>ALIVER</span></div><div className={styles.storyCopy}><p className={styles.eyebrow}>{locale === 'ru' ? 'Философия ALIVER' : 'ALIVER falsafasi'}</p><h2>{locale === 'ru' ? 'Уход, созданный для вашей уверенности' : 'O‘zingizga bo‘lgan ishonch uchun yaratilgan parvarish'}</h2><p>{locale === 'ru' ? 'Красота — это ежедневное внимание к себе. Эффективные формулы, приятные текстуры и современный дизайн.' : 'Go‘zallik o‘zingizga har kuni e’tibor berishdan boshlanadi. Samarali formulalar, yoqimli teksturalar va zamonaviy dizayn.'}</p><Link className={styles.textAction} href={`/${locale}/sahifa/biz-haqimiz`}>{locale === 'ru' ? 'Узнать больше' : 'Batafsil bilish'} <span>→</span></Link></div></Reveal>
       <ProductRow title={locale === 'ru' ? 'Новые открытия' : 'Yangi kashfiyotlar'} kicker={locale === 'ru' ? 'Новинки' : 'Yangi kelganlar'} href={`/${locale}/katalog?sort=newest`} items={fresh.items} locale={locale} />
       <Reveal as="section" className={`${styles.shell} ${styles.newsletter}`}><div><p className={styles.eyebrow}>ALIVER CLUB</p><h2>{locale === 'ru' ? 'Будьте ближе к миру красоты' : 'Go‘zallik olamiga yanada yaqin bo‘ling'}</h2></div><Link className={`${styles.lightAction} alv-lift`} href={`/${locale}/hamkorlik`}>{locale === 'ru' ? 'Присоединиться' : 'Hamjamiyatga qo‘shilish'} <span>→</span></Link></Reveal>

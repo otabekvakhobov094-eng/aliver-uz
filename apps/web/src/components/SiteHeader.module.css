@@ -14,43 +14,104 @@
   background: var(--alv-surface);
   border-bottom: 1px solid var(--alv-line);
 }
+/*
+ * Sarlavha joylashuvi — aliver.com dagidek.
+ *
+ * Logotip MARKAZDA va bu bilarak: brend do'konida logotip birinchi
+ * ko'riladigan narsa bo'lishi kerak, chapdagi kichik logotip esa
+ * ko'zni darhol menyuga olib ketadi. Markazdagi logotip kattaroq ham
+ * bo'la oladi — chapda u navigatsiya bilan joy talashardi.
+ *
+ * Uch qator: qidiruv | LOGO | amallar, so'ng pastda navigatsiya.
+ * Grid ustunlari `1fr auto 1fr` — yon ustunlar teng, ya'ni logotip
+ * ekranning haqiqiy markazida turadi, tarkib kengligidan qat'i nazar.
+ */
 .inner {
-  height: 70px;
-  display: flex;
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 22px;
+  gap: 16px;
+  padding-block: 12px;
 }
 .logo {
-  flex: none;
-  font-family: var(--alv-font-display);
-  /* Prata bitta og'irlikka ega — 800 so'ralsa brauzer sun'iy
-     qalinlashtiradi va didone serif buziladi. */
-  font-weight: 400;
-  font-size: 22px;
-  letter-spacing: -0.04em;
+  grid-column: 2;
+  justify-self: center;
+  display: inline-flex;
   color: var(--alv-ink);
+  /* Logotip sekin va bir marta paydo bo'ladi — sahifa "jonlanadi",
+     lekin doimiy harakat o'qishga xalaqit bermaydi. */
+  animation: alvLogoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes alvLogoIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo {
+    animation: none;
+  }
+}
+
+/* Navigatsiya logotip OSTIDA, alohida qatorda va markazlashgan. */
+.navRow {
+  border-top: 1px solid var(--alv-line);
 }
 .desktopNav {
   display: flex;
   align-items: center;
-  gap: 20px;
-  flex: 1;
-  font-size: 14px;
+  justify-content: center;
+  gap: 30px;
+  min-height: 52px;
+  font-size: 14.5px;
   font-weight: 600;
 }
 .navLink {
+  position: relative;
   color: var(--alv-ink);
   white-space: nowrap;
+  padding-block: 4px;
+}
+/*
+ * Tagchiziq markazdan ikki tomonga ochiladi. `width` emas,
+ * `transform: scaleX` — u kompozitor qatlamida ishlaydi va
+ * sahifani qayta hisoblashga majbur qilmaydi.
+ */
+.navLink::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+  background: var(--alv-brand);
+  transform: scaleX(0);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .navLink:hover {
   color: var(--alv-brand);
 }
+.navLink:hover::after,
+.navLink:focus-visible::after {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .navLink::after {
+    transition: none;
+  }
+}
 .search {
+  grid-column: 1;
+  justify-self: start;
   min-width: 190px;
   justify-content: flex-start;
   color: var(--alv-muted);
 }
 .desktopActions {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -60,8 +121,9 @@
   padding: 0 13px;
 }
 .mobileActions {
+  grid-column: 3;
+  justify-self: end;
   display: none;
-  margin-left: auto;
   align-items: center;
   gap: 8px;
 }
@@ -153,5 +215,48 @@
   }
   .logo {
     font-size: 18px;
+  }
+}
+
+
+/* ============================================================
+   Mobil sarlavha.
+
+   Logotip MARKAZDA qoladi — brend belgisi eng muhim element va uni
+   chapga surish hech narsa yutmaydi. Qidiruv o'rniga ikonka, pastdagi
+   navigatsiya qatori esa menyuga yig'iladi.
+   ============================================================ */
+@media (max-width: 900px) {
+  .inner {
+    min-height: 68px;
+    /*
+     * `1fr` aslida `minmax(auto, 1fr)` — ustun O'Z TARKIBIDAN
+     * kichrayolmaydi. Shuning uchun o'ngdagi ikonkalar o'z ustunini
+     * kengaytirib, logotipni chapga surib qo'yardi. `minmax(0, 1fr)`
+     * bunga ruxsat beradi va ikkala yon ustun haqiqatan teng bo'ladi.
+     */
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+  .search {
+    display: none;
+  }
+  /* Mobilda logotip kichikroq: 34px da yon ustunlarga joy qolmasdi. */
+  .logo :global(svg) {
+    height: 24px;
+  }
+  .desktopActions {
+    display: none;
+  }
+  .mobileActions {
+    display: flex;
+    gap: 8px;
+  }
+  .navRow {
+    display: none;
+  }
+  /* Chap ustun bo'sh qolmasin — logotip markazda tursin. */
+  .inner::before {
+    content: '';
+    grid-column: 1;
   }
 }

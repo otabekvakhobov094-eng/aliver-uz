@@ -28,29 +28,20 @@ export function SiteHeader({ locale }: { locale: Locale }) {
 
       <div className={styles.bar}>
         <div className={`alv-page ${styles.inner}`}>
-          <Link href={`/${locale}`} className={styles.logo} aria-label="ALIVER.UZ">
-            {/*
-              Sarlavhadagi logo ANIMATSIYASIZ: u ekranda doim turadi va
-              doimiy harakat o'qishga xalaqit beradi. `decorative` —
-              havolaning o'zida allaqachon aria-label bor, logotip uni
-              takrorlamasligi kerak.
-            */}
-            <AliverLogo height={26} decorative />
-          </Link>
-
-          <nav
-            className={styles.desktopNav}
-            aria-label={locale === 'ru' ? 'Основная навигация' : 'Asosiy navigatsiya'}
-          >
-            {NAV.map((item) => (
-              <Link key={item.key} href={`/${locale}${item.href}`} className={styles.navLink}>
-                {t(locale, item.key)}
-              </Link>
-            ))}
-          </nav>
-
           <Link href={`/${locale}/qidiruv`} className={`${styles.search} alv-chip`}>
             {locale === 'ru' ? 'Поиск товаров…' : 'Mahsulot qidirish…'}
+          </Link>
+
+          {/*
+            Logotip MARKAZDA — brend do'konida u birinchi ko'riladigan
+            narsa bo'lishi kerak. Markazda joy talashmagani uchun u
+            kattaroq ham bo'la oladi: 26px dan 34px ga.
+
+            `decorative` — havolaning o'zida aria-label bor, logotip uni
+            takrorlamasligi kerak.
+          */}
+          <Link href={`/${locale}`} className={styles.logo} aria-label="ALIVER.UZ">
+            <AliverLogo height={34} decorative />
           </Link>
 
           <div className={styles.desktopActions}>
@@ -70,13 +61,12 @@ export function SiteHeader({ locale }: { locale: Locale }) {
           </div>
 
           <div className={styles.mobileActions}>
-            <Link
-              href={`/${locale}/qidiruv`}
-              className={styles.iconLink}
-              aria-label={locale === 'ru' ? 'Поиск' : 'Qidiruv'}
-            >
-              ⌕
-            </Link>
+            {/*
+              Qidiruv ikonkasi mobilda YO'Q — u menyuning ichida.
+              Sababi joy: logotip markazda turishi uchun yon ustunlar
+              teng bo'lishi kerak, uchta ikonka esa 390px ekranda
+              buning imkonini bermasdi.
+            */}
             <CartBadge locale={locale} />
             <details className={styles.menu}>
               <summary aria-label={locale === 'ru' ? 'Открыть меню' : 'Menyuni ochish'}>
@@ -91,6 +81,9 @@ export function SiteHeader({ locale }: { locale: Locale }) {
                     {t(locale, item.key)}
                   </Link>
                 ))}
+                <Link href={`/${locale}/qidiruv`}>
+                  {locale === 'ru' ? 'Поиск товаров' : 'Mahsulot qidirish'}
+                </Link>
                 <Link href={`/${locale}/kuzatuv`}>
                   {locale === 'ru' ? 'Отследить заказ' : 'Buyurtmani kuzatish'}
                 </Link>
@@ -102,6 +95,24 @@ export function SiteHeader({ locale }: { locale: Locale }) {
             </details>
           </div>
         </div>
+      </div>
+
+      {/*
+        Navigatsiya logotip OSTIDA, alohida qatorda va markazlashgan —
+        aliver.com dagidek. Bu bo'limlarni ko'rinadigan qiladi: chapdagi
+        siqilgan menyuda ular logotip bilan joy talashardi.
+      */}
+      <div className={styles.navRow}>
+        <nav
+          className={`alv-page ${styles.desktopNav}`}
+          aria-label={locale === 'ru' ? 'Основная навигация' : 'Asosiy navigatsiya'}
+        >
+          {NAV.map((item) => (
+            <Link key={item.key} href={`/${locale}${item.href}`} className={styles.navLink}>
+              {t(locale, item.key)}
+            </Link>
+          ))}
+        </nav>
       </div>
     </header>
   );

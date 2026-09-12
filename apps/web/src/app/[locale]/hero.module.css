@@ -1,0 +1,296 @@
+/* ============================================================
+   Bosh sahifa heroi — to'liq kenglikdagi banner.
+
+   Ilgari rasm o'ng tomonda KICHIK blok bo'lib turardi va matn bilan
+   joy talashardi. Go'zallik savdosida bu ishlamaydi: mahsulot surati
+   asosiy dalil va u ekranni egallashi kerak, matn esa uning ustida
+   turadi. aliver.com ning o'zi ham shunday ishlaydi.
+
+   Chuqurlik uchta qatlamdan: fon rasmi sekin kattalashadi, ustida
+   yorug'lik yuzadi, oldida esa matn. Har biri boshqa tezlikda
+   harakatlanadi — shu narsa tekis rasmni "hajmli" qilib ko'rsatadi.
+   ============================================================ */
+
+.banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: clamp(420px, 56vw, 640px);
+  display: grid;
+  align-items: center;
+  background: linear-gradient(125deg, #fff7fa 0%, #fbe9ef 55%, #f3d3de 100%);
+}
+
+/* Fon rasmi — TO'LIQ kenglikda, chetdan chetga. */
+.bannerImage {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  z-index: -2;
+  /* Sekin kattalashish: 18 soniyada 4% — ko'z uni harakat sifatida
+     ilg'amaydi, lekin surat "tirik" bo'lib qoladi. */
+  animation: alvSlowZoom 18s ease-out both;
+}
+
+@keyframes alvSlowZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.04);
+  }
+}
+
+/*
+ * Matn ostidagi qoraytirish.
+ *
+ * Chapdan o'ngga: matn turgan joyda quyuq, rasm turgan joyda shaffof.
+ * Bunsiz oq matn och rangli suratda o'qilmaydi — bu bezak emas,
+ * kontrast talabi.
+ */
+.bannerImage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /*
+   * Qoraytirish MATN TURGAN joyda to'xtaydi.
+   *
+   * Ilgari u 72% gacha cho'zilardi va o'rtasi loyqa bo'lib qolardi —
+   * mahsulot surati aynan o'sha yerda va u asosiy dalil. Endi chapdagi
+   * 52% qoraytiriladi (matn shu yerda tugaydi), qolgani toza.
+   */
+  background: linear-gradient(
+    90deg,
+    rgba(26, 16, 21, 0.8) 0%,
+    rgba(26, 16, 21, 0.62) 30%,
+    rgba(26, 16, 21, 0.2) 52%,
+    transparent 68%
+  );
+}
+
+/* Yorug'lik yuzishi — shisha va metall qadoqqa mos yaltirash. */
+.sheen {
+  position: absolute;
+  inset: -40% -10%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0.32),
+    rgba(255, 255, 255, 0) 70%
+  );
+  animation: alvSheen 14s ease-in-out infinite alternate;
+}
+
+@keyframes alvSheen {
+  from {
+    transform: translate3d(-12%, -6%, 0);
+  }
+  to {
+    transform: translate3d(14%, 8%, 0);
+  }
+}
+
+.copy {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  padding-block: clamp(48px, 7vw, 96px);
+  color: #fff;
+}
+
+/* Rasm yo'q bo'lsa fon och qoladi — matn qora bo'lishi kerak. */
+.plain .copy {
+  color: var(--alv-ink);
+}
+
+.eyebrow {
+  margin: 0 0 16px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffd3df;
+}
+.plain .eyebrow {
+  color: var(--alv-brand);
+}
+
+.title {
+  margin: 0;
+  /* Prata bitta og'irlikka ega — 700 so'ralsa brauzer sun'iy
+     qalinlashtiradi va didone serif buziladi. */
+  font-family: var(--alv-font-display);
+  font-weight: 400;
+  font-size: clamp(38px, 6.4vw, 78px);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 46ch;
+  margin: 22px 0 0;
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.86);
+}
+.plain .lead {
+  color: var(--alv-ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin-top: 32px;
+}
+
+.cta {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 54px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1b1220;
+  font-size: 14px;
+  font-weight: 750;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s;
+}
+.cta:hover {
+  color: #1b1220;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(20, 12, 16, 0.28);
+}
+
+/* Tugma ustidan o'tuvchi yorug'lik — faqat sichqoncha tegsa. */
+.cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  left: -60%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: skewX(-18deg);
+}
+.cta:hover::before {
+  animation: alvShine 0.85s ease-out;
+}
+@keyframes alvShine {
+  to {
+    left: 130%;
+  }
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.plain .ghost {
+  color: var(--alv-ink);
+}
+.ghost span {
+  transition: transform 0.22s;
+}
+.ghost:hover span {
+  transform: translateX(5px);
+}
+
+.notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 40px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.76);
+}
+.plain .notes {
+  color: var(--alv-muted);
+}
+.notes span + span::before {
+  content: '•';
+  margin-right: 22px;
+  opacity: 0.5;
+}
+
+/*
+ * Matn qatorma-qator chiqadi.
+ *
+ * Kechikish bosqichli: ko'z yuqoridan pastga tabiiy ergashadi. Bu
+ * "4D" hissini beradigan asosiy narsa — bir vaqtda paydo bo'lgan
+ * blok tekis, ketma-ket chiqqani esa qatlamli ko'rinadi.
+ */
+.copy > * {
+  animation: alvRise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.copy > *:nth-child(1) { animation-delay: 0.05s; }
+.copy > *:nth-child(2) { animation-delay: 0.14s; }
+.copy > *:nth-child(3) { animation-delay: 0.23s; }
+.copy > *:nth-child(4) { animation-delay: 0.32s; }
+.copy > *:nth-child(5) { animation-delay: 0.41s; }
+
+@keyframes alvRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+/*
+ * Harakatga sezgir foydalanuvchi uchun hammasi o'chadi.
+ *
+ * MUHIM: `opacity` ham qaytariladi — aks holda element `opacity: 0`
+ * da qotib qolardi va matn UMUMAN ko'rinmasdi. Bu animatsiyani
+ * o'chirishdagi eng ko'p uchraydigan xato.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bannerImage,
+  .sheen,
+  .copy > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .banner {
+    min-height: auto;
+  }
+  .copy {
+    padding-block: 44px 40px;
+  }
+  /* Mobilda gradient pastdan yuqoriga: matn rasm ustida emas,
+     ostida turadi va yon gradient u yerda ishlamaydi. */
+  .bannerImage::after {
+    background: linear-gradient(
+      180deg,
+      rgba(26, 16, 21, 0.35) 0%,
+      rgba(26, 16, 21, 0.72) 45%,
+      rgba(26, 16, 21, 0.88) 100%
+    );
+  }
+  .notes {
+    margin-top: 28px;
+    gap: 8px 14px;
+  }
+  .notes span + span::before {
+    margin-right: 14px;
+  }
+}
