@@ -26,6 +26,24 @@ import {
  * indeks. Webhook takror kelsa yoki operator ikki marta bossa, ikkinchi
  * yozuv o'tmaydi — bu kafolat kodga ishonib qo'yilmagan.
  */
+/**
+ * Prisma ning «bunday yozuv allaqachon bor» xatosi.
+ *
+ * NEGA TEKSHIRILADI. Ilgari `catch` HAMMA xatoni «allaqachon
+ * berilgan» deb hisoblardi: bazaga ulanish uzilsa ham, boshqa
+ * cheklov buzilsa ham log'da «ball allaqachon berilgan» deb
+ * yozilardi. Natijada mijoz to'lagan, ball esa berilmagan bo'lardi
+ * va buni hech kim bilmasdi — na xato, na ogohlantirish.
+ */
+function isDuplicate(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === 'P2002'
+  );
+}
+
 @Injectable()
 export class LoyaltyService {
   private readonly logger = new Logger(LoyaltyService.name);
@@ -146,10 +164,22 @@ export class LoyaltyService {
         select: { id: true, points: true },
       });
     } catch (error) {
-      // Unikal indeks — ball allaqachon berilgan. Bu XATO EMAS:
-      // webhook takror kelgan. Jimgina o'tkazamiz.
-      this.logger.log(`Ball allaqachon berilgan (buyurtma ${orderId})`);
-      return null;
+      if (isDuplicate(error)) {
+        // Unikal indeks — ball allaqachon berilgan. Bu XATO EMAS:
+        // webhook takror kelgan.
+        this.logger.log(`Ball allaqachon berilgan (buyurtma ${orderId})`);
+        return null;
+      }
+      /*
+       * Boshqa har qanday xato — HAQIQIY nosozlik. Uni yutib
+       * yuborsak, mijoz to'lagan bo'lib ball olmay qoladi va bu
+       * hech qayerda ko'rinmaydi. Shuning uchun log'ga xato
+       * darajasida yoziladi va yuqoriga uzatiladi.
+       */
+      this.logger.error(
+        `Ball berishda xato (buyurtma ${orderId}): ${(error as Error)?.message ?? error}`,
+      );
+      throw error;
     }
   }
 
@@ -219,9 +249,15 @@ export class LoyaltyService {
         },
         select: { id: true, points: true },
       });
-    } catch {
-      // Allaqachon qaytarilgan.
-      return null;
+    } catch (error) {
+      if (isDuplicate(error)) {
+        // Allaqachon qaytarilgan — takroriy chaqiruv.
+        return null;
+      }
+      this.logger.error(
+        `Ballarni qaytarishda xato (buyurtma ${orderId}): ${(error as Error)?.message ?? error}`,
+      );
+      throw error;
     }
   }
 

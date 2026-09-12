@@ -98,6 +98,41 @@ export class LoyaltyExpiryService {
     }));
   }
 
+  /**
+   * Nomzodlarning TO'LIQ yig'indisi — `LIMIT` siz.
+   *
+   * NEGA ALOHIDA SO'ROV. Ro'yxat sahifalanadi (100 ta), lekin
+   * «jami shuncha ball kuyadi» degan raqam butun to'plamdan
+   * hisoblanishi kerak. Ilgari u ko'rsatilgan sahifadan
+   * yig'ilardi: 900 mijozda 100 tasining balli ko'rinardi va
+   * do'kon o'z majburiyatini to'qqiz barobar kam ko'rardi.
+   */
+  private async candidateTotal(params: { before: Date; after?: Date }): Promise<{
+    points: number;
+    customers: number;
+  }> {
+    const after = params.after ?? new Date(0);
+    const rows = await this.prisma.$queryRaw<Array<{ points: number | null; customers: number }>>`
+      SELECT COALESCE(SUM(t.balance), 0)::int AS "points",
+             COUNT(*)::int                    AS "customers"
+      FROM (
+        SELECT SUM(e.points)::int AS balance
+        FROM loyalty_entries e
+        JOIN customers c ON c.id = e."customerId"
+        WHERE c."deletedAt" IS NULL
+          AND c.status = 'ACTIVE'
+        GROUP BY e."customerId"
+        HAVING SUM(e.points) > 0
+           AND MAX(e."createdAt") FILTER (WHERE e.kind <> 'EXPIRE') <  ${params.before}
+           AND MAX(e."createdAt") FILTER (WHERE e.kind <> 'EXPIRE') >= ${after}
+      ) t
+    `;
+    return {
+      points: Number(rows[0]?.points ?? 0),
+      customers: Number(rows[0]?.customers ?? 0),
+    };
+  }
+
   /* ======================================================================
      OGOHLANTIRISH
      ====================================================================== */
@@ -247,12 +282,17 @@ export class LoyaltyExpiryService {
     const days = params.days ?? EXPIRY_WARN_DAYS;
     const limit = Math.min(params.limit ?? 100, BATCH);
 
-    const rows = await this.candidates({
+    const window = {
       before: addMonths(addDays(now, days), -EXPIRY_MONTHS),
       after: addMonths(now, -EXPIRY_MONTHS),
-      limit,
-    });
-    if (rows.length === 0) return { days, totalPoints: 0, items: [] };
+    };
+    const [rows, totals] = await Promise.all([
+      this.candidates({ ...window, limit }),
+      this.candidateTotal(window),
+    ]);
+    if (rows.length === 0) {
+      return { days, totalPoints: 0, totalCustomers: 0, shown: 0, items: [] };
+    }
 
     const customers = await this.prisma.customer.findMany({
       where: { id: { in: rows.map((r) => r.customerId) } },
@@ -281,7 +321,10 @@ export class LoyaltyExpiryService {
 
     return {
       days,
-      totalPoints: items.reduce((s, i) => s + i.points, 0),
+      // Jami — BUTUN to'plamdan, ro'yxat esa birinchi `limit` tasi.
+      totalPoints: totals.points,
+      totalCustomers: totals.customers,
+      shown: items.length,
       items,
     };
   }

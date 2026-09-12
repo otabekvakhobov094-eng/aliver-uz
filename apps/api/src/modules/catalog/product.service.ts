@@ -591,6 +591,47 @@ export class ProductService {
     });
   }
 
+  /**
+   * Sotuvni hisobga olish — «Eng ko'p sotilgan» saralashi uchun.
+   *
+   * NEGA KERAK. `salesCount` katalogda uch joyda o'qilardi
+   * («Ommabop» standart saralash, «Eng ko'p sotilgan» va qidiruv
+   * takliflari), lekin unga HECH QAYERDA yozilmasdi — sxemadagi
+   * izoh «5-etapda buyurtmalardan yangilanadi» deb turgan edi.
+   * Natijada xaridor «eng ko'p sotilgan» ni tanlaganda barcha
+   * mahsulotda nol turardi va tartib tasodifiy bo'lardi. Sahifa
+   * ochiladi, xato yo'q — shuning uchun buni hech kim aytmaydi.
+   *
+   * To'lov PAID ga O'TGAN paytda bir marta chaqiriladi: o'sha
+   * o'tish bazada qo'riqlangan, ya'ni takroriy webhook sonni ikki
+   * marta oshirmaydi.
+   */
+  async recordSale(orderId: string): Promise<void> {
+    const items = await this.prisma.orderItem.findMany({
+      where: { orderId },
+      select: { quantity: true, variant: { select: { productId: true } } },
+    });
+
+    // Bitta buyurtmada bir mahsulotning bir nechta varianti bo'lishi
+    // mumkin — ular bitta yozuvga yig'iladi.
+    const byProduct = new Map<string, number>();
+    for (const item of items) {
+      const productId = item.variant?.productId;
+      if (!productId) continue;
+      byProduct.set(productId, (byProduct.get(productId) ?? 0) + item.quantity);
+    }
+    if (byProduct.size === 0) return;
+
+    await this.prisma.$transaction(
+      [...byProduct].map(([productId, quantity]) =>
+        this.prisma.product.update({
+          where: { id: productId },
+          data: { salesCount: { increment: quantity } },
+        }),
+      ),
+    );
+  }
+
   async restore(id: string) {
     const product = await this.prisma.product.findFirst({
       where: { id, deletedAt: { not: null } },

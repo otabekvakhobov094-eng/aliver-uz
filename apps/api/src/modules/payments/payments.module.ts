@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { OrdersModule } from '../orders/orders.module';
 import { FiscalModule } from '../fiscal/fiscal.module';
 import { LoyaltyModule } from '../loyalty/loyalty.module';
+import { CatalogModule } from '../catalog/catalog.module';
 import { PaymentService } from './payment.service';
 import { PaymentRegistry } from './payment-registry';
 import { ReconcileService } from './reconcile.service';
@@ -15,7 +16,7 @@ import { PaymentsController } from './payments.controller';
 import { AdminPaymentsController } from './admin-payments.controller';
 
 @Module({
-  imports: [OrdersModule, FiscalModule, LoyaltyModule],
+  imports: [OrdersModule, FiscalModule, LoyaltyModule, CatalogModule],
   controllers: [ClickController, PaymeController, PaymentsController, AdminPaymentsController],
   providers: [
     PaymentService,

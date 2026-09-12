@@ -10,6 +10,7 @@ import { OrderService } from '../orders/order.service';
 import { FiscalService } from '../fiscal/fiscal.service';
 import { NotificationService } from '../notifications/notification.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
+import { ProductService } from '../catalog/product.service';
 import { MetaCapiService } from '../marketing/meta-capi.service';
 import { amountVar, type Lang } from '../notifications/templates';
 import {
@@ -85,6 +86,7 @@ export class PaymentService {
     private readonly fiscal: FiscalService,
     private readonly notifications: NotificationService,
     private readonly loyalty: LoyaltyService,
+    private readonly products: ProductService,
     private readonly meta: MetaCapiService,
   ) {}
 
@@ -324,6 +326,20 @@ export class PaymentService {
     } catch (e) {
       this.logger.error(
         `Ball berilmadi (buyurtma ${payment.orderId}): ${(e as Error).message}`,
+      );
+    }
+
+    /*
+     * Sotuv hisoblagichi — katalogdagi «Eng ko'p sotilgan» saralashi
+     * shunga qarab ishlaydi. U ham aynan shu yerda: yuqoridagi
+     * `transition` bir marta o'tadi, ya'ni takroriy webhook sonni
+     * ikki marta oshirmaydi.
+     */
+    try {
+      await this.products.recordSale(payment.orderId);
+    } catch (e) {
+      this.logger.error(
+        `Sotuv hisoblanmadi (buyurtma ${payment.orderId}): ${(e as Error).message}`,
       );
     }
 

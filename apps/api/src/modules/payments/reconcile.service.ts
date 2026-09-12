@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -58,15 +58,37 @@ export class ReconcileService {
   > {
     const provider = params.provider ?? 'PAYME';
 
+    /*
+     * TO'LIQ to'plam kerak, sahifa emas.
+     *
+     * `take: 5000` bu yerda jimgina yolg'on gapirardi: chegaradan
+     * tashqarida qolgan har bir to'lov provayder vypiskasida bor
+     * bo'lgani uchun «MISSING_LOCALLY» — ya'ni «mijoz to'lagan,
+     * bizda yozuv yo'q» — deb belgilanardi, «farq» raqami esa
+     * o'sha summaga kam chiqardi. Buxgalter oyni solishtirib,
+     * bir sahifa soxta «kritik» nomuvofiqlik va noto'g'ri raqam
+     * ko'rardi; hech qanday xato chiqmasdi.
+     *
+     * Shuning uchun chegara bor, lekin u OSHIB KETGANDA AYTILADI.
+     */
+    const HARD_LIMIT = 50_000;
+    const where = {
+      provider: provider as never,
+      createdAt: { gte: params.from, lte: params.to },
+    };
+    const totalCount = await this.prisma.payment.count({ where });
     const rows = await this.prisma.payment.findMany({
-      where: {
-        provider: provider as never,
-        createdAt: { gte: params.from, lte: params.to },
-      },
+      where,
       include: { order: { select: { number: true } } },
       orderBy: { createdAt: 'asc' },
-      take: 5000,
+      take: HARD_LIMIT,
     });
+    if (totalCount > rows.length) {
+      throw new BadRequestException(
+        `Bu davrda ${totalCount} ta to‘lov bor — solishtirish uchun juda ko‘p. ` +
+          'Davrni qisqartiring: yarim natija noto‘g‘ri xulosaga olib keladi.',
+      );
+    }
 
     const local: LocalPayment[] = rows.map((p) => ({
       paymentId: p.id,
@@ -143,6 +165,8 @@ export class ReconcileService {
       if (live) return { records: live, source: `${provider} API`, independent: true };
     }
 
+    // Bu yerda ham to'liq to'plam: yarmi bilan solishtirish
+    // «provayderda bor, bizda yo'q» degan soxta xulosa beradi.
     const events = await this.prisma.webhookEvent.findMany({
       where: {
         provider: provider.toLowerCase(),
@@ -150,7 +174,7 @@ export class ReconcileService {
         processedAt: { not: null },
       },
       orderBy: { createdAt: 'asc' },
-      take: 5000,
+      take: 50_000,
     });
 
     const byTxn = new Map<string, ProviderRecord>();

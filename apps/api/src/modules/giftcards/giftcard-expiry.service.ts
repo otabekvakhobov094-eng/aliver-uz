@@ -121,11 +121,40 @@ export class GiftCardExpiryService {
     return { warned };
   }
 
+  /**
+   * Jami qoldiq — `take` SIZ.
+   *
+   * Ro'yxat sahifalanadi, lekin «jami shuncha pul kuyadi» degan
+   * raqam butun to'plamdan hisoblanishi kerak. Ilgari u ko'rsatilgan
+   * yuztadan yig'ilardi va do'kon o'z majburiyatini kam ko'rardi.
+   */
+  private async upcomingTotal(now: Date, days: number) {
+    const until = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const rows = await this.prisma.giftCard.findMany({
+      where: { cancelledAt: null, expiresAt: { gt: now, lte: until } },
+      select: { initialAmount: true, entries: { select: { amount: true } } },
+    });
+
+    let total = 0n;
+    let cards = 0;
+    for (const c of rows) {
+      const spent = c.entries.reduce((sum: bigint, e: { amount: bigint }) => sum + e.amount, 0n);
+      const remaining = (c.initialAmount as bigint) - spent;
+      if (remaining <= 0n) continue;
+      total += remaining;
+      cards += 1;
+    }
+    return { total, cards };
+  }
+
   /** Admin uchun: tez orada tugaydigan kartalar. */
   async expiringSoon(params: { days?: number; limit?: number } = {}) {
     const now = new Date();
     const days = params.days ?? MAX_WINDOW;
-    const rows = await this.upcoming(now, days, Math.min(params.limit ?? 100, 500));
+    const [rows, totals] = await Promise.all([
+      this.upcoming(now, days, Math.min(params.limit ?? 100, 500)),
+      this.upcomingTotal(now, days),
+    ]);
 
     const items = rows
       // Puli qolmagan karta ro'yxatda keraksiz: uning muddati
@@ -146,9 +175,10 @@ export class GiftCardExpiryService {
 
     return {
       days,
-      totalRemaining: items
-        .reduce((sum, i) => sum + BigInt(i.remaining), 0n)
-        .toString(),
+      // Jami — BUTUN to'plamdan, ro'yxat esa birinchi `limit` tasi.
+      totalRemaining: totals.total.toString(),
+      totalCards: totals.cards,
+      shown: items.length,
       items,
     };
   }

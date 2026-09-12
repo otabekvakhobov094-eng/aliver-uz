@@ -715,7 +715,15 @@ export class OrderService {
     if (query.dateFrom || query.dateTo) {
       where.placedAt = {
         ...(query.dateFrom ? { gte: new Date(query.dateFrom) } : {}),
-        ...(query.dateTo ? { lte: new Date(query.dateTo) } : {}),
+        /*
+         * Kun OXIRIGACHA. `new Date('2026-09-12')` — o'sha kunning
+         * 00:00 i, ya'ni `lte` bilan o'sha kun BUTUNLAY tushib
+         * qolardi: operator «1–12 sentabr» deb filtrlaganda bugungi
+         * buyurtmalar ko'rinmasdi va ro'yxat shunchaki tinch kun
+         * bo'lib tuyulardi. Audit va to'lovlar moduli buni
+         * allaqachon to'g'ri qiladi.
+         */
+        ...(query.dateTo ? { lte: new Date(`${query.dateTo}T23:59:59.999`) } : {}),
       };
     }
     if (query.q) {
@@ -735,7 +743,10 @@ export class OrderService {
         skip: (page - 1) * perPage,
         take: perPage,
         include: {
-          items: { select: { id: true }, take: 20 },
+          // `_count` — `take` bilan sanash 20 dan ortiq pozitsiyali
+          // buyurtmada «20» deb ko'rsatardi va buyurtma kartochkasi
+          // bilan ziddiyatga tushardi.
+          _count: { select: { items: true } },
           payments: { select: { provider: true }, take: 1, orderBy: { createdAt: 'desc' } },
         },
       }),
@@ -753,7 +764,7 @@ export class OrderService {
         contactPhone: o.contactPhone,
         regionName: o.regionName,
         grandTotal: o.grandTotal.toString(),
-        itemsCount: o.items.length,
+        itemsCount: o._count.items,
         placedAt: o.placedAt,
         reservationExpiresAt: o.reservationExpiresAt,
       })),

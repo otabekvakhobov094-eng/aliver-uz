@@ -4,46 +4,7 @@ import { RequirePermissions } from '../../common/decorators';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
 import { UTF8_BOM, tiyinToSum, toCsv } from './report-csv';
-
-/**
- * Davr kalitini aniq sanalarga aylantiradi. Toshkent vaqti (UTC+5)
- * bo'yicha — server UTC da ishlasa ham "bugun" mijoz uchun bugun bo'lsin.
- */
-const TZ_OFFSET_MS = 5 * 60 * 60 * 1000;
-
-function startOfLocalDay(d: Date): Date {
-  const shifted = new Date(d.getTime() + TZ_OFFSET_MS);
-  shifted.setUTCHours(0, 0, 0, 0);
-  return new Date(shifted.getTime() - TZ_OFFSET_MS);
-}
-
-function resolvePeriod(period: string, from?: string, to?: string): { gte: Date; lte: Date } {
-  const now = new Date();
-  const today = startOfLocalDay(now);
-  const day = 86400000;
-
-  switch (period) {
-    case 'today':
-      return { gte: today, lte: now };
-    case 'yesterday':
-      return { gte: new Date(today.getTime() - day), lte: today };
-    case '7d':
-      return { gte: new Date(today.getTime() - 6 * day), lte: now };
-    case 'month': {
-      const m = new Date(today);
-      m.setUTCDate(1);
-      return { gte: startOfLocalDay(m), lte: now };
-    }
-    case 'custom':
-      return {
-        gte: from ? new Date(from) : new Date(today.getTime() - 29 * day),
-        lte: to ? new Date(to) : now,
-      };
-    case '30d':
-    default:
-      return { gte: new Date(today.getTime() - 29 * day), lte: now };
-  }
-}
+import { resolvePeriod } from './period';
 
 function fmtDate(d: Date): string {
   return d.toISOString().slice(0, 10);
