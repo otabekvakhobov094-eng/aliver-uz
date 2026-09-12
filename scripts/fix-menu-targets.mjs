@@ -1,5 +1,11 @@
 /**
- * Menyu nishonlarini bazada tuzatish.
+ * Menyu nishonlarini tekshirish va tuzatish — QO'LDA.
+ *
+ * ODATDA BU SKRIPT KERAK EMAS: slug'larni joyiga keltirish har
+ * deployda avtomatik bajariladi (`ensure-aliver-catalog.mjs`).
+ * Bu yerda u qo'lda tekshirish uchun qoldirilgan — masalan
+ * kategoriya adminda o'chirilgan va menyu buzilganini bilish
+ * kerak bo'lganda.
  *
  * NEGA KERAK. Loyihada ikkita katalog tasnifi paydo bo'lgan edi:
  *
@@ -27,58 +33,16 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import {
+  CATEGORY_RENAME,
+  COLLECTION_RENAME,
+  REQUIRED_CATEGORIES,
+  REQUIRED_COLLECTIONS,
+  ensureCatalogSlugs,
+} from './lib/catalog-slugs.mjs';
 
 const commit = process.argv.includes('--commit');
 const prisma = new PrismaClient();
-
-/**
- * Eski importer slugi → kod endi ishlatadigan slug.
- *
- * `skin-care` YUZ parvarishiga aylanadi: importer tasnifi endi yuz va
- * tanani ajratadi, lekin QAYTA NOMLASH bitta qatorni ikkiga bo'la
- * olmaydi. Shuning uchun qayta nomlashdan keyin katalogni qaytadan
- * import qilish kerak — o'shanda tana mahsulotlari o'z joyiga o'tadi.
- */
-const CATEGORY_RENAME = {
-  nail: 'tirnoq',
-  'make-up': 'makiyaj',
-  'foot-hand': 'qol-oyoq-parvarishi',
-  'hair-care': 'soch-parvarishi',
-  'skin-care': 'yuz-parvarishi',
-  'teri-parvarishi': 'yuz-parvarishi',
-  'mens-care': 'erkaklar-parvarishi',
-  oral: 'ogiz-parvarishi',
-  other: 'boshqa',
-};
-
-/**
- * Sayt QATTIQ yozib qo'ygan kategoriyalar.
- *
- * Bosh sahifadagi plitkalar, «Vosita tanlagich» va menyu shu
- * slug'larga qaraydi. Ular bazada bo'lmasa — plitka bo'sh sahifaga
- * olib boradi. Shuning uchun yetishmagani YARATILADI: bo'sh
- * kategoriya import qilingach to'ladi, yo'q kategoriya esa hech
- * qachon to'lmaydi.
- */
-const REQUIRED_CATEGORIES = [
-  { slug: 'soch-parvarishi', nameUz: 'Soch parvarishi', nameRu: 'Уход за волосами' },
-  { slug: 'yuz-parvarishi', nameUz: 'Yuz parvarishi', nameRu: 'Уход за лицом' },
-  { slug: 'tana-parvarishi', nameUz: 'Tana parvarishi', nameRu: 'Уход за телом' },
-  { slug: 'tirnoq', nameUz: 'Tirnoq parvarishi', nameRu: 'Уход за ногтями' },
-  { slug: 'makiyaj', nameUz: 'Makiyaj', nameRu: 'Макияж' },
-];
-
-const REQUIRED_COLLECTIONS = [
-  { slug: 'yangi-kelganlar', nameUz: 'Yangi kelganlar', nameRu: 'Новинки' },
-  { slug: 'best-sellers', nameUz: 'Bestsellerlar', nameRu: 'Хиты продаж' },
-  { slug: 'sovga-toplamlari', nameUz: 'Sovg‘alar va to‘plamlar', nameRu: 'Подарки и наборы' },
-];
-
-const COLLECTION_RENAME = {
-  'new-arrivals': 'yangi-kelganlar',
-  'editor-choice': 'muharrir-tanlovi',
-  'gifts-sets': 'sovga-toplamlari',
-};
 
 /**
  * Menyudagi o'lik nishon → uning o'rniga qaysi kategoriya.
@@ -98,48 +62,6 @@ const say = (s) => {
   console.log(s);
 };
 
-async function renameSlugs(model, table, map) {
-  let done = 0;
-  for (const [from, to] of Object.entries(map)) {
-    const old = await model.findFirst({ where: { slug: from } });
-    if (!old) continue;
-    const taken = await model.findFirst({ where: { slug: to } });
-    if (taken) {
-      say(`  ! ${table}: «${from}» → «${to}» — «${to}» allaqachon bor, tegilmadi`);
-      continue;
-    }
-    say(`  ${table}: «${from}» → «${to}»`);
-    if (commit) await model.update({ where: { id: old.id }, data: { slug: to } });
-    done += 1;
-  }
-  return done;
-}
-
-async function ensureRequired() {
-  let made = 0;
-  for (const [model, table, list] of [
-    [prisma.category, 'kategoriya', REQUIRED_CATEGORIES],
-    [prisma.collection, 'kolleksiya', REQUIRED_COLLECTIONS],
-  ]) {
-    for (const row of list) {
-      const found = await model.findFirst({ where: { slug: row.slug } });
-      if (found) continue;
-      say(`  ${table} yaratiladi: «${row.slug}» (${row.nameUz})`);
-      if (commit) {
-        await model.create({
-          data: { slug: row.slug, nameUz: row.nameUz, nameRu: row.nameRu, isActive: true },
-        });
-      }
-      made += 1;
-    }
-  }
-  if (made > 0) {
-    say('  Yangi kategoriya BO‘SH keladi — katalogni qaytadan import qiling:');
-    say('    npm run migrate:aliver-catalog');
-  }
-  return made;
-}
-
 async function aliveSlugs() {
   const [cats, cols, pages, posts] = await Promise.all([
     prisma.category.findMany({ where: { isActive: true, deletedAt: null }, select: { slug: true } }),
@@ -158,15 +80,16 @@ async function aliveSlugs() {
 async function main() {
   say(commit ? 'REJIM: yoziladi (--commit)' : 'REJIM: faqat ko‘rsatadi (--commit yo‘q)');
 
-  say('\nSlug‘larni qayta nomlash:');
-  const renamed =
-    (await renameSlugs(prisma.category, 'kategoriya', CATEGORY_RENAME)) +
-    (await renameSlugs(prisma.collection, 'kolleksiya', COLLECTION_RENAME));
-  if (renamed === 0) say('  qayta nomlanadigan slug topilmadi');
-
-  say('\nSayt kutadigan kategoriya va kolleksiyalar:');
-  const created = await ensureRequired();
-  if (created === 0) say('  hammasi joyida');
+  say('\nSlug‘lar va sayt kutadigan kategoriyalar:');
+  if (commit) {
+    const { renamed, created } = await ensureCatalogSlugs(prisma, say);
+    if (renamed === 0 && created === 0) say('  hammasi joyida');
+    if (created > 0) {
+      say('  Yangi kategoriya BO‘SH keladi — katalogni qaytadan import qiling.');
+    }
+  } else {
+    say('  (--commit yo‘q — faqat menyu tekshiriladi)');
+  }
 
   // Qayta nomlashdan KEYINGI holat bo'yicha tekshiriladi: aks holda
   // hozirgina tuzatilgan band yana «o'lik» ko'rinardi.

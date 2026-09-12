@@ -18,61 +18,66 @@ deploy bo'lmagan.
 Ya'ni quyida sanab o'tilgan tuzatishlarning **birortasi ham hozir
 saytda yo'q**. Birinchi qadam — kodni yuborish:
 
-```bash
+```
 cd C:\Users\VOBEX\aliver-uz
-git fetch aliver-uz-241c3bd.bundle "*:refs/remotes/bundle/*"
-git merge bundle/main          # yoki: git reset --hard bundle/main
+git fetch aliver-uz-<versiya>.bundle "refs/heads/*:refs/remotes/bundle/*"
+git merge --ff-only bundle/main
 git push origin main
 ```
 
+Agar `merge` «untracked working tree files would be overwritten»
+desa (bu men yuborgan hujjat fayli tufayli bo'ladi), o'rniga:
+
+```
+git reset --hard bundle/main
+git push origin main
+```
+
+Bu xavfsiz: bundle sizning `origin/main` ingizni ham o'z ichiga
+oladi, ya'ni yo'qoladigan narsa yo'q.
+
 Keyin Render → Deploys bo'limida deploy **tugaganiga** ishonch hosil
-qiling. Oldingi deploy ham tushmay qolgan edi.
+qiling. Oldingi deploy tushmay qolgan edi.
 
 ---
 
-## 2. Deploy'dan keyin — bazani tuzatish
+## 2. Bazani tuzatish — AVTOMATIK
 
-Tartib muhim: har biri oldingisiga tayanadi.
+Buning uchun sizdan hech narsa talab qilinmaydi va **Node.js
+o'rnatish ham shart emas.** API ishga tushishidan oldin
+`ensure-aliver-catalog.mjs` ishlaydi va ikki ishni qiladi:
 
-### 2.1. Menyu nishonlarini tuzatish
+**Har deployda** — arzon va takrorlanishi xavfsiz: eski inglizcha
+kategoriya slug'larini (`hair-care`, `skin-care`, `nail`…) sayt
+kutayotgan o'zbekchaga qayta nomlaydi va sayt talab qiladigan
+kategoriyalarni yaratadi. Qayta nomlash — o'chirib-yaratish emas:
+qator o'sha qoladi, demak 556 ta mahsulotning aloqasi saqlanadi.
 
-```bash
-npm run fix:menu             # nima o'zgarishini ko'rsatadi
-npm run fix:menu -- --commit # yozadi
-```
+**Bir marta, versiya o'zgarganda** — katalogni qaytadan import
+qiladi. Bu safar versiya `v3` ga ko'tarildi, ya'ni birinchi
+deployda import o'zi ishga tushadi va:
 
-Nima qiladi: bazadagi inglizcha kategoriya slug'larini (`hair-care`,
-`skin-care`, `nail`…) sayt kutayotgan o'zbekchaga qayta nomlaydi va
-saytda ko'rinmay qolgan olti menyu bandini tiklaydi.
+- mahsulotlarni yangi tasnif bo'yicha joylashtiradi (yuz va tana
+  endi alohida);
+- **teglarni yozadi** — usiz bosh sahifadagi «Vosita tanlash» hech
+  qachon natija bermaydi;
+- nom va tavsifni manbadan to'g'ri oladi — «Aliver Bowling lab Tint»
+  kabi aralashmalar yo'qoladi;
+- narxlarni yaxlitlaydi — «636 071 so'm» o'rniga tegishli qiymat;
+- variant nomini tozalaydi — «1 bottle / 1 bottle /  / » yo'qoladi.
 
-### 2.2. Katalogni qaytadan import qilish
+**Qoldiqqa tegilmaydi** — u xodim kiritadigan ma'lumot.
 
-```bash
-npm run migrate:aliver-catalog
-```
+Import 556 ta mahsulotni qayta yozadi, shuning uchun shu deploy
+odatdagidan sekinroq ko'tariladi. Bu bir martalik.
 
-Nima qiladi: 556 ta mahsulotni yangi tasnif bo'yicha qayta
-joylashtiradi (yuz va tana endi alohida), **teglarni yozadi** —
-usiz bosh sahifadagi «Vosita tanlash» hech qachon natija bermaydi —
-va variant nomlarini tozalaydi.
+> Diqqat: import mahsulot nomi va tavsifini manbadan qayta yozadi.
+> Agar kelajakda adminda nomni qo'lda tahrirlasangiz, keyingi
+> versiya importida u yo'qoladi.
 
-Qoldiqqa tegmaydi.
+### Qoldiq kiritish — buni siz qilasiz
 
-### 2.3. Nom, tavsif va narxlarni tuzatish
-
-```bash
-npm run fix:catalog             # ko'rsatadi
-npm run fix:catalog -- --commit # yozadi
-```
-
-Hozir saytda shunday nomlar turibdi: «Aliver Bowling lab Tint»,
-«teri Tone Adjusting CC krem», «Aliver Wispy Natural ko'z Lash
-Clusters». Narxlar ham dollardan konvertatsiya qilingan holicha:
-«636 071 so'm».
-
-### 2.4. Qoldiq kiritish
-
-Hozir **556 ta mahsulotning hammasi «Tugagan»** holatida — ya'ni
+Hozir **556 ta mahsulotning hammasi «Tugagan»** holatida, ya'ni
 saytda hech narsa sotilmaydi.
 
 Adminka → Ombor → «Fayldan qoldiq kiritish». Shablonni o'sha yerdan
