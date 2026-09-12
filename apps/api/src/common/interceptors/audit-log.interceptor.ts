@@ -4,6 +4,7 @@ import type { Request } from 'express';
 import { Observable, tap } from 'rxjs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AUDIT_KEY, AuthPrincipal } from '../decorators';
+import { auditIp } from '../util/client-ip';
 
 /**
  * TZ 75 — audit log. @Audit('products', 'update') bilan belgilangan
@@ -51,7 +52,7 @@ export class AuditLogInterceptor implements NestInterceptor {
               recordId: recordId ?? null,
               before: (req.auditBefore ?? null) as never,
               after: (sanitize(result) ?? null) as never,
-              ip: req.ip ?? null,
+              ip: auditIp(req),
               userAgent: req.headers['user-agent'] ?? null,
             },
           })

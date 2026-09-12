@@ -7,6 +7,7 @@ import { AdminLoginDto } from '../auth/dto/auth.dto';
 import { TokensService } from '../auth/tokens.service';
 import { AdminAuthService } from './admin-auth.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { auditIp } from '../../common/util/client-ip';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -30,7 +31,7 @@ export class AdminController {
       email: dto.email,
       password: dto.password,
       totp: dto.totp,
-      ip: req.ip,
+      ip: auditIp(req) ?? undefined,
       userAgent: req.headers['user-agent'],
     });
     this.tokens.setAuthCookies(res, result.tokens);
