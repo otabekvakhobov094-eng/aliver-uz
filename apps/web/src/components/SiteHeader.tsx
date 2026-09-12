@@ -1,4 +1,5 @@
 import { AliverLogo } from '@aliver/ui';
+import { LocaleSwitchLink } from './LocaleSwitchLink';
 import Link from 'next/link';
 import type { Locale } from '@/i18n/messages';
 import { contentApi, type MenuNode } from '@/lib/content-api';
@@ -68,9 +69,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </Link>
 
           <div className={styles.right}>
-            <Link href={`/${other}`} className={styles.lang} aria-label={other.toUpperCase()}>
-              {other.toUpperCase()}
-            </Link>
+            <LocaleSwitchLink locale={locale} other={other} className={styles.lang} />
             <Link
               href={`/${locale}/kabinet`}
               className="alv-icon-btn"

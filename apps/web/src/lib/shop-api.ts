@@ -450,6 +450,20 @@ export const shopApi = {
 
   regions: () => call<DeliveryRegion[]>('/delivery/regions'),
 
+  /** Hududlar bo'yicha tarif jadvali — «Yetkazish» sahifasi uchun. */
+  tariffs: () =>
+    call<
+      Array<{
+        regionId: string;
+        nameUz: string;
+        nameRu: string;
+        price: string | null;
+        freeFrom: string | null;
+        daysMin: number | null;
+        daysMax: number | null;
+      }>
+    >('/delivery/tariffs'),
+
   quotes: (params: { regionId: Uuid; subtotal: string; freeShipping?: boolean }) => {
     const qs = new URLSearchParams({
       regionId: params.regionId,

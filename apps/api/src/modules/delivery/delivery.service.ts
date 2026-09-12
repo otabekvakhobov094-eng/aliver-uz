@@ -13,6 +13,79 @@ export class DeliveryService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** Viloyatlar va tumanlar — checkout uchun (TZ 29). */
+  /**
+   * Hududlar bo'yicha tarif jadvali — saytdagi «Yetkazish» sahifasi
+   * uchun.
+   *
+   * NEGA KERAK. Sahifada uchta qator QO'LDA yozilgan edi:
+   * «Toshkent — 1 kun — 20 000 so'mdan» va hokazo. Xodim adminda
+   * tarifni o'zgartirsa, sahifa eski raqamni ko'rsatishda davom
+   * etardi, savat esa yangisini hisoblardi. Mijoz uchun bu ikki xil
+   * narx degani va u faqat to'lov paytida bilinardi.
+   *
+   * Har bir hudud uchun ENG ARZON kuryer usuli olinadi — sahifada
+   * «shu summadan boshlab» deb ko'rsatiladi.
+   */
+  async tariffs() {
+    const [regions, methods] = await Promise.all([
+      this.prisma.region.findMany({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+        select: { id: true, nameUz: true, nameRu: true },
+      }),
+      this.prisma.deliveryMethod.findMany({
+        where: { isActive: true, type: 'COURIER' },
+        select: {
+          basePrice: true,
+          freeThreshold: true,
+          estimatedDaysMin: true,
+          estimatedDaysMax: true,
+          regions: {
+            select: {
+              regionId: true,
+              price: true,
+              freeThreshold: true,
+              daysMin: true,
+              daysMax: true,
+              isAvailable: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return regions.map((region) => {
+      let price: bigint | null = null;
+      let daysMin: number | null = null;
+      let daysMax: number | null = null;
+      let freeFrom: bigint | null = null;
+
+      for (const m of methods) {
+        const override = m.regions.find((r) => r.regionId === region.id);
+        // Hududda o'chirilgan usul hisobga olinmaydi.
+        if (override && !override.isAvailable) continue;
+
+        const effective = (override?.price ?? m.basePrice) as bigint;
+        if (price === null || effective < price) {
+          price = effective;
+          daysMin = override?.daysMin ?? m.estimatedDaysMin;
+          daysMax = override?.daysMax ?? m.estimatedDaysMax;
+          freeFrom = (override?.freeThreshold ?? m.freeThreshold) as bigint | null;
+        }
+      }
+
+      return {
+        regionId: region.id,
+        nameUz: region.nameUz,
+        nameRu: region.nameRu,
+        price: price === null ? null : price.toString(),
+        freeFrom: freeFrom === null || freeFrom === undefined ? null : freeFrom.toString(),
+        daysMin,
+        daysMax,
+      };
+    });
+  }
+
   async regions() {
     const rows = await this.prisma.region.findMany({
       where: { isActive: true },

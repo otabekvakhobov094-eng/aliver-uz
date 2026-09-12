@@ -102,7 +102,13 @@ export const LANDING_PAGES: LandingPage[] = [
     introRu:
       'Гель-лаки во всей палитре. На карточке видно количество оттенков — не нужно ' +
       'открывать товар, чтобы понять выбор.',
-    filters: { category: 'tirnoq', tags: 'gel-lak', inStock: true },
+    /*
+     * `gel-lak` — bu TEG emas, `seed-catalog` dagi KATEGORIYA slugi.
+     * Teg sifatida u hech bir mahsulotga mos kelmasdi va sahifa
+     * doim bo'sh chiqardi. Sahifa tirnoq kategoriyasi va qidiruv
+     * so'zi bilan to'ldiriladi.
+     */
+    filters: { category: 'tirnoq', q: 'gel lak', inStock: true },
   },
   {
     slug: 'chegirmadagi-mahsulotlar',

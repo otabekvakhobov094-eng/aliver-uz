@@ -373,8 +373,15 @@ const PROMOS: Array<{
   },
   {
     key: 'wine-lip-tint',
-    titleUz: '25% chegirma — Wine Lip Tint',
-    titleRu: 'Скидка 25% — Wine Lip Tint',
+    /*
+     * FOIZ YOZILMAYDI. Seed'dagi banner «25% chegirma» deb va'da
+     * berardi, chegirmalar modulida esa bunday qoida yo'q edi:
+     * xaridor savatda hech qanday chegirma ko'rmasdi. Haqiqiy
+     * aksiyani admin «Chegirmalar» bo'limida yaratadi va u savatda
+     * o'zi qo'llanadi.
+     */
+    titleUz: 'Wine Lip Tint — ipakdek matn',
+    titleRu: 'Wine Lip Tint — шелковистая текстура',
     subtitleUz: 'Ipakdek yumshoq, to‘yingan rang. Kun bo‘yi ushlab turadi.',
     subtitleRu: 'Шелковистая текстура и насыщенный цвет. Держится весь день.',
     ctaUz: 'Tanlash',

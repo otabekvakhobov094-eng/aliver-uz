@@ -70,7 +70,11 @@ export default async function DeliveryPage({ params }: { params: Promise<{ local
 
   // Hudud ro'yxati bo'lmasa sahifa baribir ochiladi — to'lov qismi
   // mustaqil va mijozga kerak.
-  const regions: Region[] = await shopApi.regions().catch(() => []);
+  const [regions, tariffs] = await Promise.all([
+    shopApi.regions().catch((): Region[] => []),
+    // Tariflar adminda o'zgaradi — sahifa ularni serverdan oladi.
+    shopApi.tariffs().catch(() => []),
+  ]);
 
   return (
     <>
@@ -114,22 +118,39 @@ export default async function DeliveryPage({ params }: { params: Promise<{ local
                   ))}
                 </tr>
               </thead>
+              {/*
+                JADVAL SERVERDAN. Ilgari uchta qator qo'lda yozilgan
+                edi va admin tarifni o'zgartirsa, sahifa eski
+                raqamni ko'rsatishda davom etardi — savat esa
+                yangisini hisoblardi.
+              */}
               <tbody>
-                <tr>
-                  <td style={cell}>{ru ? 'Ташкент' : 'Toshkent'}</td>
-                  <td style={cell}>{ru ? '1 день' : '1 kun'}</td>
-                  <td style={cell}>{ru ? 'от 20 000 сум' : '20 000 so‘mdan'}</td>
-                </tr>
-                <tr>
-                  <td style={cell}>{ru ? 'Областные центры' : 'Viloyat markazlari'}</td>
-                  <td style={cell}>{ru ? '1–2 дня' : '1–2 kun'}</td>
-                  <td style={cell}>{ru ? 'от 30 000 сум' : '30 000 so‘mdan'}</td>
-                </tr>
-                <tr>
-                  <td style={cell}>{ru ? 'Районы' : 'Tumanlar'}</td>
-                  <td style={cell}>{ru ? '2–4 дня' : '2–4 kun'}</td>
-                  <td style={cell}>{ru ? 'от 35 000 сум' : '35 000 so‘mdan'}</td>
-                </tr>
+                {tariffs.map((t) => (
+                  <tr key={t.regionId}>
+                    <td style={cell}>{ru ? t.nameRu : t.nameUz}</td>
+                    <td style={cell}>
+                      {t.daysMin === null
+                        ? '—'
+                        : t.daysMax && t.daysMax !== t.daysMin
+                          ? `${t.daysMin}–${t.daysMax} ${ru ? 'дня' : 'kun'}`
+                          : `${t.daysMin} ${ru ? 'день' : 'kun'}`}
+                    </td>
+                    <td style={cell}>
+                      {t.price === null
+                        ? '—'
+                        : `${money(t.price, ru)}${ru ? '' : 'dan'}`}
+                    </td>
+                  </tr>
+                ))}
+                {tariffs.length === 0 ? (
+                  <tr>
+                    <td style={cell} colSpan={3}>
+                      {ru
+                        ? 'Стоимость рассчитывается в корзине после выбора региона.'
+                        : 'Narx savatda, hudud tanlangandan keyin hisoblanadi.'}
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

@@ -32,6 +32,16 @@ export class DeliveryController {
   }
 
   @Public()
+  @Get('tariffs')
+  @ApiOperation({
+    summary: 'Hududlar bo‘yicha tarif jadvali',
+    description: 'Saytdagi «Yetkazish» sahifasi uchun — narxlar adminda o‘zgaradi.',
+  })
+  tariffs() {
+    return this.delivery.tariffs();
+  }
+
+  @Public()
   @Get('quotes')
   @ApiOperation({
     summary: 'Hudud uchun yetkazib berish narxlari',

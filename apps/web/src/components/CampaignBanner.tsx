@@ -170,8 +170,19 @@ export const SUMMER_CAMPAIGN: CampaignCopy = {
   titleRu: 'Освежающие масла для волос и кожи',
   leadUz: 'Rozmarin, batana, kastor va qovoq urug‘i moylari — issiqda ham yengil.',
   leadRu: 'Розмарин, батана, касторовое и тыквенное масла — лёгкие даже в жару.',
-  offerUz: '3 ta oling — 20% chegirma',
-  offerRu: 'Купите 3 — скидка 20%',
+  /*
+   * CHEGIRMA VA'DASI OLIB TASHLANDI.
+   *
+   * Bu yerda «3 ta oling — 20% chegirma» yozilgan edi, lekin bunday
+   * qoida chegirmalar modulida YO'Q: xaridor uchta moy solib,
+   * savatda hech qanday chegirma ko'rmasdi. Bu shunchaki xato emas
+   * — bu bajarilmaydigan va'da, va u bannerni adminda o'zgartirish
+   * bilan ham o'chmasdi, chunki `fromBanner` bu maydonni
+   * ko'chirmaydi.
+   *
+   * Haqiqiy aksiya «Chegirmalar» bo'limida yaratiladi va savatda
+   * o'zi ko'rinadi. Bannerda esa faqat mavzu qoladi.
+   */
   ctaUz: 'Moylarni ko‘rish',
   ctaRu: 'Смотреть масла',
   href: '/katalog?category=soch-parvarishi',
@@ -182,12 +193,11 @@ export const LIP_CAMPAIGN: CampaignCopy = {
   tone: 'warm',
   eyebrowUz: 'Lab bo‘yoqlari',
   eyebrowRu: 'Тинты для губ',
-  titleUz: '25% chegirma — Wine Lip Tint',
-  titleRu: 'Скидка 25% — Wine Lip Tint',
+  titleUz: 'Wine Lip Tint — ipakdek matn',
+  titleRu: 'Wine Lip Tint — шелковистая текстура',
   leadUz: 'Ipakdek yumshoq, to‘yingan rang. Kun bo‘yi ushlab turadi.',
   leadRu: 'Шелковистая текстура и насыщенный цвет. Держится весь день.',
-  offerUz: '25% chegirma',
-  offerRu: 'Скидка 25%',
+  // Foiz yozilmaydi: haqiqiy chegirmani «Chegirmalar» bo'limi beradi.
   ctaUz: 'Tanlash',
   ctaRu: 'Выбрать',
   href: '/katalog?category=makiyaj',
