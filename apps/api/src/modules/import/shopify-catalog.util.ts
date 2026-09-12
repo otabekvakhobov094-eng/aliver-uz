@@ -64,37 +64,98 @@ export function stripHtml(html = ''): string {
     .trim();
 }
 
-const TERMS_UZ = new Map<string, string>([
-  ['hair', 'soch'], ['nail', 'tirnoq'], ['skin', 'teri'], ['face', 'yuz'], ['body', 'tana'],
-  ['hand', 'qo‘l'], ['foot', 'oyoq'], ['cream', 'krem'], ['serum', 'serum'], ['oil', 'moy'],
-  ['mask', 'niqob'], ['shampoo', 'shampun'], ['conditioner', 'konditsioner'], ['gel', 'gel'],
-  ['spray', 'sprey'], ['brush', 'cho‘tka'], ['powder', 'kukun'], ['set', 'to‘plam'],
-  ['kit', 'to‘plam'], ['makeup', 'makiyaj'], ['lip', 'lab'], ['eye', 'ko‘z'], ['eyebrow', 'qosh'],
-  ['care', 'parvarish'], ['repair', 'tiklovchi'], ['whitening', 'oqartiruvchi'],
-  ['moisturizing', 'namlovchi'], ['cleaning', 'tozalovchi'], ['remover', 'tozalagich'],
-]);
-
-const TERMS_RU = new Map<string, string>([
-  ['hair', 'волос'], ['nail', 'ногтей'], ['skin', 'кожи'], ['face', 'лица'], ['body', 'тела'],
-  ['hand', 'рук'], ['foot', 'ног'], ['cream', 'крем'], ['serum', 'сыворотка'], ['oil', 'масло'],
-  ['mask', 'маска'], ['shampoo', 'шампунь'], ['conditioner', 'кондиционер'], ['gel', 'гель'],
-  ['spray', 'спрей'], ['brush', 'кисть'], ['powder', 'пудра'], ['set', 'набор'], ['kit', 'набор'],
-  ['makeup', 'макияж'], ['lip', 'губ'], ['eye', 'глаз'], ['eyebrow', 'бровей'], ['care', 'уход'],
-  ['repair', 'восстанавливающий'], ['whitening', 'отбеливающий'],
-  ['moisturizing', 'увлажняющий'], ['cleaning', 'очищающий'], ['remover', 'средство для снятия'],
-]);
-
-/** So'zma-so'z tarjima: tanilgan atamalar almashadi, qolgani o'z holicha. */
-export function localizeTitle(title: string, dictionary: Map<string, string>): string {
-  return title
-    .split(/(\s+|[-/(),])/)
-    .map((part) => dictionary.get(part.toLowerCase()) ?? part)
-    .join('')
-    .replace(/\s+/g, ' ')
-    .trim();
+/**
+ * Mahsulot nomi.
+ *
+ * NOM TARJIMA QILINMAYDI va bu ataylab.
+ *
+ * Ilgari bu yerda so'zma-so'z lug'at ishlagan: nom so'zlarga bo'linib,
+ * har bir so'z almashtirilgan. Natija o'qib bo'lmaydigan aralashma
+ * bo'lgan — «Aliver Bowling lab Tint», «teri Tone Adjusting CC krem»,
+ * «ko'z Lash Clusters». 556 ta mahsulotning hammasida.
+ *
+ * Lug'atni kengaytirish buni tuzatmaydi: so'zma-so'z tarjima printsipial
+ * ravishda to'g'ri nom bermaydi — u so'z tartibini, kelishikni va
+ * kontekstni bilmaydi. Kosmetika brendlarining nomlari O'zbekiston
+ * bozorida lotin yozuvida qoladi, va bu odatiy holat.
+ *
+ * Tarjima kerak bo'lsa u ALOHIDA ish: odam yozadi yoki tarjima xizmati
+ * qiladi, keyin adminda saqlanadi. Import unga aralashmaydi.
+ */
+export function productTitle(p: ShopifyProduct): string {
+  return (p.title ?? '').replace(/\s+/g, ' ').trim();
 }
 
-export const dictionaries = { uz: TERMS_UZ, ru: TERMS_RU };
+/**
+ * Mahsulot tavsifi — MANBADAN.
+ *
+ * Ilgari har bir mahsulotga bir xil jumla yozilardi: «Original ALIVER
+ * mahsuloti. Variant va qo'llash tafsilotlari mahsulot kartasida
+ * ko'rsatilgan.» Shopify'dagi haqiqiy tavsif esa o'qilardi va tashlab
+ * yuborilardi.
+ *
+ * Bu ikki tomondan zarar: mijoz mahsulot haqida hech narsa bilmaydi,
+ * Google esa 556 ta bir xil sahifani takroriy kontent deb baholaydi.
+ *
+ * Matn bo'lmasa — `null`. Bo'sh joyni shablon bilan to'ldirish
+ * yo'qligini yashiradi, ya'ni uni hech kim tuzatmaydi.
+ */
+export function descriptionFrom(html: string | null | undefined, limit = 2000): string | null {
+  const text = stripHtml(html ?? '');
+  if (text.length < 20) return null;
+  return text.length > limit ? `${text.slice(0, limit - 1).trimEnd()}…` : text;
+}
+
+/**
+ * Qoldiq — FAQAT manbada haqiqatan bo'lsa.
+ *
+ * Shopify'ning ochiq `products.json` fayli qoldiqni bermaydi: u yerda
+ * `inventory_quantity` yo yo'q, yo nol. Shu nolni bazaga yozish 556 ta
+ * mahsulotni «Tugagan» holatiga tushirgan va do'kon umuman sotolmay
+ * qolgan edi.
+ *
+ * Bundan ham yomoni: importni qayta ishga tushirish xodim qo'lda
+ * kiritgan qoldiqni nolga qaytarardi. Ya'ni katalogni yangilash
+ * omborni o'chirib yuborardi.
+ *
+ * `null` — «bilmayman» degani va u «nol» dan butunlay boshqa narsa.
+ * Chaqiruvchi `null` bo'lsa qoldiqqa TEGMAYDI.
+ */
+export function sourceStock(v: ShopifyVariant): number | null {
+  const raw = v.inventory_quantity;
+  if (raw === null || raw === undefined) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  // Nol ham ma'lumot bo'lishi mumkin, lekin ochiq faylda u deyarli
+  // har doim «ko'rsatilmagan» degani. Ishonchli belgi: hech bo'lmasa
+  // bitta variantda musbat son bo'lishi.
+  return Math.max(0, Math.trunc(n));
+}
+
+/** Butun mahsulot bo'yicha qoldiq ma'lum emasmi. */
+export function stockUnknown(p: ShopifyProduct): boolean {
+  return p.variants.every((v) => (sourceStock(v) ?? 0) <= 0);
+}
+
+/**
+ * Narxni yaxlitlash.
+ *
+ * Dollardan kursga ko'paytirilgan narx «412 303 so'm» bo'lib chiqadi.
+ * O'zbekistonda hech bir do'kon bunday narx qo'ymaydi va u mijozda
+ * «bu avtomatik yig'ilgan sayt» degan taassurot qoldiradi.
+ *
+ * Qadam SO'MDA beriladi (tiyинda emas): narx siyosati so'mda
+ * o'ylanadi. Eng yaqin qadamga yaxlitlanadi, nolga tushib ketmaydi.
+ */
+export function roundPriceTiyin(tiyin: bigint, stepSum = 1000): bigint {
+  if (stepSum <= 0) return tiyin;
+  const step = BigInt(Math.trunc(stepSum)) * 100n;
+  if (tiyin <= 0n) return tiyin;
+  const rounded = ((tiyin + step / 2n) / step) * step;
+  // Arzon tovar nolga aylanib qolmasligi kerak: 300 so'm 1 000 ga
+  // yaxlitlanganda nol bo'lardi.
+  return rounded > 0n ? rounded : step;
+}
 
 /* ------------------------------------------------------------------ *
  * Tasniflash

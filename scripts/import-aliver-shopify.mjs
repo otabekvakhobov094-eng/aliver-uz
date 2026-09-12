@@ -1,4 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import {
+  descriptionFrom,
+  productTitle,
+  roundPriceTiyin,
+  sourceStock,
+} from './lib/catalog-copy.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 
 const argv = process.argv.slice(2);
@@ -27,25 +33,6 @@ const clean = (html = '') => html
   .replace(/&#39;/gi, "'")
   .replace(/\s+/g, ' ')
   .trim();
-
-const termsUz = new Map([
-  ['hair', 'soch'], ['nail', 'tirnoq'], ['skin', 'teri'], ['face', 'yuz'], ['body', 'tana'],
-  ['hand', "qo‘l"], ['foot', 'oyoq'], ['cream', 'krem'], ['serum', 'serum'], ['oil', 'moy'],
-  ['mask', 'niqob'], ['shampoo', 'shampun'], ['conditioner', 'konditsioner'], ['gel', 'gel'],
-  ['spray', 'sprey'], ['brush', "cho‘tka"], ['powder', 'kukun'], ['set', "to‘plam"],
-  ['kit', "to‘plam"], ['makeup', 'makiyaj'], ['lip', 'lab'], ['eye', "ko‘z"], ['eyebrow', 'qosh'],
-  ['care', 'parvarish'], ['repair', 'tiklovchi'], ['whitening', 'oqartiruvchi'],
-  ['moisturizing', 'namlovchi'], ['cleaning', 'tozalovchi'], ['remover', 'tozalagich'],
-]);
-const termsRu = new Map([
-  ['hair', 'волос'], ['nail', 'ногтей'], ['skin', 'кожи'], ['face', 'лица'], ['body', 'тела'],
-  ['hand', 'рук'], ['foot', 'ног'], ['cream', 'крем'], ['serum', 'сыворотка'], ['oil', 'масло'],
-  ['mask', 'маска'], ['shampoo', 'шампунь'], ['conditioner', 'кондиционер'], ['gel', 'гель'],
-  ['spray', 'спрей'], ['brush', 'кисть'], ['powder', 'пудра'], ['set', 'набор'], ['kit', 'набор'],
-  ['makeup', 'макияж'], ['lip', 'губ'], ['eye', 'глаз'], ['eyebrow', 'бровей'], ['care', 'уход'],
-  ['repair', 'восстанавливающий'], ['whitening', 'отбеливающий'],
-  ['moisturizing', 'увлажняющий'], ['cleaning', 'очищающий'], ['remover', 'средство для снятия'],
-]);
 
 // ALIVER.com navigatsiyasidagi rasmiy asosiy bo‘limlar. Shopify public
 // products.json kolleksiya aloqalarini bermaydi, shuning uchun product_type,
@@ -91,24 +78,27 @@ function collectionsFor(product) {
   return selected;
 }
 
-function localizeTitle(title, dictionary) {
-  return title.split(/(\s+|[-/(),])/).map((part) => {
-    const translated = dictionary.get(part.toLowerCase());
-    return translated ?? part;
-  }).join('').replace(/\s+/g, ' ').trim();
-}
 
 function localizedCopy(product) {
-  const nameUz = localizeTitle(product.title, termsUz);
-  const nameRu = localizeTitle(product.title, termsRu);
-  const sourceSummary = clean(product.body_html).slice(0, 500);
+  /*
+   * Nom TARJIMA QILINMAYDI, tavsif esa MANBADAN olinadi.
+   *
+   * Qoidalar `scripts/lib/catalog-copy.mjs` da va ular sinaladi.
+   * Ilgari bu yerda so'zma-so'z tarjima va har bir mahsulot uchun
+   * bir xil shablon jumla bor edi — natijada katalogda
+   * «Aliver Bowling lab Tint» kabi nomlar va 556 ta bir xil tavsif
+   * paydo bo'lgan.
+   */
+  const name = productTitle(product);
+  const description = descriptionFrom(product.body_html);
   return {
-    nameUz,
-    nameRu,
-    shortDescUz: `${nameUz}. Original ALIVER mahsuloti. Variant va qo‘llash tafsilotlari mahsulot kartasida ko‘rsatilgan.`,
-    shortDescRu: `${nameRu}. Оригинальный продукт ALIVER. Варианты и способ применения указаны в карточке товара.`,
-    descUz: sourceSummary ? `${nameUz}. Mahsulot xususiyatlari va tarkibi ishlab chiqaruvchi ma’lumotlari asosida tekshiriladi.` : null,
-    descRu: sourceSummary ? `${nameRu}. Характеристики и состав проверяются по данным производителя.` : null,
+    nameUz: name,
+    nameRu: name,
+    nameEn: name,
+    shortDescUz: description ? description.slice(0, 300) : null,
+    shortDescRu: description ? description.slice(0, 300) : null,
+    descUz: description,
+    descRu: description,
     warningsUz: "Faqat ko‘rsatma bo‘yicha foydalaning. Qadoqdagi ogohlantirish va tarkibni tekshiring.",
     warningsRu: 'Используйте согласно инструкции. Проверьте состав и предупреждения на упаковке.',
   };
@@ -129,7 +119,10 @@ async function downloadCatalog() {
 }
 
 function money(price) {
-  return BigInt(Math.round(Number(price || 0) * usdToUzs * 100));
+  // Narx eng yaqin 1 000 so'mga yaxlitlanadi: dollardan konvertatsiya
+  // «412 303 so'm» kabi natija beradi va bu mijozga do'kon avtomatik
+  // yig'ilgandek ko'rsatadi.
+  return roundPriceTiyin(BigInt(Math.round(Number(price || 0) * usdToUzs * 100)));
 }
 
 function normalizeSku(product, variant, index) {
@@ -141,7 +134,6 @@ function productData(product, brandId) {
   const copy = localizedCopy(product);
   const prices = product.variants.map((v) => money(v.price));
   const compare = product.variants.map((v) => v.compare_at_price ? money(v.compare_at_price) : null);
-  const stocks = product.variants.map((v) => Math.max(0, Number(v.inventory_quantity ?? 0)));
   const active = product.published_at !== null;
   return {
     ...copy,
@@ -156,8 +148,10 @@ function productData(product, brandId) {
     minPrice: prices.reduce((a, b) => a < b ? a : b, prices[0] ?? 0n),
     maxPrice: prices.reduce((a, b) => a > b ? a : b, prices[0] ?? 0n),
     hasSale: compare.some((old, i) => old !== null && old > prices[i]),
-    inStock: stocks.some((stock) => stock > 0),
-    searchText: `${copy.nameUz} ${copy.nameRu} ${product.handle} ${product.vendor ?? ''}`.toLowerCase(),
+    // `inStock` bu yerda YOZILMAYDI: u qoldiqdan hisoblanadi
+    // (`inventory.service.ts` → `syncInStock`). Importda yozilsa,
+    // u manbadagi soxta nolni katalogga ko'chirardi.
+    searchText: `${copy.nameUz} ${product.handle} ${product.vendor ?? ''}`.toLowerCase(),
   };
 }
 
@@ -200,11 +194,18 @@ async function importProduct(tx, product, brandId, warehouseId, categoryIds, col
       select: { id: true },
     });
     variantIds.set(String(variant.id), savedVariant.id);
-    const stock = Math.max(0, Number(variant.inventory_quantity ?? 0));
+    /*
+     * QOLDIQQA TEGILMAYDI, agar manba uni bilmasa.
+     *
+     * Shopify'ning ochiq fayli qoldiqni bermaydi. O'sha nolni yozish
+     * 556 ta mahsulotni «Tugagan» qilib qo'ygan, va importni qayta
+     * ishga tushirish xodim kiritgan qoldiqni o'chirib yuborardi.
+     */
+    const stock = sourceStock(variant);
     await tx.inventory.upsert({
       where: { variantId_warehouseId: { variantId: savedVariant.id, warehouseId } },
-      update: { totalStock: stock },
-      create: { variantId: savedVariant.id, warehouseId, totalStock: stock },
+      update: stock !== null && stock > 0 ? { totalStock: stock } : {},
+      create: { variantId: savedVariant.id, warehouseId, totalStock: stock ?? 0 },
     });
   }
 
@@ -217,8 +218,8 @@ async function importProduct(tx, product, brandId, warehouseId, categoryIds, col
       url: image.src,
       width: image.width || null,
       height: image.height || null,
-      altUz: localizeTitle(image.alt || product.title, termsUz),
-      altRu: localizeTitle(image.alt || product.title, termsRu),
+      altUz: image.alt || productTitle(product),
+      altRu: image.alt || productTitle(product),
       sortOrder: index,
     })) });
   }

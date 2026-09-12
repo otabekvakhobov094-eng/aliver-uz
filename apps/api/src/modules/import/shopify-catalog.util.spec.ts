@@ -2,8 +2,11 @@ import {
   brandSlug,
   categoryFor,
   collectionsFor,
-  localizeTitle,
-  dictionaries,
+  descriptionFrom,
+  productTitle,
+  roundPriceTiyin,
+  sourceStock,
+  stockUnknown,
   normalizeSku,
   previewRow,
   resolveSkus,
@@ -161,9 +164,117 @@ describe('Shopify katalogini o‘girish', () => {
       expect(stripHtml('<p>Salom <b>dunyo</b></p><script>x()</script>')).toBe('Salom dunyo');
     });
 
-    it('tanilgan atamalar tarjima qilinadi', () => {
-      expect(localizeTitle('Hair Oil', dictionaries.uz)).toBe('soch moy');
-      expect(localizeTitle('Hair Oil', dictionaries.ru)).toBe('волос масло');
+    it('nom TARJIMA QILINMAYDI — asl holida qoladi', () => {
+      /*
+       * Ilgari bu yerda so'zma-so'z tarjima sinalar va test
+       * «Hair Oil» → «soch moy» ni TO'G'RI deb tasdiqlardi. Aslida
+       * bu noto'g'ri o'zbekcha (kelishik yo'q) va jonli saytda u
+       * «Aliver Bowling lab Tint» kabi nomlarga aylangan edi.
+       *
+       * Test xatoni qo'riqlab turgan holat: shuning uchun u ham
+       * almashtirildi.
+       */
+      expect(productTitle(product({ title: 'Aliver Bowling Lip Tint (Bowler)' }))).toBe(
+        'Aliver Bowling Lip Tint (Bowler)',
+      );
+    });
+
+    it('nomdagi ortiqcha bo‘sh joylar tozalanadi', () => {
+      expect(productTitle(product({ title: '  Rosemary   Oil  60ml ' }))).toBe(
+        'Rosemary Oil 60ml',
+      );
+    });
+  });
+
+  describe('tavsif', () => {
+    it('manbadagi matn olinadi, HTML tozalanadi', () => {
+      expect(descriptionFrom('<p>Soch uchun <b>rozmarin</b> moyi, 60 ml.</p>')).toBe(
+        'Soch uchun rozmarin moyi, 60 ml.',
+      );
+    });
+
+    it('matn yo‘q bo‘lsa `null` — shablon bilan to‘ldirilmaydi', () => {
+      // Shablon yo'qlikni yashiradi va uni hech kim tuzatmaydi.
+      expect(descriptionFrom('')).toBeNull();
+      expect(descriptionFrom(null)).toBeNull();
+      expect(descriptionFrom('<p>  </p>')).toBeNull();
+    });
+
+    it('juda qisqa matn tavsif hisoblanmaydi', () => {
+      expect(descriptionFrom('<p>60 ml</p>')).toBeNull();
+    });
+
+    it('uzun matn kesiladi, lekin belgisi qoladi', () => {
+      const long = `<p>${'a'.repeat(3000)}</p>`;
+      const out = descriptionFrom(long, 100);
+      expect(out).toHaveLength(100);
+      expect(out?.endsWith('…')).toBe(true);
+    });
+  });
+
+  describe('qoldiq', () => {
+    it('manbada son bo‘lmasa — `null`, ya’ni «bilmayman»', () => {
+      // Bu «nol» dan butunlay boshqa narsa: nol yozish 556 ta
+      // mahsulotni «Tugagan» qilib qo'ygan edi.
+      expect(sourceStock({ id: 1, price: '1' })).toBeNull();
+      expect(sourceStock({ id: 1, price: '1', inventory_quantity: null })).toBeNull();
+    });
+
+    it('manbadagi son olinadi', () => {
+      expect(sourceStock({ id: 1, price: '1', inventory_quantity: 12 })).toBe(12);
+    });
+
+    it('manfiy son nolga tushiriladi', () => {
+      expect(sourceStock({ id: 1, price: '1', inventory_quantity: -5 })).toBe(0);
+    });
+
+    it('hamma variant nol bo‘lsa — qoldiq noma’lum deb hisoblanadi', () => {
+      expect(
+        stockUnknown(
+          product({
+            variants: [
+              { id: 1, price: '1', inventory_quantity: 0 },
+              { id: 2, price: '2' },
+            ],
+          }),
+        ),
+      ).toBe(true);
+    });
+
+    it('bittasida musbat son bo‘lsa — ma’lum', () => {
+      expect(
+        stockUnknown(
+          product({ variants: [{ id: 1, price: '1', inventory_quantity: 3 }] }),
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe('narxni yaxlitlash', () => {
+    it('eng yaqin 1 000 so‘mga', () => {
+      // 412 303 so'm → 412 000. Dollardan konvertatsiya qilingan narx
+      // mijozga «avtomatik yig'ilgan sayt» degan taassurot beradi.
+      expect(roundPriceTiyin(412_303_00n)).toBe(412_000_00n);
+      expect(roundPriceTiyin(105_933_00n)).toBe(106_000_00n);
+      expect(roundPriceTiyin(200_201_00n)).toBe(200_000_00n);
+    });
+
+    it('yarmi yuqoriga yaxlitlanadi', () => {
+      expect(roundPriceTiyin(1_500_00n)).toBe(2_000_00n);
+    });
+
+    it('arzon tovar NOLGA aylanmaydi', () => {
+      // 300 so'm 1 000 ga yaxlitlanganda nol bo'lardi va tovar
+      // bepul bo'lib qolardi.
+      expect(roundPriceTiyin(300_00n)).toBe(1_000_00n);
+    });
+
+    it('qadamni o‘zgartirish mumkin', () => {
+      expect(roundPriceTiyin(412_303_00n, 5000)).toBe(410_000_00n);
+    });
+
+    it('nol narx o‘zgarmaydi', () => {
+      expect(roundPriceTiyin(0n)).toBe(0n);
     });
   });
 

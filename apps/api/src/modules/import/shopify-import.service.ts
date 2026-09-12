@@ -6,8 +6,10 @@ import {
   brandSlug,
   categoryFor,
   collectionsFor,
-  dictionaries,
-  localizeTitle,
+  descriptionFrom,
+  productTitle,
+  roundPriceTiyin,
+  sourceStock,
   previewRow,
   resolveSkus,
   stripHtml,
@@ -298,25 +300,35 @@ export class ShopifyImportService {
     },
   ) {
     const { usdToUzs } = ctx;
-    const nameUz = localizeTitle(product.title, dictionaries.uz);
-    const nameRu = localizeTitle(product.title, dictionaries.ru);
-    const summary = stripHtml(product.body_html ?? '').slice(0, 500);
-    const prices = product.variants.map((v) => toTiyin(v.price, usdToUzs));
+    // Nom TARJIMA QILINMAYDI — sababi `productTitle` izohida.
+    const name = productTitle(product);
+    const description = descriptionFrom(product.body_html);
+    const prices = product.variants.map((v) => roundPriceTiyin(toTiyin(v.price, usdToUzs)));
     const compare = product.variants.map((v) =>
-      v.compare_at_price ? toTiyin(v.compare_at_price, usdToUzs) : null,
+      v.compare_at_price ? roundPriceTiyin(toTiyin(v.compare_at_price, usdToUzs)) : null,
     );
-    const stocks = product.variants.map((v) => Math.max(0, Number(v.inventory_quantity ?? 0)));
     const active = product.published_at !== null && product.published_at !== undefined;
 
     const data = {
       brandId: ctx.brandId,
-      nameUz,
-      nameRu,
-      nameEn: null,
-      shortDescUz: `${nameUz}. Original mahsulot. Variant va qo‘llash tafsilotlari mahsulot kartasida.`,
-      shortDescRu: `${nameRu}. Оригинальный продукт. Варианты и способ применения — в карточке товара.`,
-      descUz: summary ? `${nameUz}. Xususiyatlari ishlab chiqaruvchi ma’lumotlari asosida.` : null,
-      descRu: summary ? `${nameRu}. Характеристики по данным производителя.` : null,
+      nameUz: name,
+      nameRu: name,
+      nameEn: name,
+      /*
+       * Tavsif MANBADAN olinadi.
+       *
+       * Ilgari bu yerda har bir mahsulotga bir xil jumla yozilardi,
+       * Shopify'dagi haqiqiy matn esa o'qilib, tashlab yuborilardi.
+       * Natijada 556 ta sahifada bitta matn turardi — mijozga
+       * foydasiz, Google uchun esa takroriy kontent.
+       *
+       * Matn yo'q bo'lsa `null` qoladi: bo'sh joyni shablon bilan
+       * to'ldirish yo'qligini yashiradi va uni hech kim tuzatmaydi.
+       */
+      shortDescUz: description ? description.slice(0, 300) : null,
+      shortDescRu: description ? description.slice(0, 300) : null,
+      descUz: description,
+      descRu: description,
       warningsUz: 'Faqat ko‘rsatma bo‘yicha foydalaning. Qadoqdagi ogohlantirishni tekshiring.',
       warningsRu: 'Используйте согласно инструкции. Проверьте предупреждения на упаковке.',
       slug: product.handle,
@@ -337,8 +349,7 @@ export class ShopifyImportService {
       minPrice: prices.length ? prices.reduce((a, b) => (a < b ? a : b)) : 0n,
       maxPrice: prices.length ? prices.reduce((a, b) => (a > b ? a : b)) : 0n,
       hasSale: compare.some((old, i) => old !== null && old > (prices[i] ?? 0n)),
-      inStock: stocks.some((s) => s > 0),
-      searchText: `${nameUz} ${nameRu} ${product.handle} ${product.vendor ?? ''}`.toLowerCase(),
+      searchText: `${name} ${product.handle} ${product.vendor ?? ''}`.toLowerCase(),
     };
 
     await this.prisma.$transaction(
@@ -377,12 +388,46 @@ export class ShopifyImportService {
           });
           variantIds.set(String(variant.id), savedVariant.id);
 
-          const stock = Math.max(0, Number(variant.inventory_quantity ?? 0));
-          await tx.inventory.upsert({
-            where: { variantId_warehouseId: { variantId: savedVariant.id, warehouseId: ctx.warehouseId } },
-            update: { totalStock: stock },
-            create: { variantId: savedVariant.id, warehouseId: ctx.warehouseId, totalStock: stock },
-          });
+          /*
+           * QOLDIQQA IMPORT TEGMAYDI, agar manba uni bilmasa.
+           *
+           * Shopify'ning ochiq fayli qoldiqni bermaydi — u yerda nol
+           * turadi. O'sha nolni yozish ikki marta zarar keltirgan:
+           *
+           *   1. 556 ta mahsulot «Tugagan» bo'lib qolgan va do'kon
+           *      umuman sotolmagan;
+           *   2. importni qayta ishga tushirish xodim qo'lda kiritgan
+           *      qoldiqni nolga qaytargan bo'lardi — ya'ni katalogni
+           *      yangilash omborni o'chirib yuborardi.
+           *
+           * Shuning uchun: son ma'lum bo'lsa yoziladi, aks holda
+           * mavjud yozuvga tegilmaydi va yangi variantga nol bilan
+           * ochiladi (xodim keyin to'ldiradi).
+           */
+          const stock = sourceStock(variant);
+          if (stock !== null && stock > 0) {
+            await tx.inventory.upsert({
+              where: {
+                variantId_warehouseId: { variantId: savedVariant.id, warehouseId: ctx.warehouseId },
+              },
+              update: { totalStock: stock },
+              create: {
+                variantId: savedVariant.id,
+                warehouseId: ctx.warehouseId,
+                totalStock: stock,
+              },
+            });
+          } else {
+            // `create` — mavjud bo'lmasa ochiladi; `update: {}` —
+            // mavjud bo'lsa hech narsa o'zgarmaydi.
+            await tx.inventory.upsert({
+              where: {
+                variantId_warehouseId: { variantId: savedVariant.id, warehouseId: ctx.warehouseId },
+              },
+              update: {},
+              create: { variantId: savedVariant.id, warehouseId: ctx.warehouseId, totalStock: 0 },
+            });
+          }
         }
 
         await tx.productImage.deleteMany({ where: { productId: saved.id } });
@@ -399,8 +444,8 @@ export class ShopifyImportService {
               url: image.src,
               width: image.width || null,
               height: image.height || null,
-              altUz: localizeTitle(image.alt || product.title, dictionaries.uz),
-              altRu: localizeTitle(image.alt || product.title, dictionaries.ru),
+              altUz: image.alt || name,
+              altRu: image.alt || name,
               sortOrder: index,
             })),
           });
