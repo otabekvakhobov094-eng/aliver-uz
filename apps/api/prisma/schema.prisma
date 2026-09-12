@@ -214,6 +214,18 @@ enum AgeBand {
   OVER_45
 }
 
+/// Sharh qayerdan kelgan.
+///
+/// Bu maydon MAJBURIY va uni yashirib bo'lmaydi: Uzum'dagi do'kondan
+/// olingan sharh aliver.uz da qilingan xarid emas. Uni belgisiz
+/// ko'rsatish mijozga «bu odam shu saytda sotib olgan» deb aytardi va
+/// «tasdiqlangan xarid» yorlig'i yolg'on bo'lib qolardi.
+enum ReviewSource {
+  SITE /// aliver.uz da qilingan xariddan
+  UZUM /// Uzum Market do'konidan olib kelingan
+  IMPORT /// boshqa manbadan qo'lda kiritilgan
+}
+
 enum ReviewStatus {
   PENDING
   APPROVED
@@ -1442,8 +1454,9 @@ model Review {
   id         String       @id @default(uuid()) @db.Uuid
   productId  String       @db.Uuid
   product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  customerId String       @db.Uuid
-  customer   Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  /// Uzum'dan kelgan sharhda bizda mijoz YO'Q — shuning uchun ixtiyoriy.
+  customerId String?      @db.Uuid
+  customer   Customer?    @relation(fields: [customerId], references: [id], onDelete: Cascade)
   orderId    String?      @db.Uuid
 
   rating     Int // 1..5
@@ -1458,6 +1471,13 @@ model Review {
   skinType   SkinType?
   hairType   HairType?
   ageBand    AgeBand?
+
+  /// Manba. Sukut bo'yicha SITE — mavjud sharhlar aynan shunday.
+  source ReviewSource @default(SITE)
+  /// Manbadagi identifikator — takroriy importning oldini oladi.
+  externalId String?
+  /// Manbadagi muallif nomi (Uzum'da mijozimiz yo'q).
+  externalAuthor String?
   mediaUrls  String[] @default([])
   status     ReviewStatus @default(PENDING)
   isVerified Boolean      @default(false) // yetkazilgan buyurtma egasi [B-13]
@@ -1469,6 +1489,9 @@ model Review {
   deletedAt DateTime?
 
   @@unique([productId, customerId, orderId])
+  /// Bir xil tashqi sharh IKKI MARTA import qilinmasin. Sinxronizatsiya
+  /// qayta-qayta ishga tushiriladi va bu kafolat kodda emas, bazada.
+  @@unique([source, externalId])
   @@index([productId, status])
   // «Menga o'xshaganlar» filtri aynan shu uch maydon bo'yicha qidiradi.
   @@index([productId, status, skinType])

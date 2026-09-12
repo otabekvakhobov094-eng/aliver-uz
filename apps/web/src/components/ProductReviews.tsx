@@ -42,6 +42,7 @@ interface Item {
   skinType: string | null;
   hairType: string | null;
   ageBand: string | null;
+  source?: 'SITE' | 'UZUM' | 'IMPORT';
   author: string;
 }
 type LabelMap = Record<string, { uz: string; ru: string }>;
@@ -72,6 +73,7 @@ const T = {
   retry: { uz: 'Qayta urinish', ru: 'Повторить' },
   of: { uz: 'ta sharh', ru: 'отзывов' },
   reply: { uz: 'ALIVER javobi', ru: 'Ответ ALIVER' },
+  fromUzum: { uz: 'Uzum’dagi do‘konimizdan', ru: 'Из нашего магазина на Uzum' },
 };
 
 interface Props {
@@ -374,6 +376,28 @@ export function ProductReviews({ slug, locale, me }: Props) {
                       }}
                     >
                       ✓ {t('verified')}
+                    </span>
+                  ) : null}
+
+                  {/*
+                    Manba YASHIRILMAYDI. Uzum'dagi do'konimizdan olingan
+                    sharh shu saytda qilingan xarid emas va uni belgisiz
+                    ko'rsatish mijozga shunday deb aytardi. Belgisi
+                    bo'lgani esa aksincha — ishonchni oshiradi, chunki
+                    sharhni Uzum'da tekshirish mumkin.
+                  */}
+                  {r.source === 'UZUM' ? (
+                    <span
+                      style={{
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        color: 'var(--alv-ink-2)',
+                        background: 'var(--alv-surface-2)',
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                      }}
+                    >
+                      {t('fromUzum')}
                     </span>
                   ) : null}
                   <span style={{ marginLeft: 'auto', fontSize: 12.5, color: 'var(--alv-muted)' }}>

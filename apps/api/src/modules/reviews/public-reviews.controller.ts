@@ -89,6 +89,8 @@ interface Shaped {
   skinType: string | null;
   hairType: string | null;
   ageBand: string | null;
+  source: string;
+  externalAuthor: string | null;
   customer: { fullName: string | null } | null;
 }
 
@@ -139,6 +141,8 @@ export class PublicReviewsController {
         skinType: true,
         hairType: true,
         ageBand: true,
+        source: true,
+        externalAuthor: true,
         customer: { select: { fullName: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -203,10 +207,16 @@ export class PublicReviewsController {
         skinType: r.skinType,
         hairType: r.hairType,
         ageBand: r.ageBand,
+        // Manba YASHIRILMAYDI: Uzum'dagi do'kondan olingan sharh shu
+        // saytda qilingan xarid emas va mijoz buni bilishi kerak.
+        // Belgisi bo'lgani ishonchni oshiradi — sharhni Uzum'da
+        // tekshirish mumkin.
+        source: r.source,
         // Faqat ism va familiyaning birinchi harfi: to'liq ism bilan
         // birga teri turi va yosh ko'rsatilsa, bu odamni aniqlashga
         // yaqinlashadi.
-        author: maskName(r.customer?.fullName ?? null),
+        // Uzum sharhida bizda mijoz yo'q — muallif nomi manbadan keladi.
+        author: maskName(r.customer?.fullName ?? r.externalAuthor ?? null),
       })),
     };
   }
