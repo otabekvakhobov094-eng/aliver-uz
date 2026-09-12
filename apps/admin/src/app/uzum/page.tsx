@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
-import { adminApi, type UzumProductPreview, type UzumReviewImport, type UzumStatus } from '@/lib/api';
+import {
+  adminApi,
+  type UzumProductPreview,
+  type UzumReviewImport,
+  type UzumStatus,
+  type UzumSyncPlan,
+} from '@/lib/api';
 
 /**
  * Uzum Seller bilan bog'lanish — TZ-4.
@@ -24,6 +30,7 @@ export default function UzumPage() {
   const [status, setStatus] = useState<UzumStatus | null>(null);
   const [preview, setPreview] = useState<UzumProductPreview | null>(null);
   const [imported, setImported] = useState<UzumReviewImport | null>(null);
+  const [sync, setSync] = useState<UzumSyncPlan | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
 
@@ -133,6 +140,115 @@ export default function UzumPage() {
                 </ul>
               </div>
             ) : null}
+          </>
+        ) : null}
+      </section>
+
+      {/*
+        SINXRONIZATSIYA — aynan shu bo'lim qo'lda solishtirishni
+        almashtiradi. Uzum yozish API si ulanmagan bo'lsa ham ishlaydi:
+        farq hisoblanadi va CSV qilib beriladi, fayl esa Uzum
+        kabinetidagi ommaviy tahrirlashga yuklanadi.
+      */}
+      <section className="alv-card" style={{ padding: 18, display: 'grid', gap: 12, marginBottom: 16 }}>
+        <h2 style={{ margin: 0, fontSize: 16, fontFamily: 'var(--alv-font-display)' }}>
+          Narx va qoldiqni tenglashtirish
+        </h2>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
+          Ikkala do‘kondagi farq SKU bo‘yicha hisoblanadi. Hech narsa o‘zgartirilmaydi —
+          natijani CSV qilib olib, Uzum kabinetidagi ommaviy tahrirlashga yuklaysiz.
+        </p>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button
+            size="sm"
+            disabled={!ready || busy !== ''}
+            onClick={() =>
+              void run('sync', async () => {
+                setSync(await adminApi.uzumSyncPlan());
+              })
+            }
+          >
+            {busy === 'sync' ? 'Solishtirilmoqda…' : 'Farqni hisoblash'}
+          </Button>
+          {sync ? (
+            <a
+              className="alv-btn alv-btn--ghost alv-btn--sm"
+              href={adminApi.uzumSyncCsvUrl()}
+              download="uzum-sync.csv"
+            >
+              CSV yuklab olish
+            </a>
+          ) : null}
+        </div>
+
+        {sync ? (
+          <>
+            <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap' }}>
+              <Stat label="Jami" value={sync.summary.total} />
+              <Stat label="Mos" value={sync.summary.ok} />
+              <Stat label="Qoldiq farqi" value={sync.summary.needsStock} />
+              <Stat label="Narx farqi" value={sync.summary.needsPrice} />
+              <Stat label="Uzum’da yo‘q" value={sync.summary.onlyHere} />
+              <Stat label="Bizda yo‘q" value={sync.summary.onlyThere} />
+            </div>
+
+            {!sync.summary.priceSyncEnabled ? (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  padding: '10px 12px',
+                  background: 'var(--alv-warn-soft)',
+                  borderRadius: 8,
+                }}
+              >
+                Narx taqqoslanmayapti. Uzum narxi ichida marketpleys komissiyasi bor, ya’ni
+                saytdagi narxni o‘sha yerga ko‘chirish zarar keltiradi. Taqqoslash uchun
+                server sozlamasida <code>UZUM_PRICE_MARKUP_PERCENT</code> ni ko‘rsating —
+                masalan <code>15</code>.
+              </p>
+            ) : null}
+
+            {sync.summary.reserveStock > 0 ? (
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--alv-muted)' }}>
+                Marketpleysga har bir tovardan {sync.summary.reserveStock} dona kam
+                ko‘rsatiladi — oxirgi donani ikki joyda bir vaqtda sotib qo‘ymaslik uchun.
+              </p>
+            ) : null}
+
+            <div style={{ overflowX: 'auto' }}>
+              <table className="alv-table" style={{ width: '100%', fontSize: 13 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left' }}>SKU</th>
+                    <th style={{ textAlign: 'left' }}>Nomi</th>
+                    <th style={{ textAlign: 'right' }}>Qoldiq (biz / Uzum)</th>
+                    <th style={{ textAlign: 'left' }}>Izoh</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sync.rows
+                    .filter((r) => r.action !== 'ok')
+                    .slice(0, 40)
+                    .map((r) => (
+                      <tr key={`${r.sku}-${r.externalId ?? 'x'}`}>
+                        <td>
+                          <code>{r.sku}</code>
+                        </td>
+                        <td>{r.nameUz}</td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {r.local.available ?? '—'} / {r.remote.stock ?? '—'}
+                          {r.target.stock !== null && r.target.stock !== r.remote.stock ? (
+                            <strong> → {r.target.stock}</strong>
+                          ) : null}
+                        </td>
+                        <td style={{ color: 'var(--alv-muted)' }}>{r.note}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </>
         ) : null}
       </section>

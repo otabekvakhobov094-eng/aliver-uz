@@ -114,6 +114,33 @@ export interface LoyaltyView {
   history: LoyaltyEntry[];
 }
 
+export interface UzumSyncRow {
+  sku: string;
+  externalId: string | null;
+  nameUz: string;
+  local: { priceTiyin: string | null; available: number | null };
+  remote: { priceTiyin: string | null; stock: number | null };
+  target: { priceTiyin: string | null; stock: number | null };
+  action: 'ok' | 'stock' | 'price' | 'both' | 'only-here' | 'only-there';
+  note: string;
+}
+
+export interface UzumSyncPlan {
+  rows: UzumSyncRow[];
+  summary: {
+    total: number;
+    ok: number;
+    needsStock: number;
+    needsPrice: number;
+    onlyHere: number;
+    onlyThere: number;
+    /** Narx faqat ustama sozlanganda taqqoslanadi. */
+    priceSyncEnabled: boolean;
+    markupPercent: number | null;
+    reserveStock: number;
+  };
+}
+
 export interface UzumStatus {
   ready: boolean;
   missing: string[];
@@ -1541,6 +1568,18 @@ export const adminApi = {
 
   uzumStatus: () => request<UzumStatus>('/admin/uzum/status'),
   uzumPreview: () => request<UzumProductPreview>('/admin/uzum/products/preview'),
+
+  /** Ikki do'kon o'rtasidagi farq — narx va qoldiq. */
+  uzumSyncPlan: () => request<UzumSyncPlan>('/admin/uzum/sync/plan'),
+
+  /**
+   * CSV manzili.
+   *
+   * Faylni `fetch` bilan olib, keyin blob qilish shart emas: havola
+   * bir xil manbaga boradi va session cookie o'zi ketadi. Blob yo'li
+   * esa katta faylni xotiraga yuklab, yuklab olishni sekinlashtirardi.
+   */
+  uzumSyncCsvUrl: () => `${apiBase()}/admin/uzum/sync/export.csv`,
   uzumImportReviews: (dryRun: boolean) =>
     request<UzumReviewImport>(`/admin/uzum/reviews/import?dryRun=${dryRun}`, { method: 'POST' }),
 
