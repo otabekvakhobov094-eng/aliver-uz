@@ -14,6 +14,7 @@ import {
   type DeliveryRegion,
 } from '@/lib/shop-api';
 import type { Locale } from '@/i18n/messages';
+import type { LegalLinks } from '@/lib/legal-links';
 import { toSum, trackAddPaymentInfo, trackInitiateCheckout, trackLead } from '@/lib/pixel';
 import {
   blockerMessage,
@@ -35,7 +36,29 @@ type Payment = 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
  *  3. Har yuborishda bitta `idempotencyKey` — tugmani ikki marta bosish
  *     ikkita buyurtma yaratmaydi (ekspertiza A-7).
  */
-export function CheckoutForm({ locale }: { locale: Locale }) {
+/**
+ * Rozilik matnidagi havola.
+ *
+ * Sahifa nashr qilinmagan bo'lsa HAVOLA QO'YILMAYDI — matn oddiy
+ * so'z bo'lib qoladi. Ilgari havola doim qo'yilardi va u 404 ga
+ * olib borardi: xaridor «nimaga roziman?» degan savolga javob
+ * o'rniga xato sahifasini ko'rardi.
+ */
+function LegalText({ href, text }: { href: string | null; text: string }) {
+  if (!href) return <>{text}</>;
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ textDecoration: 'underline' }}
+    >
+      {text}
+    </Link>
+  );
+}
+
+export function CheckoutForm({ locale, legal }: { locale: Locale; legal?: LegalLinks }) {
   const router = useRouter();
   const { cart, ready, refresh } = useCart();
 
@@ -111,10 +134,72 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
   const quote = quotes.find((q) => q.code === methodCode);
   const needsAddress = quote?.type !== 'PICKUP';
 
+  /*
+   * PIKSEL HODISALARI SHU YERDA — erta `return` lardan OLDIN.
+   *
+   * Bu React ning qat'iy qoidasi: hook'lar har chizishda BIR XIL
+   * tartibda va BIR XIL sonda chaqirilishi kerak. Ular pastda,
+   * `if (!ready) return …` dan keyin turgan edi — ya'ni birinchi
+   * chizishda (savat hali yuklanmagan) 21 ta hook, ikkinchisida
+   * 25 ta. React buni «Rendered more hooks than during the previous
+   * render» xatosi bilan to'xtatadi.
+   *
+   * Natija: RASMIYLASHTIRISH SAHIFASI UMUMAN OCHILMASDI — savatga
+   * mahsulot solingan har bir mijoz uchun. Xatolik chegarasi ekranni
+   * egallaydi, sabab esa konsolda qoladi.
+   */
+  /*
+   * «Rasmiylashtirish boshlandi» — savat ma'lumoti KELGANDAN keyin.
+   *
+   * Sahifa ochilishi bilan yuborib bo'lmaydi: o'shanda summa hali
+   * noma'lum, va Facebook qiymati nol konversiya olardi — bu
+   * optimizatsiyani buzadi.
+   *
+   * Bir marta: savatga qo'shimcha mahsulot solinsa ham hodisa qayta
+   * ketmaydi, aks holda bitta rasmiylashtirish bir necha marta
+   * hisoblanardi.
+   */
+  const [checkoutTracked, setCheckoutTracked] = useState(false);
+  useEffect(() => {
+    if (checkoutTracked || !cart || cart.items.length === 0) return;
+    setCheckoutTracked(true);
+    trackInitiateCheckout(
+      toSum(cart.subtotal),
+      cart.items.map((i) => ({ id: i.sku, quantity: i.quantity, price: toSum(i.unitPrice) })),
+    );
+  }, [cart, checkoutTracked]);
+
+  /*
+   * To'lov usuli tanlandi.
+   *
+   * Voronkadagi oxirgi bosqich — bundan keyin faqat tasdiqlash qoladi,
+   * shuning uchun Facebook uni alohida hodisa sifatida kutadi.
+   */
+  const [paymentTracked, setPaymentTracked] = useState(false);
+  useEffect(() => {
+    if (paymentTracked || !cart || !payment) return;
+    setPaymentTracked(true);
+    trackAddPaymentInfo(toSum(cart.subtotal));
+  }, [payment, cart, paymentTracked]);
+
+  /**
+   * «To'lov uchun» — mijoz KO'RADIGAN summa.
+   *
+   * BALLAR HAM AYIRILADI. Ilgari ular alohida «−Ballar» qatori bo'lib
+   * ko'rinardi-yu, yakuniy summadan chiqarilmasdi: ekranda arifmetika
+   * to'g'ri kelmasdi, keyin esa server ballarni hisobga olib KAMROQ
+   * yozardi. Mijoz uchun bu «sayt noto'g'ri sanayapti» degani.
+   *
+   * Nolga tushib ketmasligi uchun pastdan cheklangan: ball miqdori
+   * serverdan keladi va u savat summasidan oshmasligi kerak, lekin
+   * yetkazib berish narxi o'zgarganda oraliq holat bo'lishi mumkin.
+   */
   const grandTotal = useMemo(() => {
     if (!cart) return 0n;
-    return BigInt(cart.grandTotal) + BigInt(quote?.price ?? '0');
-  }, [cart, quote]);
+    const total =
+      BigInt(cart.grandTotal) + BigInt(quote?.price ?? '0') - BigInt(loyalty.amount || '0');
+    return total > 0n ? total : 0n;
+  }, [cart, quote, loyalty.amount]);
 
   if (!ready) {
     return (
@@ -197,40 +282,6 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
   // Mijoz nima yetishmayotganini KO'RISHI kerak. Faol bo'lmagan tugma
   // sababini aytmaydi va odam formani boshidan qayta o'qib chiqadi.
   const blockerHint = blockerMessage(blockers[0], locale === 'ru' ? 'ru' : 'uz');
-
-  /*
-   * «Rasmiylashtirish boshlandi» — savat ma'lumoti KELGANDAN keyin.
-   *
-   * Sahifa ochilishi bilan yuborib bo'lmaydi: o'shanda summa hali
-   * noma'lum, va Facebook qiymati nol konversiya olardi — bu
-   * optimizatsiyani buzadi.
-   *
-   * Bir marta: savatga qo'shimcha mahsulot solinsa ham hodisa qayta
-   * ketmaydi, aks holda bitta rasmiylashtirish bir necha marta
-   * hisoblanardi.
-   */
-  const [checkoutTracked, setCheckoutTracked] = useState(false);
-  useEffect(() => {
-    if (checkoutTracked || !cart || cart.items.length === 0) return;
-    setCheckoutTracked(true);
-    trackInitiateCheckout(
-      toSum(cart.subtotal),
-      cart.items.map((i) => ({ id: i.sku, quantity: i.quantity, price: toSum(i.unitPrice) })),
-    );
-  }, [cart, checkoutTracked]);
-
-  /*
-   * To'lov usuli tanlandi.
-   *
-   * Voronkadagi oxirgi bosqich — bundan keyin faqat tasdiqlash qoladi,
-   * shuning uchun Facebook uni alohida hodisa sifatida kutadi.
-   */
-  const [paymentTracked, setPaymentTracked] = useState(false);
-  useEffect(() => {
-    if (paymentTracked || !cart || !payment) return;
-    setPaymentTracked(true);
-    trackAddPaymentInfo(toSum(cart.subtotal));
-  }, [payment, cart, paymentTracked]);
 
   const sendOtp = async () => {
     setError(null);
@@ -644,19 +695,15 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
           />
           <span>
             {locale === 'ru' ? 'Я согласен с ' : 'Men '}
-            <Link href={`/${locale}/sahifa/public-offer`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: 'underline' }}>
-              {locale === 'ru' ? 'публичной офертой' : 'ommaviy oferta'}
-            </Link>
+            <LegalText
+              href={legal?.offer ?? null}
+              text={locale === 'ru' ? 'публичной офертой' : 'ommaviy oferta'}
+            />
             {locale === 'ru' ? ' и ' : ' va '}
-            <Link href={`/${locale}/sahifa/privacy-policy`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: 'underline' }}>
-              {locale === 'ru' ? 'политикой конфиденциальности' : 'maxfiylik siyosati'}
-            </Link>
+            <LegalText
+              href={legal?.privacy ?? null}
+              text={locale === 'ru' ? 'политикой конфиденциальности' : 'maxfiylik siyosati'}
+            />
             {locale === 'ru' ? '.' : ' shartlariga roziman.'}
           </span>
         </label>

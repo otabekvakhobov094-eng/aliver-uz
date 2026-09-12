@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CheckoutForm } from '@/components/CheckoutForm';
+import { legalLinks } from '@/lib/legal-links';
 import { isLocale } from '@/i18n/messages';
 
 export const metadata: Metadata = {
@@ -12,6 +13,10 @@ export const metadata: Metadata = {
 export default async function CheckoutPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : 'uz';
+
+  // Huquqiy sahifalar hali nashr qilinmagan bo'lishi mumkin —
+  // o'shanda rozilik matni HAVOLASIZ chiqadi, 404 emas.
+  const legal = await legalLinks(locale);
 
   return (
     <>
@@ -27,7 +32,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
         >
           {locale === 'ru' ? 'Оформление заказа' : 'Buyurtmani rasmiylashtirish'}
         </h1>
-        <CheckoutForm locale={locale} />
+        <CheckoutForm locale={locale} legal={legal} />
       </main>
       <SiteFooter locale={locale} />
     </>
