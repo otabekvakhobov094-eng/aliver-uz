@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, formatPrice } from '@aliver/ui';
 import { useCart } from './CartProvider';
+import { LoyaltyRedeem } from './LoyaltyRedeem';
 import {
   ShopError,
   newIdempotencyKey,
@@ -44,6 +45,11 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
   const [landmark, setLandmark] = useState('');
   const [methodCode, setMethodCode] = useState('');
   const [payment, setPayment] = useState<Payment>('CLICK');
+  // Ball: server qaytargan REJA saqlanadi, mijoz kiritgan son emas.
+  const [loyalty, setLoyalty] = useState<{ points: number; amount: string }>({
+    points: 0,
+    amount: '0',
+  });
   const [comment, setComment] = useState('');
   const [accept, setAccept] = useState(false);
 
@@ -175,6 +181,7 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
         otpCode: codNeedsOtp ? otpCode : undefined,
         comment: comment.trim() || undefined,
         acceptOffer: accept,
+        loyaltyPoints: loyalty.points > 0 ? loyalty.points : undefined,
         idempotencyKey,
       });
       /*
@@ -704,6 +711,17 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
 
         <div style={{ height: 1, background: 'var(--alv-line)' }} />
 
+        {/* Ball bloki jami summadan OLDIN: mijoz chegirmani jami
+            o'zgarishi bilan birga ko'radi. */}
+        <LoyaltyRedeem
+          locale={locale}
+          subtotalAfterDiscount={(
+            BigInt(cart.subtotal) - BigInt(cart.discountTotal)
+          ).toString()}
+          value={loyalty.points}
+          onChange={(points, amount) => setLoyalty({ points, amount })}
+        />
+
         <SumRow
           label={locale === 'ru' ? 'Товары' : 'Mahsulotlar'}
           value={money(cart.subtotal, locale)}
@@ -712,6 +730,12 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
           <SumRow
             label={locale === 'ru' ? 'Скидка' : 'Chegirma'}
             value={`−${money(cart.discountTotal, locale)}`}
+          />
+        ) : null}
+        {loyalty.points > 0 ? (
+          <SumRow
+            label={locale === 'ru' ? 'Баллы' : 'Ballar'}
+            value={`−${money(loyalty.amount, locale)}`}
           />
         ) : null}
         <SumRow

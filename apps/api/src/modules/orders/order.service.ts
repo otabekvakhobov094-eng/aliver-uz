@@ -16,6 +16,7 @@ import { CartService } from '../cart/cart.service';
 import { OtpService } from '../auth/otp.service';
 import { FiscalService } from '../fiscal/fiscal.service';
 import { NotificationService } from '../notifications/notification.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 import { carrierTrackUrl } from '../shipments/shipment-state';
 import { STATUS_TEMPLATE, amountVar, type Lang } from '../notifications/templates';
 import { normalizePhone } from '../../common/phone';
@@ -49,6 +50,7 @@ export class OrderService {
     private readonly fiscal: FiscalService,
     private readonly notifications: NotificationService,
     private readonly config: ConfigService,
+    private readonly loyalty: LoyaltyService,
   ) {}
 
   private async setting<T>(key: string, fallback: T): Promise<T> {
@@ -247,6 +249,29 @@ export class OrderService {
       shipping: shipping.quote.price,
     });
 
+    /*
+     * 5b) Sodiqlik ballari.
+     *
+     * Chegara hisobi shu yerda QAYTA bajariladi, mijoz yuborgan songa
+     * ishonilmaydi: brauzerdagi tekshiruv faqat qulaylik uchun va uni
+     * chetlab o'tish oson. Reja balans, buyurtma ulushi va so'ralgan
+     * miqdorning eng kichigini oladi.
+     *
+     * Ball MAHSULOT summasidan ayiriladi, yetkazishdan emas: kuryerga
+     * ball bilan to'lab bo'lmaydi.
+     */
+    const redeem =
+      params.customerId && (dto.loyaltyPoints ?? 0) > 0
+        ? await this.loyalty.quote(
+            params.customerId,
+            totals.subtotal - totals.discountTotal,
+            dto.loyaltyPoints ?? 0,
+          )
+        : null;
+
+    const loyaltyAmount = redeem?.amount ?? 0n;
+    const grandTotalAfterPoints = totals.grandTotal - loyaltyAmount;
+
     // 6) Hudud nomlari (nusxa uchun)
     const [region, district] = await Promise.all([
       this.prisma.region.findUnique({ where: { id: dto.regionId } }),
@@ -291,7 +316,8 @@ export class OrderService {
               discountTotal: totals.discountTotal,
               shippingTotal: totals.shippingTotal,
               vatTotal: totals.vatTotal,
-              grandTotal: totals.grandTotal,
+              // Ball bilan qoplangan qism ayirilgan yakuniy summa.
+              grandTotal: grandTotalAfterPoints,
               appliedCouponCode: cartRow.couponCode,
               reservationExpiresAt,
               idempotencyKey: dto.idempotencyKey ?? null,
@@ -389,6 +415,23 @@ export class OrderService {
             }
           }
 
+          /*
+           * Ball chiqimi buyurtma bilan BITTA tranzaksiyada yoziladi.
+           *
+           * Alohida yozilsa, tranzaksiya orasida xato bo'lganda mijoz
+           * chegirmani olib, ballari joyida qolardi — ya'ni bepul pul.
+           * Ikki marta yozilishining oldini baza oladi: `(orderId, kind)`
+           * bo'yicha unikal indeks.
+           */
+          if (params.customerId && redeem && redeem.points > 0) {
+            await this.loyalty.redeem(tx as never, {
+              customerId: params.customerId,
+              orderId: created.id,
+              points: redeem.points,
+              amount: redeem.amount,
+            });
+          }
+
           await tx.orderStatusHistory.create({
             data: {
               orderId: created.id,
@@ -404,7 +447,7 @@ export class OrderService {
               orderId: created.id,
               provider: dto.paymentProvider as never,
               status: 'PENDING',
-              amount: totals.grandTotal,
+              amount: grandTotalAfterPoints,
             },
           });
 
@@ -478,7 +521,7 @@ export class OrderService {
         {
           number: order.number,
           name: `${dto.firstName} ${dto.lastName ?? ''}`.trim(),
-          amount: amountVar(totals.grandTotal),
+          amount: amountVar(grandTotalAfterPoints),
           provider: dto.paymentProvider,
         },
         order.id,
@@ -487,7 +530,11 @@ export class OrderService {
       this.logger.error(`Buyurtma ${order.number}: bildirishnoma xatosi — ${(e as Error).message}`);
     }
 
-    this.logger.log(`Buyurtma yaratildi: ${order.number} (${totals.grandTotal} tiyin)`);
+    this.logger.log(
+      `Buyurtma yaratildi: ${order.number} (${grandTotalAfterPoints} tiyin` +
+        (redeem && redeem.points > 0 ? `, ${redeem.points} ball ishlatildi` : '') +
+        ')',
+    );
     return this.publicView(order.id);
   }
 

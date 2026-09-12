@@ -78,6 +78,17 @@ export class CreateOrderDto {
   acceptOffer!: boolean;
 
   /**
+   * Ishlatmoqchi bo'lgan ball. Server BARIBIR qayta hisoblaydi —
+   * brauzerdagi chegara faqat qulaylik uchun va uni chetlab o'tish oson.
+   */
+  @ApiPropertyOptional({ description: 'Sodiqlik ballari' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  loyaltyPoints?: number;
+
+  /**
    * Tugmani ikki marta bosishdan himoya. Frontend har checkout uchun
    * bitta tasodifiy kalit yuboradi (ekspertiza A-7).
    */

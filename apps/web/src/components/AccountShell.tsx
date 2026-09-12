@@ -9,6 +9,7 @@ const NAV: Array<{ href: string; uz: string; ru: string }> = [
   { href: '/buyurtmalar', uz: 'Buyurtmalar', ru: 'Заказы' },
   { href: '/qaytarishlar', uz: 'Qaytarishlar', ru: 'Возвраты' },
   { href: '/manzillar', uz: 'Manzillar', ru: 'Адреса' },
+  { href: '/ballar', uz: 'Ballar', ru: 'Баллы' },
   { href: '/sevimlilar', uz: 'Sevimlilar', ru: 'Избранное' },
 ];
 

@@ -50,6 +50,36 @@ export interface Cart {
   warnings: string[];
 }
 
+export interface LoyaltyBalance {
+  points: number;
+  /** «Ikki valyuta»: ball har doim so'mda ham ko'rsatiladi. */
+  amount: Tiyin;
+  rate: {
+    pointsPerSum: Tiyin;
+    tiyinPerPoint: Tiyin;
+    maxRedeemSharePercent: number;
+    expiryMonths: number;
+  };
+  expiresAt: string | null;
+}
+
+export interface LoyaltyEntry {
+  id: Uuid;
+  kind: 'EARN' | 'REDEEM' | 'EXPIRE' | 'ADJUST' | 'REVERSAL';
+  points: number;
+  amount: Tiyin;
+  comment: string | null;
+  createdAt: string;
+  orderNumber: string | null;
+}
+
+export interface LoyaltyQuote {
+  points: number;
+  amount: Tiyin;
+  maxPoints: number;
+  reason: 'ok' | 'balance' | 'cap' | 'nothing';
+}
+
 export interface SampleOption {
   variantId: Uuid;
   sku: string;
@@ -159,6 +189,8 @@ export interface CreateOrderInput {
   landmark?: string;
   deliveryMethodCode: string;
   paymentProvider: 'CLICK' | 'PAYME' | 'UZUM' | 'CASH_ON_DELIVERY';
+  /** Server baribir qayta hisoblaydi — bu faqat so'rov. */
+  loyaltyPoints?: number;
   otpCode?: string;
   comment?: string;
   acceptOffer: boolean;
@@ -360,6 +392,13 @@ export const shopApi = {
   removeCoupon: () => call<Cart>('/cart/coupon', { method: 'DELETE' }),
 
   samples: () => call<SampleOption[]>('/cart/samples'),
+
+  /* ----------------------------- Sodiqlik ----------------------------- */
+
+  loyaltyBalance: () => call<LoyaltyBalance>('/loyalty/balance'),
+  loyaltyHistory: () => call<LoyaltyEntry[]>('/loyalty/history'),
+  loyaltyQuote: (subtotal: string, points: number) =>
+    call<LoyaltyQuote>(`/loyalty/quote?subtotal=${subtotal}&points=${points}`),
 
   /** `null` — tanlovni bekor qiladi. */
   chooseSample: (variantId: Uuid | null) =>

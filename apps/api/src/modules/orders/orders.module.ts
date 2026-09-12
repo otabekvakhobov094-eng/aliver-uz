@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { LoyaltyModule } from '../loyalty/loyalty.module';
 import { OrdersController } from './orders.controller';
 import { AdminOrdersController } from './admin-orders.controller';
 import { OrderService } from './order.service';
@@ -18,8 +19,7 @@ import { AuditModule } from '../audit/audit.module';
     DeliveryModule,
     AuthModule,
     FiscalModule,
-    AuditModule,
-  ],
+    AuditModule, LoyaltyModule],
   controllers: [OrdersController, AdminOrdersController],
   providers: [OrderService],
   exports: [OrderService],

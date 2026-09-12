@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { OrderService } from '../orders/order.service';
 import { FiscalService } from '../fiscal/fiscal.service';
 import { NotificationService } from '../notifications/notification.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 import { amountVar, type Lang } from '../notifications/templates';
 import {
   type PaymentStatus,
@@ -82,6 +83,7 @@ export class PaymentService {
     private readonly orders: OrderService,
     private readonly fiscal: FiscalService,
     private readonly notifications: NotificationService,
+    private readonly loyalty: LoyaltyService,
   ) {}
 
   /* ======================================================================
@@ -304,6 +306,24 @@ export class PaymentService {
 
     // Fiskal chek — to'lov qabul qilingan paytda (ekspertiza A-1).
     await this.fiscal.enqueueSale(payment.orderId, payment.id);
+
+    /*
+     * Sodiqlik ballari — AYNAN shu yerda, buyurtma yaratilganda emas.
+     *
+     * Aks holda ball ishlab chiqarish uchun buyurtma berib, to'lamay
+     * qo'yish yetarli bo'lardi.
+     *
+     * Xato butun to'lovni YIQITMAYDI: pul allaqachon qabul qilingan va
+     * uni ball tufayli orqaga qaytarish nomutanosib. Takrorlanishdan
+     * himoya bazadagi unikal indeksda.
+     */
+    try {
+      await this.loyalty.earnForOrder(payment.orderId);
+    } catch (e) {
+      this.logger.error(
+        `Ball berilmadi (buyurtma ${payment.orderId}): ${(e as Error).message}`,
+      );
+    }
 
     // Mijozga "pul yechildi" xabari SHOSHILINCH: u tunda ham yuboriladi,
     // chunki bu uning puliga tegishli.
