@@ -79,12 +79,46 @@ for (const name of ['index.d.ts', 'default.d.ts', 'edge.d.ts']) {
   fs.writeFileSync(path.join(clientDir, name), dts);
 }
 
-// Runtime uchun — aniq xato. Bu fayllar FAQAT typecheck uchun kerak;
-// ishga tushirishda haqiqiy klient bo'lishi shart, shuning uchun
-// chaqirilsa jim `undefined` emas, tushunarli xabar chiqadi.
-const js = `throw new Error(
-  'Prisma klienti generatsiya qilinmagan (stub o‘rnatilgan). Ishga tushirishdan oldin: npm run db:generate'
-);\n`;
+/*
+ * Runtime.
+ *
+ * Bu fayl yuklanganda XATO BERMASLIGI kerak. Testlar `@prisma/client`
+ * ni import qiladigan modullarni yuklaydi va import paytida yiqilgan
+ * stub butun test to'plamini o'chirib qo'yardi — ya'ni stub tekshiruvni
+ * kuchaytirish o'rniga uni yo'q qilardi.
+ *
+ * Shuning uchun:
+ *   — ENUMLAR haqiqiy qiymat bilan beriladi. Kod ularni ishlatadi
+ *     (`OrderStatus.CANCELLED`), va ular bo'lmasa testlar `undefined`
+ *     bilan jimgina noto'g'ri ishlardi;
+ *   — `PrismaClient` esa faqat YARATILGANDA xato beradi. Ya'ni import
+ *     o'tadi, haqiqiy bazaga ulanishga urinish esa aniq xabar bilan
+ *     to'xtaydi.
+ */
+const enumLines = [];
+for (const m of fs.readFileSync(path.join(ROOT, 'apps/api/prisma/schema.prisma'), 'utf8')
+  .matchAll(/^enum\s+(\w+)\s*\{([\s\S]*?)^\}/gm)) {
+  const values = m[2]
+    .split('\n')
+    .map((l) => l.trim().split(/\s|\/\//)[0])
+    .filter((l) => /^[A-Za-z_]\w*$/.test(l));
+  enumLines.push(
+    `exports.${m[1]} = Object.freeze({ ${values.map((v) => `${v}: '${v}'`).join(', ')} });`,
+  );
+}
+
+const js = `// ALIVER-STUB: sxemadan generatsiya qilingan runtime. Qo'lda tahrirlamang.
+class PrismaClient {
+  constructor() {
+    throw new Error(
+      'Prisma klienti generatsiya qilinmagan (stub o‘rnatilgan). Ishga tushirishdan oldin: npm run db:generate'
+    );
+  }
+}
+exports.PrismaClient = PrismaClient;
+exports.Prisma = { PrismaClientKnownRequestError: class extends Error {} };
+${enumLines.join('\n')}
+`;
 for (const name of ['index.js', 'default.js', 'edge.js', 'index-browser.js']) {
   fs.writeFileSync(path.join(clientDir, name), js);
 }

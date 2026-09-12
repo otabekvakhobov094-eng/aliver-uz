@@ -2,10 +2,11 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   EXPIRY_MONTHS,
+  EXPIRY_WARN_DAYS,
   MAX_REDEEM_SHARE,
   POINTS_PER_SUM,
   TIYIN_PER_POINT,
-  expiresAt,
+  expiryState,
   planRedeem,
   pointsForOrder,
   pointsToTiyin,
@@ -33,13 +34,25 @@ export class LoyaltyService {
 
   /** Mijozning joriy balansi va uning so'mdagi qiymati. */
   async balance(customerId: string) {
-    const agg = await this.prisma.loyaltyEntry.aggregate({
-      where: { customerId },
-      _sum: { points: true },
-      _max: { createdAt: true },
-    });
+    const [agg, lastActivity] = await Promise.all([
+      this.prisma.loyaltyEntry.aggregate({
+        where: { customerId },
+        _sum: { points: true },
+      }),
+      // Oxirgi FAOLIYAT — EXPIRE yozuvisiz.
+      //
+      // EXPIRE ni tizim o'zi yozadi va uni faoliyat deb hisoblash
+      // muddatni o'zi qaytadan uzaytirardi: ball kuyadi, sana esa yana
+      // 12 oyga suriladi va keyingi safar kuyadigan narsa qolmaydi.
+      // Ya'ni qoida bir marta ishlab, keyin jim o'chib qolardi.
+      this.prisma.loyaltyEntry.findFirst({
+        where: { customerId, kind: { not: 'EXPIRE' } },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
+      }),
+    ]);
     const points = agg._sum.points ?? 0;
-    const last = agg._max.createdAt ?? null;
+    const last = lastActivity?.createdAt ?? null;
 
     return {
       points,
@@ -52,10 +65,14 @@ export class LoyaltyService {
         tiyinPerPoint: TIYIN_PER_POINT.toString(),
         maxRedeemSharePercent: MAX_REDEEM_SHARE,
         expiryMonths: EXPIRY_MONTHS,
+        expiryWarnDays: EXPIRY_WARN_DAYS,
       },
       // Ballar oxirgi harakatdan 12 oy keyin kuyadi — sana ochiq
       // ko'rsatiladi, aks holda u kutilmaganda yo'qolib qolardi.
-      expiresAt: last ? expiresAt(last) : null,
+      //
+      // Balans nol bo'lsa sana KO'RSATILMAYDI: «0 ball 12 oydan keyin
+      // kuyadi» degan yozuvning ma'nosi yo'q va u mijozni chalg'itadi.
+      ...expiryState({ lastActivityAt: last, balance: points, now: new Date() }),
     };
   }
 

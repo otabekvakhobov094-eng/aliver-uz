@@ -29,6 +29,8 @@ export type TemplateKey =
   | 'RETURN_APPROVED'
   | 'RETURN_REJECTED'
   | 'RETURN_RECEIVED'
+  | 'LOYALTY_EXPIRING'
+  | 'GIFTCARD_EXPIRING'
   | 'STAFF_NEW_ORDER'
   | 'STAFF_RETURN_REQUESTED'
   | 'STAFF_PAYMENT_FAILED'
@@ -37,6 +39,8 @@ export type TemplateKey =
 
 export interface TemplateVars {
   number?: string;
+  points?: string;
+  tail?: string;
   amount?: string;
   name?: string;
   trackUrl?: string;
@@ -123,6 +127,23 @@ export const TEMPLATES: Record<TemplateKey, TemplateDef> = {
   },
 
   /* ---------------------------- Operatorlar ---------------------------- */
+
+  /**
+   * Ball kuyishidan oldingi ogohlantirish.
+   *
+   * Matn TAKLIF emas, XABAR: reklama roziligini talab qilmaslik uchun
+   * u mijozning o'z hisobidagi qiymat haqida bo'lishi kerak. «Chegirma
+   * bor, keling» degan matn marketing bo'lardi va boshqa rozilik
+   * talab qilardi.
+   */
+  LOYALTY_EXPIRING: {
+    uz: 'ALIVER.UZ: {points} bonus balingiz ({amount} so‘m) {date} da kuyadi. Buyurtma bersangiz muddat yangilanadi.',
+    ru: 'ALIVER.UZ: {points} бонусных баллов ({amount} сум) сгорят {date}. Новый заказ продлит срок.',
+  },
+  GIFTCARD_EXPIRING: {
+    uz: 'ALIVER.UZ: sovg‘a kartangiz (...{tail}) {date} da tugaydi. Qoldiq: {amount} so‘m.',
+    ru: 'ALIVER.UZ: срок подарочной карты (...{tail}) истекает {date}. Остаток: {amount} сум.',
+  },
 
   STAFF_NEW_ORDER: {
     staff: true,

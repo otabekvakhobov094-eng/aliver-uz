@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsInt, IsString, Length, NotEquals } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Audit, AuthPrincipal, CurrentUser, RequirePermissions } from '../../common/decorators';
+import { LoyaltyExpiryService } from './loyalty-expiry.service';
 import { LoyaltyService } from './loyalty.service';
 
 class AdjustDto {
@@ -66,7 +67,42 @@ export class LoyaltyController {
 @ApiTags('admin-loyalty')
 @Controller('admin/loyalty')
 export class AdminLoyaltyController {
-  constructor(private readonly loyalty: LoyaltyService) {}
+  constructor(
+    private readonly loyalty: LoyaltyService,
+    private readonly expiry: LoyaltyExpiryService,
+  ) {}
+
+  /**
+   * Tez orada kuyadigan ballar.
+   *
+   * `:customerId` yo'liDAN OLDIN turishi shart: Nest yo'llarni e'lon
+   * tartibida sinaydi va «kuyish» so'zi aks holda mijoz id si deb
+   * o'qilib, ParseUUIDPipe da xato bergan bo'lardi.
+   */
+  @Get('expiring')
+  @RequirePermissions('customers.view')
+  @ApiOperation({
+    summary: 'Tez orada kuyadigan ballar',
+    description: 'Standart — keyingi 14 kun ichida kuyadiganlar.',
+  })
+  expiring(@Query('days') days?: string, @Query('limit') limit?: string) {
+    return this.expiry.expiringSoon({
+      days: days ? Number(days) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+  }
+
+  /** Kuygan ballar hisoboti. */
+  @Get('expired')
+  @RequirePermissions('customers.view')
+  @ApiOperation({ summary: 'Kuygan ballar hisoboti' })
+  expired(@Query('from') from?: string, @Query('to') to?: string, @Query('limit') limit?: string) {
+    return this.expiry.expiredReport({
+      from: from ? new Date(from) : undefined,
+      to: to ? new Date(to) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+  }
 
   @Get(':customerId')
   @RequirePermissions('customers.view')

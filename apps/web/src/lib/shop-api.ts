@@ -59,8 +59,15 @@ export interface LoyaltyBalance {
     tiyinPerPoint: Tiyin;
     maxRedeemSharePercent: number;
     expiryMonths: number;
+    expiryWarnDays: number;
   };
+  /**
+   * `none` — kuyadigan ball yo'q; `warning` — muddat yaqin.
+   * Balans nol bo'lganda sana ko'rsatilmaydi.
+   */
+  stage: 'none' | 'active' | 'warning' | 'due';
   expiresAt: string | null;
+  daysLeft: number | null;
 }
 
 export interface LoyaltyEntry {

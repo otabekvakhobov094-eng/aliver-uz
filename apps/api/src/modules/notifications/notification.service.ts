@@ -48,6 +48,16 @@ export interface EnqueueParams {
   lang?: Lang;
   /** Mijoz Telegram chat id si (bo'lsa, SMS bilan birga yuboriladi). */
   telegramChatId?: string | null;
+  /**
+   * Buyurtmaga bog'lanmagan hodisani ajratuvchi kalit.
+   *
+   * Ba'zi xabarlar buyurtma bilan emas, MIJOZ bilan bog'liq: ball
+   * kuyishi, sovg'a kartasining muddati. Ular ham takrorlanmasligi
+   * kerak, lekin `orderId` yo'q. Bu maydon o'sha o'rinni egallaydi —
+   * masalan "<customerId>:<kuyish sanasi>". Har kuni ishlaydigan cron
+   * shu kalit tufayli bir xil mijozga har kuni SMS yubormaydi.
+   */
+  dedupeId?: string | null;
 }
 
 /**
@@ -117,7 +127,13 @@ export class NotificationService {
         body,
         orderId: params.orderId ?? null,
         scheduledAt: when,
-        dedupeKey: this.dedupeKey('SMS', params.template, params.orderId, params.eventKey),
+        dedupeKey: this.dedupeKey(
+          'SMS',
+          params.template,
+          params.orderId,
+          params.eventKey,
+          params.dedupeId,
+        ),
         payload: params.vars,
       });
     }
@@ -131,7 +147,13 @@ export class NotificationService {
         body,
         orderId: params.orderId ?? null,
         scheduledAt: when,
-        dedupeKey: this.dedupeKey('TELEGRAM', params.template, params.orderId, params.eventKey),
+        dedupeKey: this.dedupeKey(
+          'TELEGRAM',
+          params.template,
+          params.orderId,
+          params.eventKey,
+          params.dedupeId,
+        ),
         payload: params.vars,
       });
     }
@@ -166,13 +188,15 @@ export class NotificationService {
     template: string,
     orderId?: string | null,
     eventKey?: string | null,
+    dedupeId?: string | null,
   ): string | null {
-    // Buyurtmaga bog'lanmagan xabarlar (masalan qoldiq ogohlantirishi)
-    // takrorlanishi mumkin — ularga kalit berilmaydi.
-    if (!orderId) return null;
+    // Buyurtmaga ham, mijozga ham bog'lanmagan xabarlar (masalan qoldiq
+    // ogohlantirishi) takrorlanishi mumkin — ularga kalit berilmaydi.
+    const scope = orderId ?? dedupeId;
+    if (!scope) return null;
     return eventKey
-      ? `${prefix}:${template}:${orderId}:${eventKey}`
-      : `${prefix}:${template}:${orderId}`;
+      ? `${prefix}:${template}:${scope}:${eventKey}`
+      : `${prefix}:${template}:${scope}`;
   }
 
   private scheduleFor(template: TemplateKey): Date {

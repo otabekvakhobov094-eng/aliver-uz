@@ -3,6 +3,8 @@ import {
   POINTS_PER_SUM,
   TIYIN_PER_POINT,
   expiresAt,
+  expiryState,
+  expiryWarnKey,
   planRedeem,
   pointsForOrder,
   pointsToTiyin,
@@ -142,5 +144,87 @@ describe('Bekor qilinganda qaytarish', () => {
 
   it('nollar xavfsiz', () => {
     expect(reversalFor({ earned: 0, redeemed: 0 })).toEqual({ take: 0, giveBack: 0 });
+  });
+});
+
+describe('ballarning kuyishi', () => {
+  const NOW = new Date('2026-09-12T10:00:00Z');
+
+  it('balans nol bo‘lsa sana umuman ko‘rsatilmaydi', () => {
+    // «0 ball 12 oydan keyin kuyadi» degan yozuv mijozni chalg'itadi.
+    expect(
+      expiryState({ lastActivityAt: new Date('2026-01-01'), balance: 0, now: NOW }),
+    ).toEqual({ stage: 'none', expiresAt: null, daysLeft: null });
+  });
+
+  it('manfiy balansda ham sana yo‘q', () => {
+    expect(
+      expiryState({ lastActivityAt: new Date('2026-01-01'), balance: -5, now: NOW }).stage,
+    ).toBe('none');
+  });
+
+  it('hech qachon faoliyat bo‘lmagan bo‘lsa — sana yo‘q', () => {
+    expect(expiryState({ lastActivityAt: null, balance: 100, now: NOW }).stage).toBe('none');
+  });
+
+  it('muddat uzoq bo‘lsa — active', () => {
+    const s = expiryState({ lastActivityAt: new Date('2026-08-01'), balance: 100, now: NOW });
+    expect(s.stage).toBe('active');
+    expect(s.expiresAt).toEqual(new Date('2027-08-01'));
+  });
+
+  it('14 kun qolganda — warning', () => {
+    // 2025-09-20 + 12 oy = 2026-09-20, ya'ni 8 kun qoldi.
+    const s = expiryState({ lastActivityAt: new Date('2025-09-20T10:00:00Z'), balance: 100, now: NOW });
+    expect(s.stage).toBe('warning');
+    expect(s.daysLeft).toBe(8);
+  });
+
+  it('chegaraning o‘zi — 14 kun ham warning', () => {
+    const s = expiryState({
+      lastActivityAt: new Date('2025-09-26T10:00:00Z'),
+      balance: 100,
+      now: NOW,
+    });
+    expect(s.daysLeft).toBe(14);
+    expect(s.stage).toBe('warning');
+  });
+
+  it('15 kun — hali active', () => {
+    const s = expiryState({
+      lastActivityAt: new Date('2025-09-27T10:00:00Z'),
+      balance: 100,
+      now: NOW,
+    });
+    expect(s.daysLeft).toBe(15);
+    expect(s.stage).toBe('active');
+  });
+
+  it('muddat o‘tgan bo‘lsa — due', () => {
+    const s = expiryState({ lastActivityAt: new Date('2025-01-01'), balance: 100, now: NOW });
+    expect(s.stage).toBe('due');
+    expect(s.daysLeft).toBeLessThan(0);
+  });
+
+  it('aynan muddat tugagan lahza — due, ya’ni ball saqlanib qolmaydi', () => {
+    const last = new Date('2025-09-12T10:00:00Z');
+    const s = expiryState({ lastActivityAt: last, balance: 100, now: NOW });
+    expect(s.expiresAt).toEqual(NOW);
+    expect(s.stage).toBe('due');
+  });
+
+  it('ogohlantirish kaliti KUYISH sanasiga bog‘lanadi, yuborilgan kunga emas', () => {
+    // Aks holda har kuni ishlaydigan cron har kuni SMS yuborardi.
+    const at = new Date('2026-09-20T10:00:00Z');
+    const a = expiryWarnKey('c1', at);
+    const b = expiryWarnKey('c1', new Date('2026-09-20T23:59:00Z'));
+    expect(a).toBe(b);
+    expect(a).toBe('c1:2026-09-20');
+  });
+
+  it('muddat uzayganda kalit o‘zgaradi — keyingi davrda yana ogohlantiriladi', () => {
+    expect(expiryWarnKey('c1', new Date('2026-09-20'))).not.toBe(
+      expiryWarnKey('c1', new Date('2027-09-20')),
+    );
   });
 });

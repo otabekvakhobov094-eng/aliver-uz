@@ -63,10 +63,31 @@ export function AccountLoyalty({ locale }: { locale: Locale }) {
             : `Har 1 000 so‘mga 1 ball. Ballar bilan buyurtmaning ${balance.rate.maxRedeemSharePercent}% gacha qismini qoplash mumkin.`}
         </p>
 
+        {/*
+          Muddat OGOHLANTIRISH sifatida ko'rsatiladi, shunchaki sana
+          sifatida emas. «Kuyish sanasi: 20.09.2026» degan yozuvni odam
+          o'qiydi va unutadi; «14 kun qoldi» esa harakatga undaydi —
+          buyurtma bersa muddat yangilanadi va ball saqlanib qoladi.
+
+          Balans nol bo'lganda server sanani umuman qaytarmaydi.
+        */}
         {balance.expiresAt ? (
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--alv-warn)' }}>
-            {ru ? 'Сгорают ' : 'Kuyish sanasi: '}
-            {new Date(balance.expiresAt).toLocaleDateString(ru ? 'ru-RU' : 'uz-UZ')}
+          <p
+            style={{
+              margin: '10px 0 0',
+              fontSize: 13.5,
+              lineHeight: 1.55,
+              color: balance.stage === 'warning' ? 'var(--alv-sale)' : 'var(--alv-ink-2)',
+              fontWeight: balance.stage === 'warning' ? 600 : 400,
+            }}
+          >
+            {balance.stage === 'warning' && balance.daysLeft !== null
+              ? ru
+                ? `Баллы сгорят через ${balance.daysLeft} дн. — ${fmt(balance.expiresAt, ru)}. Любой заказ продлит срок на ${balance.rate.expiryMonths} мес.`
+                : `Ballar ${balance.daysLeft} kundan keyin kuyadi — ${fmt(balance.expiresAt, ru)}. Har qanday buyurtma muddatni ${balance.rate.expiryMonths} oyga uzaytiradi.`
+              : ru
+                ? `Срок действия — до ${fmt(balance.expiresAt, ru)}. Каждый заказ продлевает его на ${balance.rate.expiryMonths} мес.`
+                : `Amal qilish muddati — ${fmt(balance.expiresAt, ru)} gacha. Har bir buyurtma uni ${balance.rate.expiryMonths} oyga uzaytiradi.`}
           </p>
         ) : null}
       </div>
@@ -118,4 +139,13 @@ export function AccountLoyalty({ locale }: { locale: Locale }) {
       </div>
     </div>
   );
+}
+
+/** Sana — mijoz o'qiydigan ko'rinishda. */
+function fmt(iso: string, ru: boolean): string {
+  return new Date(iso).toLocaleDateString(ru ? 'ru-RU' : 'uz-UZ', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
 }

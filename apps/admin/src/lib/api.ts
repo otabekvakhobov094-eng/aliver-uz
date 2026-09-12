@@ -70,8 +70,33 @@ export interface LoyaltyBalance {
     tiyinPerPoint: string;
     maxRedeemSharePercent: number;
     expiryMonths: number;
+    expiryWarnDays: number;
   };
+  /** `none` — kuyadigan ball yo'q; `warning` — 14 kun ichida kuyadi. */
+  stage: 'none' | 'active' | 'warning' | 'due';
   expiresAt: string | null;
+  daysLeft: number | null;
+}
+
+export interface LoyaltyExpiringRow {
+  customerId: string;
+  phone: string | null;
+  name: string | null;
+  points: number;
+  amount: string;
+  lastActivityAt: string;
+  expiresAt: string | null;
+  daysLeft: number | null;
+}
+
+export interface LoyaltyExpiredRow {
+  id: string;
+  customerId: string;
+  phone: string | null;
+  name: string | null;
+  points: number;
+  amount: string;
+  createdAt: string;
 }
 
 export interface LoyaltyEntry {
@@ -1474,6 +1499,23 @@ export const adminApi = {
     }),
 
   loyalty: (customerId: string) => request<LoyaltyView>(`/admin/loyalty/${customerId}`),
+
+  /** Tez orada kuyadigan ballar. */
+  loyaltyExpiring: (days?: number) =>
+    request<{ days: number; totalPoints: number; items: LoyaltyExpiringRow[] }>(
+      `/admin/loyalty/expiring${days ? `?days=${days}` : ''}`,
+    ),
+
+  /** Kuygan ballar hisoboti. */
+  loyaltyExpired: (params: { from?: string; to?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    const tail = qs.toString();
+    return request<{ totalPoints: number; totalAmount: string; items: LoyaltyExpiredRow[] }>(
+      `/admin/loyalty/expired${tail ? `?${tail}` : ''}`,
+    );
+  },
   adjustLoyalty: (customerId: string, points: number, comment: string) =>
     request<unknown>(`/admin/loyalty/${customerId}/adjust`, {
       method: 'POST',
