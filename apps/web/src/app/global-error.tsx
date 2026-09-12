@@ -15,8 +15,9 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
         style={{
           margin: 0,
           minHeight: '100vh',
-          display: 'grid',
-          placeItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           background: '#fff9fc',
           color: '#1b1220',
@@ -24,7 +25,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
           textAlign: 'center',
         }}
       >
-        <div>
+        <div style={{ width: '100%', maxWidth: 460 }}>
           <h1 style={{ fontSize: 24, margin: '0 0 10px' }}>Sayt vaqtincha ishlamayapti</h1>
           <p style={{ color: '#8b7d94', margin: '0 0 24px' }}>
             Qayta urinib ko‘ring yoki birozdan keyin kiring.

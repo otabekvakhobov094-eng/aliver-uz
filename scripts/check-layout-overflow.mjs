@@ -16,7 +16,31 @@
  * Sukut bo'yicha http://localhost:3000
  */
 
-import { chromium } from 'playwright';
+/**
+ * Playwright loyiha bog'liqligi EMAS (u og'ir va faqat shu tekshiruvga
+ * kerak). Shuning uchun bir nechta joydan qidiriladi: loyiha ichidan,
+ * global o'rnatmadan yoki PLAYWRIGHT_MODULE bilan ko'rsatilgan yo'ldan.
+ */
+async function loadPlaywright() {
+  const tries = [
+    process.env.PLAYWRIGHT_MODULE,
+    'playwright',
+    '/usr/local/lib/node_modules_global/playwright/index.js',
+    '/usr/lib/node_modules/playwright/index.js',
+  ].filter(Boolean);
+  for (const spec of tries) {
+    try {
+      const mod = await import(spec);
+      return mod.chromium ?? mod.default?.chromium;
+    } catch {
+      /* keyingisini sinaymiz */
+    }
+  }
+  console.error('Playwright topilmadi. `npm i -D playwright` yoki PLAYWRIGHT_MODULE=<yo‘l>.');
+  process.exit(2);
+}
+
+const chromium = await loadPlaywright();
 
 const BASE = process.argv[2] ?? process.env.WEB_URL ?? 'http://localhost:3000';
 

@@ -23,15 +23,16 @@ export default function AdminGlobalError({
         style={{
           margin: 0,
           minHeight: '100vh',
-          display: 'grid',
-          placeItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           background: '#fff9fc',
           color: '#1b1220',
           padding: 20,
         }}
       >
-        <div style={{ maxWidth: 460, textAlign: 'center' }}>
+        <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
           <h1 style={{ fontSize: 22, margin: '0 0 10px' }}>{t("Panel ochilmadi")}</h1>
           <p style={{ color: '#463a4f', lineHeight: 1.65, margin: '0 0 18px', fontSize: 15 }}>
             {t("Kutilmagan xatolik. Ma’lumotlaringiz joyida.")}

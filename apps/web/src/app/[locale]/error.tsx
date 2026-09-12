@@ -30,13 +30,14 @@ export default function CatalogError({
     <main
       style={{
         minHeight: '60vh',
-        display: 'grid',
-        placeItems: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: '64px 24px',
         textAlign: 'center',
       }}
     >
-      <div style={{ maxWidth: 440 }}>
+      <div style={{ width: '100%', maxWidth: 440 }}>
         <div style={{ fontSize: 44, marginBottom: 16 }} aria-hidden>
           ✦
         </div>

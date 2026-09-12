@@ -99,8 +99,9 @@ export default function AdminLoginPage() {
   return (
     <main
       style={{
-        display: 'grid',
-        placeItems: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         minHeight: '100vh',
         padding: 20,
         // Konteyner ham kichraya olishi kerak, aks holda `100%`

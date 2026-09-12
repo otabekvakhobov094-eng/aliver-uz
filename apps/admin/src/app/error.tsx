@@ -29,9 +29,19 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 20 }}>
+    /*
+     * MARKAZLASH FLEX BILAN, grid bilan emas. Ilgari bu yerda
+     * `display: grid; place-items: center` turardi va grid ustuni
+     * `auto` bo'lgani uchun kengligini ICHIDAGI MATN belgilardi:
+     * xato xabari uzun bo'lsa kartochka 500 px ga chuzilib, 375 px
+     * li telefonda sahifa yon tomonga siljirdi — «Qayta urinish»
+     * tugmasi ekrandan chiqib ketardi. Ya'ni xato ekrani xatoning
+     * ustiga yana bitta xato qo'shardi.
+     */
+    <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 20 }}>
       <div
         style={{
+          width: '100%',
           maxWidth: 520,
           background: 'var(--alv-surface)',
           borderRadius: 16,
