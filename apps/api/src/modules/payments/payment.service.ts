@@ -10,6 +10,7 @@ import { OrderService } from '../orders/order.service';
 import { FiscalService } from '../fiscal/fiscal.service';
 import { NotificationService } from '../notifications/notification.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
+import { MetaCapiService } from '../marketing/meta-capi.service';
 import { amountVar, type Lang } from '../notifications/templates';
 import {
   type PaymentStatus,
@@ -84,6 +85,7 @@ export class PaymentService {
     private readonly fiscal: FiscalService,
     private readonly notifications: NotificationService,
     private readonly loyalty: LoyaltyService,
+    private readonly meta: MetaCapiService,
   ) {}
 
   /* ======================================================================
@@ -334,8 +336,72 @@ export class PaymentService {
       params.providerTxnId,
     );
 
+    /*
+     * Facebook «Purchase» hodisasi — AYNAN shu yerda.
+     *
+     * Sabab `markPaid` ning idempotentligi: takroriy webhook yuqorida
+     * `changed: false` bilan qaytadi va bu qatorga yetib kelmaydi.
+     * Ya'ni bir buyurtma uchun hodisa BIR MARTA ketadi. Agar uni
+     * buyurtma yaratilganda yoki «rahmat» sahifasida yuborsak,
+     * to'lanmagan buyurtmalar ham xarid bo'lib hisoblanardi va
+     * reklama byudjeti xato raqamga qarab taqsimlanardi.
+     *
+     * Xato bu yerda ham sotuvni to'xtatmaydi: `send` fonda ishlaydi.
+     */
+    void this.reportPurchase(payment.orderId);
+
     this.logger.log(`To‘lov qabul qilindi: ${payment.id} (${payment.provider})`);
     return { changed: true };
+  }
+
+  /**
+   * Xarid hodisasini Meta ga yuboradi.
+   *
+   * `eventId` brauzerdagi piksel bilan BIR XIL (`order-<id>`) —
+   * Facebook ikkalasini shu bo'yicha birlashtiradi va bitta xaridni
+   * ikki marta hisoblamaydi.
+   */
+  private async reportPurchase(orderId: string): Promise<void> {
+    if (!this.meta.configured) return;
+    try {
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        select: {
+          id: true,
+          grandTotal: true,
+          contactPhone: true,
+          firstName: true,
+          lastName: true,
+          customerId: true,
+          // E-pochta buyurtmada emas, mijoz kartasida.
+          customer: { select: { email: true } },
+          items: { select: { sku: true, quantity: true, unitPrice: true } },
+        },
+      });
+      if (!order) return;
+
+      this.meta.send({
+        eventName: 'Purchase',
+        eventId: `order-${order.id}`,
+        identity: {
+          phone: order.contactPhone,
+          email: order.customer?.email ?? null,
+          firstName: order.firstName,
+          lastName: order.lastName,
+          externalId: order.customerId,
+        },
+        // Pul bazada TIYINDA. Facebook'ga so'mda yuboriladi, aks holda
+        // har bir xarid 100 barobar katta ko'rinardi.
+        value: Number((order.grandTotal as bigint) / 100n),
+        items: order.items.map((i) => ({
+          id: i.sku,
+          quantity: i.quantity,
+          price: Number((i.unitPrice as bigint) / 100n),
+        })),
+      });
+    } catch (e) {
+      this.logger.warn(`Purchase hodisasi yuborilmadi (${orderId}): ${(e as Error).message}`);
+    }
   }
 
   /** To'lov bekor qilindi yoki muvaffaqiyatsiz tugadi. */

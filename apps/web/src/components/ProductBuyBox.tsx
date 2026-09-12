@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Badge, Button, Price } from '@aliver/ui';
 import type { ProductVariant } from '@/lib/catalog-api';
 import type { Locale } from '@/i18n/messages';
+import { toSum, trackAddToCart } from '@/lib/pixel';
 import { useCart } from './CartProvider';
 
 /**
@@ -39,6 +40,13 @@ export function ProductBuyBox({
     try {
       await add(variant.id, qty);
       setAdded(true);
+      /*
+       * «Savatga qo'shildi» — qo'shish MUVAFFAQIYATLI tugagandan keyin.
+       *
+       * Tugma bosilishi bilan yuborilsa, qoldiq yetmay xato bergan
+       * urinishlar ham hodisa bo'lib hisoblanardi.
+       */
+      trackAddToCart({ id: variant.sku, quantity: qty, price: toSum(variant.price) });
     } catch {
       // Xato matni kontekstda saqlanadi va pastda ko'rsatiladi.
     }

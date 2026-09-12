@@ -29,6 +29,7 @@ import { ReturnsModule } from './modules/returns/returns.module';
 import { AccountModule } from './modules/account/account.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { ContentModule } from './modules/content/content.module';
+import { MarketingModule } from './modules/marketing/marketing.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { B2bModule } from './modules/b2b/b2b.module';
 import { ReportsModule } from './modules/reports/reports.module';
@@ -74,6 +75,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     AccountModule,
     CustomersModule,
     ContentModule,
+    MarketingModule,
     MenuModule,
     B2bModule,
     ReportsModule,

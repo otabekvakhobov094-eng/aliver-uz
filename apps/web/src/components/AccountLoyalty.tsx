@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { formatPrice } from '@aliver/ui';
-import { shopApi, type LoyaltyBalance, type LoyaltyEntry } from '@/lib/shop-api';
+import Link from 'next/link';
+import { ShopError, shopApi, type LoyaltyBalance, type LoyaltyEntry } from '@/lib/shop-api';
 import type { Locale } from '@/i18n/messages';
 
 /**
@@ -26,25 +27,65 @@ export function AccountLoyalty({ locale }: { locale: Locale }) {
   const [balance, setBalance] = useState<LoyaltyBalance | null>(null);
   const [history, setHistory] = useState<LoyaltyEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
+  /*
+   * Xatolik TURI saqlanadi, shunchaki «failed» bayrog'i emas.
+   *
+   * Ilgari har qanday xato «Yuklab bo'lmadi» degan bir qatorga
+   * aylanardi. Lekin eng ko'p uchraydigan sabab — seans tugagani, ya'ni
+   * 401. Bunda mijozga «yuklab bo'lmadi» deyish yolg'on: hech narsa
+   * buzilmagan, shunchaki qayta kirish kerak. U esa sahifani qayta
+   * yuklab, yana o'sha yozuvni ko'rardi.
+   */
+  const [problem, setProblem] = useState<'none' | 'auth' | 'network'>('none');
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const [b, h] = await Promise.all([shopApi.loyaltyBalance(), shopApi.loyaltyHistory()]);
-        setBalance(b);
-        setHistory(h);
-      } catch {
-        setFailed(true);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setProblem('none');
+    try {
+      const [b, h] = await Promise.all([shopApi.loyaltyBalance(), shopApi.loyaltyHistory()]);
+      setBalance(b);
+      setHistory(h);
+    } catch (e) {
+      setProblem(e instanceof ShopError && (e.status === 401 || e.status === 403) ? 'auth' : 'network');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   if (loading) return <p style={{ color: 'var(--alv-muted)' }}>{ru ? 'Загрузка…' : 'Yuklanmoqda…'}</p>;
-  if (failed || !balance) {
-    return <p style={{ color: 'var(--alv-ink-2)' }}>{ru ? 'Не удалось загрузить.' : 'Yuklab bo‘lmadi.'}</p>;
+
+  if (problem === 'auth') {
+    return (
+      <div className="alv-card" style={{ padding: 22, display: 'grid', gap: 12, justifyItems: 'start' }}>
+        <p style={{ margin: 0, color: 'var(--alv-ink-2)', lineHeight: 1.6 }}>
+          {ru
+            ? 'Сессия истекла. Войдите снова, чтобы увидеть баллы.'
+            : 'Seans tugadi. Ballaringizni ko‘rish uchun qaytadan kiring.'}
+        </p>
+        <Link href={`/${locale}/kirish`} className="alv-btn alv-btn--primary alv-btn--md">
+          {ru ? 'Войти' : 'Kirish'}
+        </Link>
+      </div>
+    );
+  }
+
+  if (problem === 'network' || !balance) {
+    return (
+      <div className="alv-card" style={{ padding: 22, display: 'grid', gap: 12, justifyItems: 'start' }}>
+        <p style={{ margin: 0, color: 'var(--alv-ink-2)', lineHeight: 1.6 }}>
+          {ru
+            ? 'Не удалось связаться с сервером. Проверьте подключение и попробуйте ещё раз.'
+            : 'Server bilan bog‘lanib bo‘lmadi. Ulanishni tekshirib, qayta urinib ko‘ring.'}
+        </p>
+        <button type="button" className="alv-btn alv-btn--outline alv-btn--md" onClick={() => void load()}>
+          {ru ? 'Повторить' : 'Qayta urinish'}
+        </button>
+      </div>
+    );
   }
 
   return (

@@ -57,6 +57,10 @@ jobs:
       # Buzilgan havola 404 bermaydi — bo'sh sahifa beradi, ya'ni
       # o'zini ko'rsatmaydi.
       - run: npm run check:nav
+      # Har bir sahifada sarlavha va footer bormi. Ular tushib
+      # qolsa sahifa ochiladi va xato bermaydi — shunchaki sayt
+      # chrome'isiz ko'rinadi.
+      - run: npm run check:chrome
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test

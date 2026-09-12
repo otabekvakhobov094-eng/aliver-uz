@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Rating } from '@aliver/ui';
 import { catalogApi, pick } from '@/lib/catalog-api';
 import { ProductBuyBox } from '@/components/ProductBuyBox';
+import { ViewContentPixel } from '@/components/ViewContentPixel';
 import { ProductReviews } from '@/components/ProductReviews';
 import { KeyIngredients } from '@/components/KeyIngredients';
 import { ProductTabs } from '@/components/ProductTabs';
@@ -191,6 +192,10 @@ export default async function ProductPage({
             </div>
 
             <ProductBuyBox variants={product.variants} locale={locale} />
+            <ViewContentPixel
+              sku={product.variants[0]?.sku ?? product.slug}
+              price={product.variants[0]?.price ?? '0'}
+            />
 
             <div className="alv-card" style={{ padding: '4px 20px' }}>
               {[

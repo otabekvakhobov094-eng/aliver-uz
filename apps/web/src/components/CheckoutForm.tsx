@@ -14,6 +14,7 @@ import {
   type DeliveryRegion,
 } from '@/lib/shop-api';
 import type { Locale } from '@/i18n/messages';
+import { toSum, trackAddPaymentInfo, trackInitiateCheckout, trackLead } from '@/lib/pixel';
 
 const money = (v: string, locale: Locale) => formatPrice(v, locale === 'ru' ? 'RU' : 'UZ');
 
@@ -153,11 +154,57 @@ export function CheckoutForm({ locale }: { locale: Locale }) {
     accept &&
     (!codNeedsOtp || otpCode.length >= 4);
 
+  /*
+   * «Rasmiylashtirish boshlandi» — savat ma'lumoti KELGANDAN keyin.
+   *
+   * Sahifa ochilishi bilan yuborib bo'lmaydi: o'shanda summa hali
+   * noma'lum, va Facebook qiymati nol konversiya olardi — bu
+   * optimizatsiyani buzadi.
+   *
+   * Bir marta: savatga qo'shimcha mahsulot solinsa ham hodisa qayta
+   * ketmaydi, aks holda bitta rasmiylashtirish bir necha marta
+   * hisoblanardi.
+   */
+  const [checkoutTracked, setCheckoutTracked] = useState(false);
+  useEffect(() => {
+    if (checkoutTracked || !cart || cart.items.length === 0) return;
+    setCheckoutTracked(true);
+    trackInitiateCheckout(
+      toSum(cart.subtotal),
+      cart.items.map((i) => ({ id: i.sku, quantity: i.quantity, price: toSum(i.unitPrice) })),
+    );
+  }, [cart, checkoutTracked]);
+
+  /*
+   * To'lov usuli tanlandi.
+   *
+   * Voronkadagi oxirgi bosqich — bundan keyin faqat tasdiqlash qoladi,
+   * shuning uchun Facebook uni alohida hodisa sifatida kutadi.
+   */
+  const [paymentTracked, setPaymentTracked] = useState(false);
+  useEffect(() => {
+    if (paymentTracked || !cart || !payment) return;
+    setPaymentTracked(true);
+    trackAddPaymentInfo(toSum(cart.subtotal));
+  }, [payment, cart, paymentTracked]);
+
   const sendOtp = async () => {
     setError(null);
     try {
       const res = await shopApi.requestOrderOtp(phone);
       setOtpSent(true);
+      /*
+       * «Lead» — AYNAN shu yerda.
+       *
+       * Mijoz ismini va telefonini kiritdi, va telefon haqiqiy ekani
+       * tasdiqlandi — kod yetib bordi. Marketing ma'nosida lid shu:
+       * bog'lanish mumkin bo'lgan odam.
+       *
+       * Hodisa tugmaning yonida emas, NATIJADA yuboriladi. Bizda
+       * alohida «rahmat» sahifasi yo'q, chunki checkout bitta sahifada
+       * ketadi — shuning uchun natija paytiga bog'landi.
+       */
+      trackLead(phone.replace(/\D/g, ''), cart ? toSum(cart.subtotal) : undefined);
       setResendIn(res.resendAfterSeconds ?? 60);
     } catch (e) {
       setError(e instanceof ShopError ? e.message : 'Kod yuborilmadi');
