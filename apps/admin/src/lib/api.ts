@@ -743,6 +743,21 @@ export interface ReconcileReport {
   mode: string;
   provider: string;
   source: string;
+  /**
+   * Manba bizdan MUSTAQILMI.
+   *
+   * `false` bo'lsa hisobot o'z yozuvimizni o'z yozuvimiz bilan
+   * taqqoslagan — ya'ni «farq yo'q» degan xulosa hech narsani
+   * isbotlamaydi.
+   */
+  independent: boolean;
+  /** Fayl yuklangan bo'lsa — o'qish natijasi. */
+  parse?: {
+    rows: number;
+    skipped: number;
+    problems: Array<{ line: number; reason: string }>;
+    columns: Record<string, string | null>;
+  };
   checkedLocal: number;
   checkedProvider: number;
   matched: number;
@@ -1234,6 +1249,37 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ amount: Number(amount), reason }),
     }),
+
+  /**
+   * Vypiska faylini yuklab moslashtirish.
+   *
+   * `Content-Type` ni O'ZIMIZ QO'YMAYMIZ: brauzer `FormData` uchun
+   * chegara (boundary) bilan birga o'zi qo'yadi, qo'lda qo'yilgan
+   * sarlavha esa chegarani yo'qotib, serverda «fayl yo'q» degan
+   * xatoga olib keladi.
+   */
+  reconcileImport: async (
+    file: File,
+    dateFrom: string,
+    dateTo: string,
+    provider?: string,
+  ): Promise<ReconcileReport> => {
+    const qs = new URLSearchParams({ dateFrom, dateTo });
+    if (provider) qs.set('provider', provider);
+    const body = new FormData();
+    body.append('file', file);
+
+    const res = await fetch(`${apiBase()}/admin/payments/reconcile/import?${qs.toString()}`, {
+      method: 'POST',
+      credentials: 'include',
+      body,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(text || `Xatolik: ${res.status}`);
+    }
+    return (await res.json()) as ReconcileReport;
+  },
 
   reconcile: (dateFrom: string, dateTo: string, provider?: string) => {
     const qs = new URLSearchParams({ dateFrom, dateTo, ...(provider ? { provider } : {}) });

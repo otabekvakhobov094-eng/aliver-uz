@@ -7,6 +7,7 @@ import {
   type ProviderRecord,
   type ReconcileResult,
 } from './reconcile.util';
+import { parseStatement, type StatementParseResult } from './statement-import';
 
 /**
  * To'lovlarni moslashtirish.
@@ -35,8 +36,25 @@ export class ReconcileService {
     from: Date;
     to: Date;
     provider?: string;
+    /**
+     * Provayder kabinetidan yuklab olingan vypiska fayli.
+     *
+     * Berilgan bo'lsa — AYNAN shu manba ishlatiladi. Bu yagona
+     * haqiqiy solishtirish: qolgan hollarda biz o'z yozuvimizni o'z
+     * yozuvimiz bilan taqqoslaymiz va webhook umuman kelmagan holat
+     * ko'rinmay qoladi.
+     */
+    statementCsv?: string;
   }): Promise<
-    ReconcileResult & { mode: string; provider: string; from: Date; to: Date; source: string }
+    ReconcileResult & {
+      mode: string;
+      provider: string;
+      from: Date;
+      to: Date;
+      source: string;
+      independent: boolean;
+      parse?: Omit<StatementParseResult, 'records'>;
+    }
   > {
     const provider = params.provider ?? 'PAYME';
 
@@ -61,7 +79,12 @@ export class ReconcileService {
       paidAt: p.paidAt,
     }));
 
-    const { records, source } = await this.statement(provider, params.from, params.to);
+    const { records, source, independent, parse } = await this.statement(
+      provider,
+      params.from,
+      params.to,
+      params.statementCsv,
+    );
     const result = reconcile(local, records);
 
     if (result.mismatches.length > 0) {
@@ -71,7 +94,18 @@ export class ReconcileService {
       );
     }
 
-    return { ...result, mode: this.mode, provider, from: params.from, to: params.to, source };
+    return {
+      ...result,
+      mode: this.mode,
+      provider,
+      from: params.from,
+      to: params.to,
+      source,
+      // Hisobotni o'qiydigan odam BILISHI kerak: bu haqiqiy
+      // solishtirishmi yoki o'z yozuvimizning aksimi.
+      independent,
+      parse,
+    };
   }
 
   /**
@@ -86,10 +120,27 @@ export class ReconcileService {
     provider: string,
     from: Date,
     to: Date,
-  ): Promise<{ records: ProviderRecord[]; source: string }> {
+    statementCsv?: string,
+  ): Promise<{
+    records: ProviderRecord[];
+    source: string;
+    independent: boolean;
+    parse?: Omit<StatementParseResult, 'records'>;
+  }> {
+    // Yuklangan fayl eng ustun manba: u bizdan mustaqil.
+    if (statementCsv) {
+      const { records, ...parse } = parseStatement(statementCsv);
+      return {
+        records,
+        source: `${provider} kabinetidan yuklangan vypiska`,
+        independent: true,
+        parse,
+      };
+    }
+
     if (this.mode !== 'mock') {
       const live = await this.fetchStatement(provider, from, to);
-      if (live) return { records: live, source: `${provider} API` };
+      if (live) return { records: live, source: `${provider} API`, independent: true };
     }
 
     const events = await this.prisma.webhookEvent.findMany({
@@ -129,7 +180,12 @@ export class ReconcileService {
 
     return {
       records: [...byTxn.values()],
-      source: 'webhook loglari (maket — mustaqil manba emas)',
+      source: 'webhook loglari — MUSTAQIL MANBA EMAS',
+      // Bu eng muhim maydon. Webhook umuman kelmagan bo'lsa, ikkala
+      // tomonda ham yozuv yo'q va hisobot «hammasi joyida» deydi —
+      // mijoz pul to'lagan holda. Shuning uchun bu holat ochiq
+      // belgilanadi va adminda ogohlantirish sifatida ko'rsatiladi.
+      independent: false,
     };
   }
 

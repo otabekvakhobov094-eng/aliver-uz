@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Audit, AuthPrincipal, CurrentUser, RequirePermissions } from '../../common/decorators';
@@ -114,6 +127,43 @@ export class AdminPaymentsController {
       from: new Date(query.dateFrom),
       to: new Date(`${query.dateTo}T23:59:59`),
       provider: query.provider,
+    });
+  }
+
+  /**
+   * Provayder kabinetidan yuklangan vypiska bilan moslashtirish.
+   *
+   * Bu YAGONA haqiqiy solishtirish. Qolgan hollarda vypiska bizning
+   * webhook loglarimizdan quriladi, ya'ni biz o'z yozuvimizni o'z
+   * yozuvimiz bilan taqqoslaymiz — va eng xavfli holat ko'rinmaydi:
+   * webhook umuman kelmagan bo'lsa, ikkala tomonda ham yozuv yo'q va
+   * hisobot «hammasi joyida» deydi.
+   *
+   * Fayl HECH QAYERGA saqlanmaydi: u xotirada o'qiladi va hisobot
+   * qaytariladi. Vypiskada to'lov ma'lumotlari bor va uni serverda
+   * qoldirishning ehtiyoji yo'q.
+   */
+  @Post('reconcile/import')
+  @RequirePermissions('payments.view')
+  @Audit('payments', 'reconcile_import')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @ApiOperation({
+    summary: 'Vypiska faylini yuklab moslashtirish',
+    description:
+      'CSV fayl provayder kabinetidan yuklab olinadi. Fayl saqlanmaydi — faqat hisobot qaytariladi.',
+  })
+  reconcileImport(
+    @UploadedFile() file: { buffer?: Buffer; size?: number } | undefined,
+    @Query() query: ReconcileQueryDto,
+  ) {
+    if (!file?.buffer || file.buffer.length === 0) {
+      throw new BadRequestException('Fayl yuklanmadi');
+    }
+    return this.reconcile.run({
+      from: new Date(query.dateFrom),
+      to: new Date(`${query.dateTo}T23:59:59`),
+      provider: query.provider,
+      statementCsv: file.buffer.toString('utf8'),
     });
   }
 

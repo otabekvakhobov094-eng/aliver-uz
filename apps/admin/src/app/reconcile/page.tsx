@@ -46,6 +46,19 @@ export default function ReconcilePage() {
     }
   };
 
+  /** Provayder kabinetidan yuklangan vypiska bilan solishtirish. */
+  const runImport = async (file: File) => {
+    setBusy(true);
+    setError(null);
+    try {
+      setReport(await adminApi.reconcileImport(file, dateFrom, dateTo, provider));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Faylni o‘qib bo‘lmadi');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const exportCsv = () => {
     if (!report) return;
     const rows = [
@@ -113,6 +126,26 @@ export default function ReconcilePage() {
         <Button variant="primary" disabled={busy} onClick={() => void run()}>
           {busy ? 'Solishtirilmoqda…' : 'Solishtirish'}
         </Button>
+        {/*
+          Vypiska fayli — yagona mustaqil manba. Tugma har doim
+          ko'rinadi: aynan shu yo'l kalitlarsiz ham ishlaydi.
+        */}
+        <label className="alv-btn alv-btn--outline alv-btn--md" style={{ cursor: 'pointer' }}>
+          Vypiska fayli (CSV)
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              // Maydon tozalanadi: bir xil faylni qayta tanlash
+              // mumkin bo'lishi kerak, aks holda `change` hodisasi
+              // ikkinchi marta umuman kelmaydi.
+              e.target.value = '';
+              if (file) void runImport(file);
+            }}
+          />
+        </label>
         {report && report.mismatches.length > 0 ? (
           <Button variant="ghost" onClick={exportCsv}>
             CSV yuklab olish
@@ -128,7 +161,13 @@ export default function ReconcilePage() {
 
       {report ? (
         <>
-          {report.mode === 'mock' ? (
+          {/*
+            Ogohlantirish `mode` ga emas, MANBAGA bog'langan.
+            Ilgari u faqat maket rejimida chiqardi — jangovar rejimda
+            esa vypiska baribir webhook loglaridan qurilardi va
+            hisobot mustaqildek ko'rinardi.
+          */}
+          {!report.independent ? (
             <div
               role="status"
               style={{
@@ -142,8 +181,35 @@ export default function ReconcilePage() {
                 lineHeight: 1.55,
               }}
             >
-              Manba: {report.source}. Bu MUSTAQIL manba emas — haqiqiy moslashtirish provayder
-              vypiskasi ulangandan keyin ishlaydi. Ekran va hisobot mantiqi esa hozirdan tayyor.
+              Manba: {report.source}. Bu bizning o‘z yozuvimiz, ya’ni «farq yo‘q» degan xulosa
+              hech narsani isbotlamaydi: webhook umuman kelmagan bo‘lsa, ikkala tomonda ham
+              yozuv yo‘q. Haqiqiy tekshiruv uchun provayder kabinetidan vypiskani yuklab,
+              yuqoridagi «Vypiska fayli» tugmasidan foydalaning.
+            </div>
+          ) : null}
+
+          {report.parse ? (
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: 14,
+                background: 'var(--alv-surface-2)',
+                fontSize: 13,
+                marginBottom: 16,
+                lineHeight: 1.6,
+              }}
+            >
+              Faylda {report.parse.rows} qator o‘qildi
+              {report.parse.skipped > 0 ? `, ${report.parse.skipped} tasi o‘tkazib yuborildi` : ''}.
+              {report.parse.problems.length > 0 ? (
+                <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                  {report.parse.problems.slice(0, 5).map((p) => (
+                    <li key={p.line}>
+                      {p.line}-qator: {p.reason}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ) : null}
 
