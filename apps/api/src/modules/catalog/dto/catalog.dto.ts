@@ -187,6 +187,28 @@ export class UpsertCategoryDto {
   isActive?: boolean;
 }
 
+/* ============================== Brend ============================== */
+
+export class UpsertBrandDto {
+  @ApiPropertyOptional({ description: 'Bo‘sh bo‘lsa nomdan avtomatik yasaladi' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9-]+$/, { message: 'Slug faqat lotin harflari, raqam va tiredan iborat' })
+  @Length(1, 80)
+  slug?: string;
+
+  @ApiProperty({ example: 'ALIVER' })
+  @IsString()
+  @Length(1, 120)
+  name!: string;
+
+  @ApiPropertyOptional({ example: 'https://cdn.aliver.uz/brands/aliver.svg' })
+  @IsOptional()
+  @IsString()
+  @Length(0, 500)
+  logoUrl?: string;
+}
+
 /* ============================ Kolleksiya ============================ */
 
 export class UpsertCollectionDto {

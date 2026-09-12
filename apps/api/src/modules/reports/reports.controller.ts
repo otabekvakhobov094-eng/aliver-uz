@@ -1,7 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Header, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { RequirePermissions } from '../../common/decorators';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
+import { UTF8_BOM, tiyinToSum, toCsv } from './report-csv';
 
 /**
  * Davr kalitini aniq sanalarga aylantiradi. Toshkent vaqti (UTC+5)
@@ -43,14 +45,32 @@ function resolvePeriod(period: string, from?: string, to?: string): { gte: Date;
   }
 }
 
+function fmtDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
 @Controller('admin/reports')
 export class ReportsController {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Umumiy hisobot.
+   *
+   * `period` shu yerda ham ishlatiladi: ilgari `resolvePeriod` faqat
+   * dashboard uchun chaqirilardi va overview `from`/`to` ni xom holda
+   * olardi. Natijada bitta hisobotning ikki qismi turli qoida bo'yicha
+   * sana kesardi — «bugun» dashboardda Toshkent kuni, overview da esa
+   * UTC kuni edi.
+   */
   @Get('overview')
   @RequirePermissions('reports.view')
-  async overview(@Query('from') from?: string, @Query('to') to?: string) {
-    const placedAt = { gte: from ? new Date(from) : new Date(Date.now() - 30 * 86400000), lte: to ? new Date(to) : new Date() };
+  async overview(
+    @Query('period') period = '30d',
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const { gte, lte } = resolvePeriod(period, from, to);
+    const placedAt = { gte, lte };
     const saleWhere: Prisma.OrderWhereInput = { placedAt, deletedAt: null, paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED] } };
     const [orders, customers, products, leads, channels] = await Promise.all([
       this.prisma.order.aggregate({ where: saleWhere, _count: true, _sum: { grandTotal: true, discountTotal: true, shippingTotal: true } }),
@@ -59,7 +79,7 @@ export class ReportsController {
       this.prisma.b2BLead.groupBy({ by: ['status'], where: { createdAt: placedAt }, _count: true }),
       this.prisma.order.groupBy({ by: ['utmSource'], where: saleWhere, _count: true, _sum: { grandTotal: true }, orderBy: { _sum: { grandTotal: 'desc' } }, take: 10 }),
     ]);
-    return { period: { from: placedAt.gte, to: placedAt.lte }, orders: { count: orders._count, revenue: orders._sum?.grandTotal ?? 0n, discount: orders._sum?.discountTotal ?? 0n, shipping: orders._sum?.shippingTotal ?? 0n }, newCustomers: customers, topProducts: products, b2b: leads, attribution: channels };
+    return { period: { from: placedAt.gte, to: placedAt.lte, key: period }, orders: { count: orders._count, revenue: orders._sum?.grandTotal ?? 0n, discount: orders._sum?.discountTotal ?? 0n, shipping: orders._sum?.shippingTotal ?? 0n }, newCustomers: customers, topProducts: products, b2b: leads, attribution: channels };
   }
 
   /**
@@ -150,5 +170,87 @@ export class ReportsController {
         orders: Number(row.orders),
       })),
     };
+  }
+
+  /**
+   * Hisobotni CSV ga chiqarish.
+   *
+   * Excel CSV ni tizim kodlashida o'qiydi va O'zbek lotin harflari
+   * (o', g', ') UTF-8 belgisisiz buziladi — shuning uchun boshiga BOM
+   * qo'yiladi. Ajratgich ham nuqta-vergul: ruscha va o'zbekcha Windows
+   * lokalida Excel vergulni ustun ajratgichi deb qabul qilmaydi.
+   *
+   * Pul SO'MDA yoziladi, tiyinda emas: bu fayl buxgalteriyaga boradi.
+   */
+  @Get('export')
+  @RequirePermissions('reports.view')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  async exportCsv(
+    @Res() res: Response,
+    @Query('period') period = '30d',
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const { gte, lte } = resolvePeriod(period, from, to);
+    const placedAt = { gte, lte };
+    const saleWhere: Prisma.OrderWhereInput = {
+      placedAt,
+      deletedAt: null,
+      paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED] },
+    };
+
+    const [orders, products, channels] = await Promise.all([
+      this.prisma.order.aggregate({
+        where: saleWhere,
+        _count: true,
+        _sum: { grandTotal: true, discountTotal: true, shippingTotal: true },
+      }),
+      this.prisma.orderItem.groupBy({
+        by: ['productName'],
+        where: { order: saleWhere },
+        _sum: { quantity: true, lineTotal: true },
+        orderBy: { _sum: { lineTotal: 'desc' } },
+        take: 100,
+      }),
+      this.prisma.order.groupBy({
+        by: ['utmSource'],
+        where: saleWhere,
+        _count: true,
+        _sum: { grandTotal: true },
+        orderBy: { _sum: { grandTotal: 'desc' } },
+        take: 50,
+      }),
+    ]);
+
+    const rows: string[][] = [
+      ['ALIVER.UZ hisoboti'],
+      ['Davr', fmtDate(gte), fmtDate(lte)],
+      [],
+      ['Ko‘rsatkich', 'Qiymat'],
+      ['To‘langan buyurtmalar', String(orders._count)],
+      ['Tushum, so‘m', tiyinToSum(orders._sum?.grandTotal)],
+      ['Chegirmalar, so‘m', tiyinToSum(orders._sum?.discountTotal)],
+      ['Yetkazish, so‘m', tiyinToSum(orders._sum?.shippingTotal)],
+      [],
+      ['Mahsulot', 'Dona', 'Summa, so‘m'],
+      ...products.map((p) => [
+        p.productName,
+        String(p._sum.quantity ?? 0),
+        tiyinToSum(p._sum.lineTotal),
+      ]),
+      [],
+      ['Manba', 'Buyurtma', 'Summa, so‘m'],
+      ...channels.map((c) => [
+        c.utmSource ?? 'to‘g‘ridan-to‘g‘ri',
+        String(c._count),
+        tiyinToSum(c._sum.grandTotal),
+      ]),
+    ];
+
+    const csv = toCsv(rows);
+    const name = `aliver-hisobot-${fmtDate(gte)}_${fmtDate(lte)}.csv`;
+    res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+    // BOM: bunsiz Excel o'zbek lotin harflarini buzadi.
+    res.send(UTF8_BOM + csv);
   }
 }

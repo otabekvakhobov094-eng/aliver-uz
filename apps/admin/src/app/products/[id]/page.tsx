@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminShell } from '@/components/AdminShell';
+import { ProductImages } from '@/components/ProductImages';
 import {
   adminApi,
   type AdminBrand,
@@ -169,6 +170,9 @@ export default function ProductEditPage() {
 
   const [form, setForm] = useState<Form>(EMPTY_FORM);
   const [brands, setBrands] = useState<AdminBrand[]>([]);
+  // Rasmlar formaga kirmaydi: ular alohida endpointlar orqali darhol
+  // saqlanadi, «Saqlash» tugmasini kutmaydi. Shuning uchun alohida state.
+  const [images, setImages] = useState<AdminProductDetail['images']>([]);
   const [cats, setCats] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -194,6 +198,7 @@ export default function ProductEditPage() {
       setLoading(true);
       try {
         const p: AdminProductDetail = await adminApi.productDetail(id);
+        setImages(p.images ?? []);
         setForm({
           slug: p.slug ?? '',
           brandId: p.brandId ?? '',
@@ -257,6 +262,13 @@ export default function ProductEditPage() {
   }, [id, isNew]);
 
   const catOptions = useMemo(() => flatten(cats), [cats]);
+
+  /** Rasm amalidan keyin faqat rasmlar qayta o'qiladi — forma tegilmaydi. */
+  const reloadImages = useCallback(async () => {
+    if (isNew) return;
+    const p = await adminApi.productDetail(id);
+    setImages(p.images ?? []);
+  }, [id, isNew]);
 
   /**
    * Majburiy maydonlar shu yerda ham tekshiriladi. Server baribir
@@ -517,6 +529,14 @@ export default function ProductEditPage() {
               <textarea style={AREA} rows={3} value={form.howToUseRu} onChange={(e) => set('howToUseRu', e.target.value)} />
             </Field>
           </Row>
+        </Block>
+
+        <Block title="Rasmlar" hint="Birinchi rasm kartochkada va qidiruvda ko‘rinadi.">
+          <ProductImages
+            productId={isNew ? null : id}
+            images={images}
+            onChange={reloadImages}
+          />
         </Block>
 
         <Block

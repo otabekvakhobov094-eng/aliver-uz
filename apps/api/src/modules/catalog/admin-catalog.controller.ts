@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  NotFoundException,
   ParseUUIDPipe,
   Post,
   Put,
@@ -15,10 +17,12 @@ import type { Request } from 'express';
 import { Audit, RequirePermissions } from '../../common/decorators';
 import {
   AdminProductQueryDto,
+  UpsertBrandDto,
   UpsertCategoryDto,
   UpsertCollectionDto,
   UpsertProductDto,
 } from './dto/catalog.dto';
+import { slugify, uniqueSlug } from './slug.util';
 import { CategoryService } from './category.service';
 import { CollectionService } from './collection.service';
 import { ProductService } from './product.service';
@@ -49,11 +53,73 @@ export class AdminCatalogController {
   @Get('brands')
   @ApiOperation({ summary: 'Brendlar ro‘yxati' })
   @RequirePermissions('products.view')
-  brands() {
-    return this.prisma.brand.findMany({
+  async brands() {
+    const rows = await this.prisma.brand.findMany({
       orderBy: { name: 'asc' },
-      select: { id: true, slug: true, name: true, logoUrl: true },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        logoUrl: true,
+        // Mahsulot soni o'chirishdan oldin kerak: brend qaysidir
+        // mahsulotda ishlatilayotgan bo'lsa, uni o'chirish katalogni
+        // buzadi va buni foydalanuvchi OLDINDAN ko'rishi kerak.
+        _count: { select: { products: true } },
+      },
     });
+    return rows.map(({ _count, ...b }) => ({ ...b, productCount: _count.products }));
+  }
+
+  @Post('brands')
+  @RequirePermissions('products.create')
+  @Audit('brands', 'create')
+  async createBrand(@Body() dto: UpsertBrandDto) {
+    const slug = await this.brandSlug(dto);
+    return this.prisma.brand.create({
+      data: { slug, name: dto.name.trim(), logoUrl: dto.logoUrl?.trim() || null },
+    });
+  }
+
+  @Put('brands/:id')
+  @RequirePermissions('products.update')
+  @Audit('brands', 'update')
+  async updateBrand(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpsertBrandDto) {
+    const existing = await this.prisma.brand.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Brend topilmadi');
+    const slug = await this.brandSlug(dto, id);
+    return this.prisma.brand.update({
+      where: { id },
+      data: { slug, name: dto.name.trim(), logoUrl: dto.logoUrl?.trim() || null },
+    });
+  }
+
+  /**
+   * Brendni o'chirish. Mahsulotga biriktirilgan brend o'chirilmaydi —
+   * `brandId` nullable bo'lgani uchun Prisma buni jimgina uzib qo'yishi
+   * mumkin edi va katalogdagi 200 ta mahsulot brendsiz qolardi.
+   */
+  @Delete('brands/:id')
+  @RequirePermissions('products.delete')
+  @Audit('brands', 'delete')
+  async deleteBrand(@Param('id', ParseUUIDPipe) id: string) {
+    const used = await this.prisma.product.count({ where: { brandId: id, deletedAt: null } });
+    if (used > 0) {
+      throw new BadRequestException(
+        `Bu brend ${used} ta mahsulotda ishlatilyapti. Avval ularning brendini almashtiring.`,
+      );
+    }
+    await this.prisma.brand.delete({ where: { id } });
+    return { ok: true as const };
+  }
+
+  /** Slug band bo'lsa oxiriga raqam qo'shiladi; o'zining slugi band hisoblanmaydi. */
+  private async brandSlug(dto: UpsertBrandDto, selfId?: string) {
+    const desired = dto.slug?.trim() || slugify(dto.name);
+    const others = await this.prisma.brand.findMany({
+      where: selfId ? { NOT: { id: selfId } } : undefined,
+      select: { slug: true },
+    });
+    return uniqueSlug(desired, new Set(others.map((b) => b.slug)));
   }
 
   /* ---------------------------- Kategoriyalar ---------------------------- */

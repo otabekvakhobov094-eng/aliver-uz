@@ -24,6 +24,7 @@ export const NAV: NavItem[] = [
   { href: '/orders', label: 'Buyurtmalar', permission: 'orders.view', stage: 3, ready: true },
   { href: '/products', label: 'Mahsulotlar', permission: 'products.view', stage: 2, ready: true },
   { href: '/import', label: 'Import', permission: 'products.create', stage: 2, ready: true },
+  { href: '/brands', label: 'Brendlar', permission: 'products.view', stage: 2, ready: true },
   { href: '/categories', label: 'Kategoriyalar', permission: 'categories.view', stage: 2, ready: true },
   { href: '/collections', label: 'Kolleksiyalar', permission: 'collections.view', stage: 2, ready: true },
   { href: '/inventory', label: 'Ombor', permission: 'inventory.view', stage: 3, ready: true },

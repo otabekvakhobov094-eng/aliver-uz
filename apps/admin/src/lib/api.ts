@@ -147,7 +147,7 @@ export interface DashboardData {
 }
 
 export interface ReportOverview {
-  period: { from: string; to: string };
+  period: { from: string; to: string; key?: string };
   orders: { count: number; revenue: string; discount: string; shipping: string };
   newCustomers: number;
   topProducts: Array<{ productName: string; _sum: { quantity: number | null; lineTotal: string | null } }>;
@@ -256,7 +256,15 @@ export interface AdminProductDetail {
     volumeMl: number | null;
     isActive: boolean;
   }>;
-  images: Array<{ id: string; url: string; altUz: string | null; kind: string }>;
+  images: Array<{
+    id: string;
+    url: string;
+    urlWebp: string | null;
+    altUz: string | null;
+    altRu: string | null;
+    kind: string;
+    sortOrder: number;
+  }>;
   categories: Array<{ categoryId: string }>;
   collections: Array<{ collectionId: string }>;
   tags: Array<{ tag: { slug: string } }>;
@@ -267,6 +275,8 @@ export interface AdminBrand {
   slug: string;
   name: string;
   logoUrl: string | null;
+  /** O'chirish mumkinmi — 0 bo'lmasa o'chirish rad etiladi. */
+  productCount?: number;
 }
 
 export interface AdminCategory {
@@ -727,6 +737,90 @@ export const adminApi = {
 
   brands: () => request<AdminBrand[]>('/admin/catalog/brands'),
 
+  createBrand: (body: { name: string; slug?: string; logoUrl?: string }) =>
+    request<AdminBrand>('/admin/catalog/brands', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateBrand: (id: string, body: { name: string; slug?: string; logoUrl?: string }) =>
+    request<AdminBrand>(`/admin/catalog/brands/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  deleteBrand: (id: string) =>
+    request<{ ok: true }>(`/admin/catalog/brands/${id}`, { method: 'DELETE' }),
+
+  createCategory: (body: unknown) =>
+    request<AdminCategory>('/admin/catalog/categories', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateCategory: (id: string, body: unknown) =>
+    request<AdminCategory>(`/admin/catalog/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  deleteCategory: (id: string) =>
+    request<{ ok: true }>(`/admin/catalog/categories/${id}`, { method: 'DELETE' }),
+
+  /* ------------------------------- Media ------------------------------- */
+
+  /**
+   * Rasm yuklash. `Content-Type` ATAYLAB qo'yilmaydi — multipart chegarasini
+   * brauzer o'zi yozadi va uni qo'lda yozish deyarli har doim buziladi.
+   */
+  async uploadProductImage(
+    productId: string,
+    file: File,
+    alt: { altUz: string; altRu: string; kind?: string },
+  ) {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('altUz', alt.altUz);
+    form.append('altRu', alt.altRu);
+    if (alt.kind) form.append('kind', alt.kind);
+    const res = await fetch(`${apiBase()}/admin/media/products/${productId}`, {
+      method: 'POST',
+      credentials: 'include',
+      body: form,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      let message = `Yuklab bo‘lmadi (HTTP ${res.status})`;
+      try {
+        const parsed = JSON.parse(text) as { message?: string | string[] };
+        if (parsed.message) {
+          message = Array.isArray(parsed.message) ? parsed.message.join('; ') : parsed.message;
+        }
+      } catch {
+        // Javob JSON bo'lmasa (masalan nginx ning 413 sahifasi) matn qoladi.
+        if (text.trim()) message = text.slice(0, 200);
+      }
+      throw new Error(message);
+    }
+    return (await res.json()) as { id: string };
+  },
+
+  reorderProductImages: (productId: string, imageIds: string[]) =>
+    request<{ ok: true }>(`/admin/media/products/${productId}/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ imageIds }),
+    }),
+
+  setMainProductImage: (productId: string, imageId: string) =>
+    request<{ ok: true }>(`/admin/media/products/${productId}/main/${imageId}`, {
+      method: 'PUT',
+    }),
+
+  deleteProductImage: (productId: string, imageId: string) =>
+    request<{ ok: true }>(`/admin/media/products/${productId}/${imageId}`, {
+      method: 'DELETE',
+    }),
+
   categories: () => request<AdminCategory[]>('/admin/catalog/categories'),
 
   /** Import: fayl multipart bilan yuboriladi, shuning uchun Content-Type qo'yilmaydi. */
@@ -1081,9 +1175,44 @@ export const adminApi = {
   b2bLeads: (status?: string) => request<B2bLead[]>(`/admin/b2b${status ? `?status=${status}` : ''}`),
   updateB2bLead: (id: string, body: Record<string, unknown>) =>
     request<B2bLead>(`/admin/b2b/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
-  reportOverview: (from?: string, to?: string) => {
-    const qs = new URLSearchParams(); if (from) qs.set('from', from); if (to) qs.set('to', to);
+  reportOverview: (period: string, from?: string, to?: string) => {
+    const qs = new URLSearchParams({ period });
+    if (from) qs.set('from', from);
+    if (to) qs.set('to', to);
     return request<ReportOverview>(`/admin/reports/overview?${qs.toString()}`);
+  },
+
+  /**
+   * CSV eksporti. `request` ishlatilmaydi — javob JSON emas, fayl.
+   *
+   * Brauzerdagi oddiy `<a href>` bu yerda ishlamaydi: so'rov cookie
+   * bilan ketishi kerak va `credentials: 'include'` faqat `fetch` da
+   * bor. Shuning uchun blob olinadi va vaqtinchalik havola yasaladi.
+   */
+  async exportReportCsv(period: string, from?: string, to?: string): Promise<void> {
+    const qs = new URLSearchParams({ period });
+    if (from) qs.set('from', from);
+    if (to) qs.set('to', to);
+    const res = await fetch(`${apiBase()}/admin/reports/export?${qs.toString()}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(`Eksport qilib bo‘lmadi (HTTP ${res.status})`);
+
+    const blob = await res.blob();
+    // Fayl nomini server beradi; bermasa o'zimiz yasaymiz.
+    const disposition = res.headers.get('content-disposition') ?? '';
+    const match = /filename="?([^";]+)"?/.exec(disposition);
+    const name = match?.[1] ?? `aliver-hisobot-${period}.csv`;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Darhol bo'shatilsa Safari yuklashni tugatmasdan uzib qo'yadi.
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   },
 
   dashboard: (period: string, from?: string, to?: string) => {
