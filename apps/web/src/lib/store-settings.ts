@@ -28,17 +28,25 @@ export interface StoreSettings {
 /**
  * Server javob bermasa ishlatiladigan qiymatlar.
  *
- * Bo'sh sahifa ko'rsatishdan ko'ra eski aloqa ma'lumotini ko'rsatgan
- * afzal: mijozga bog'lanish uchun biror yo'l qolishi kerak.
+ * TELEFON RAQAMI BU YERDA YO'Q va bu ataylab.
+ *
+ * Ilgari bu ro'yxatda kodga yozilgan raqam turardi. API uxlab qolgan
+ * paytda (Render'ning bepul instansi uyg'onishi bir necha daqiqa
+ * oladi) sayt o'sha raqamni ko'rsatardi — ya'ni mijoz do'konga
+ * tegishli bo'lmagan raqamga qo'ng'iroq qilardi va buni hech kim
+ * bilmasdi. Eski raqamni ko'rsatish «raqam yo'q» dan YOMONROQ.
+ *
+ * Shuning uchun faqat brend nomi qoladi: aloqa bloki vaqtincha
+ * ko'rinmaydi, lekin noto'g'ri ma'lumot ham tarqalmaydi.
  */
 const FALLBACK: StoreSettings = {
   name: 'ALIVER.UZ',
   legalName: null,
   tin: null,
-  phone: '+998 71 200 00 00',
-  telegram: '@aliver_uz',
-  email: 'info@aliver.uz',
-  workHours: '9:00–20:00',
+  phone: null,
+  telegram: null,
+  email: null,
+  workHours: null,
   addressUz: null,
   addressRu: null,
 };
@@ -69,13 +77,13 @@ export async function getStoreSettings(): Promise<StoreSettings> {
       // va u ishonch uchun emas, aksincha zarar uchun ishlaydi.
       legalName: clean(raw['store.legalName']),
       tin: clean(raw['store.tin']),
-      // Bo'sh sozlama — bu «ko'rsatma» degani emas, «hali to'ldirilmagan»
-      // degani. Shuning uchun standart qiymatga qaytamiz; manzil esa
-      // aksincha — u yo'q bo'lsa blok umuman ko'rinmasligi kerak.
-      phone: clean(raw['store.phone']) ?? FALLBACK.phone,
-      telegram: clean(raw['store.telegram']) ?? FALLBACK.telegram,
-      email: clean(raw['store.email']) ?? FALLBACK.email,
-      workHours: clean(raw['store.workHours']) ?? FALLBACK.workHours,
+      // Sozlama bo'sh bo'lsa blok ko'rsatilmaydi. O'ylab topilgan
+      // yoki eski qiymat bilan to'ldirish — mijozni noto'g'ri
+      // ma'lumotga yo'naltirish demak.
+      phone: clean(raw['store.phone']),
+      telegram: clean(raw['store.telegram']),
+      email: clean(raw['store.email']),
+      workHours: clean(raw['store.workHours']),
       addressUz: clean(raw['store.addressUz']),
       addressRu: clean(raw['store.addressRu']),
     };

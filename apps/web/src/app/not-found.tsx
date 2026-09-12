@@ -1,59 +1,35 @@
-import Link from 'next/link';
+import type { ReactNode } from 'react';
+import { headers } from 'next/headers';
+import { NotFoundView } from '@/components/NotFoundView';
+import { CookieConsent } from '@/components/CookieConsent';
+import { isLocale } from '@/i18n/messages';
+import '@aliver/ui/tokens.css';
+import '@aliver/ui/components.css';
+import '@aliver/ui/motion.css';
 
 /**
- * 404 sahifasi.
+ * Manzil hech qaysi route'ga mos kelmaganda.
  *
- * Eski Shopify havolalari va noto'g'ri yozilgan manzillar shu yerga
- * tushadi, shuning uchun u "topilmadi" deb to'xtatib qo'ymasligi —
- * katalogga yo'l ko'rsatishi kerak.
+ * Noto'g'ri yozilgan va eski havolalar shu yerga tushadi, ya'ni
+ * odamlar aynan shu sahifani ko'proq ko'radi.
+ *
+ * BU SAHIFA `[locale]/layout.tsx` DAN TASHQARIDA turadi. Sayt
+ * uslublari o'sha layoutda import qilingan, shuning uchun bu yerda
+ * ular ALOHIDA import qilinadi — aks holda sahifa butunlay
+ * uslubsiz chiqadi: oq fon, serif shrift, ko'k tagi chizilgan
+ * havolalar. Aynan shunday edi.
+ *
+ * `<html>` va `<body>` yozilmaydi: root layout yo'q, ularni Next.js
+ * o'zi qo'shadi. Shrift havolasi ham yo'q — tokenlardagi tizim
+ * shriftlari zaxira bo'lib ishlaydi.
  */
-export default function NotFound() {
+export default async function GlobalNotFound(): Promise<ReactNode> {
+  const raw = (await headers()).get('x-alv-locale') ?? 'uz';
+  const locale = isLocale(raw) ? raw : 'uz';
   return (
-    <main
-      style={{
-        minHeight: '60vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: '64px 24px',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ maxWidth: 440 }}>
-        <div
-          style={{
-            fontFamily: 'var(--alv-font-display)',
-            fontSize: 64,
-            fontWeight: 400,
-            letterSpacing: '-0.05em',
-            color: 'var(--alv-brand)',
-            lineHeight: 1,
-          }}
-          aria-hidden
-        >
-          404
-        </div>
-        <h1
-          style={{
-            fontFamily: 'var(--alv-font-display)',
-            fontSize: 24,
-            margin: '16px 0 10px',
-            letterSpacing: '-0.03em',
-          }}
-        >
-          Sahifa topilmadi
-        </h1>
-        <p style={{ color: 'var(--alv-muted)', lineHeight: 1.6, margin: '0 0 24px' }}>
-          Ehtimol havola eskirgan yoki manzil noto‘g‘ri yozilgan.
-        </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/uz/katalog" className="alv-btn alv-btn--primary alv-btn--md">
-            Katalogga o‘tish
-          </Link>
-          <Link href="/uz" className="alv-btn alv-btn--outline alv-btn--md">
-            Bosh sahifa
-          </Link>
-        </div>
-      </div>
-    </main>
+    <>
+      <NotFoundView locale={locale} />
+      <CookieConsent locale={locale} />
+    </>
   );
 }

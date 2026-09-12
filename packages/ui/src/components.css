@@ -331,6 +331,22 @@
   font-size: 14px;
   line-height: 1.35;
   min-height: 38px;
+  /*
+   * Nom uch qatordan oshmaydi.
+   *
+   * `min-height` kartochkalarni pastdan tenglashtirardi, lekin
+   * yuqoridan emas: uzun nom sakkiz qator bo'lib, qator ichidagi
+   * kartochkalar har xil balandlikda qolardi va to'r sinib
+   * ko'rinardi. Telefonda bu ayniqsa yaqqol — ikkita ustun bir-biriga
+   * nisbatan ikki barobar farq qilardi.
+   *
+   * To'liq nom mahsulot sahifasida turadi, ya'ni hech narsa
+   * yo'qolmaydi.
+   */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .alv-pcard__foot {
   margin-top: auto;
