@@ -33,7 +33,14 @@ const PAGES = [
   '/uz/hamkorlik',
   '/uz/blog',
   '/uz/savat',
+  '/uz/checkout',
+  '/uz/kabinet',
+  '/uz/kuzatuv',
+  '/uz/tanlagich',
+  '/uz/qidiruv',
   '/ru/katalog',
+  '/ru',
+  '/ru/savollar',
 ];
 
 /** Eng qiyin kengliklar: eski telefon, oddiy telefon, planshet, noutbuk. */
