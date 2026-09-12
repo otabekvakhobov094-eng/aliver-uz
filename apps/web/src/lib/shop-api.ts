@@ -210,13 +210,44 @@ export class ShopError extends Error {
   }
 }
 
+/**
+ * So'rov uchun eng uzoq kutish.
+ *
+ * Render'ning bepul instansi harakatsizlikdan «uxlab qoladi» va
+ * birinchi so'rov 50 soniyagacha kutadi. Taymautsiz esa `fetch` umuman
+ * tugamasligi mumkin: mijoz «Yuklanmoqda…» yozuvini cheksiz ko'radi va
+ * sayt buzilgan deb o'ylaydi — foydalanuvchi aynan shuni ko'rsatdi.
+ *
+ * 60 soniya — uyg'onish uchun yetarli, lekin cheksiz emas.
+ */
+const TIMEOUT_MS = 60_000;
+
+/** Tarmoq yoki taymaut — serverning javobi emas. */
+export class ShopNetworkError extends Error {
+  constructor(readonly kind: 'timeout' | 'offline') {
+    super(kind === 'timeout' ? 'So‘rov vaqti tugadi' : 'Tarmoqqa ulanib bo‘lmadi');
+    this.name = 'ShopNetworkError';
+  }
+}
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${apiBase()}${path}`, {
-    ...init,
-    // Savat `cart_token` cookie'sida yashaydi — mehmon uchun ham ishlashi shart.
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${apiBase()}${path}`, {
+      ...init,
+      // Savat `cart_token` cookie'sida yashaydi — mehmon uchun ham ishlashi shart.
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      signal: init?.signal ?? AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (e) {
+    // `AbortSignal.timeout` `TimeoutError` tashlaydi, tarmoq uzilsa —
+    // `TypeError`. Ikkalasi ham serverning javobi EMAS, shuning uchun
+    // ular alohida turda qaytariladi: chaqiruvchi «qayta urinish»
+    // taklif qila oladi, «xato» deb ko'rsatmaydi.
+    const timedOut = e instanceof DOMException && e.name === 'TimeoutError';
+    throw new ShopNetworkError(timedOut ? 'timeout' : 'offline');
+  }
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as {

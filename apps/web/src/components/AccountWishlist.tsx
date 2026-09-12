@@ -6,20 +6,15 @@ import { Badge, Button, formatPrice } from '@aliver/ui';
 import { AccountAlert, AccountCard } from './AccountShell';
 import { useCart } from './CartProvider';
 import { ShopError, shopApi, type WishlistEntry } from '@/lib/shop-api';
+import { AccountStateView } from './AccountState';
+import { useAccountData } from './useAccountData';
 import type { Locale } from '@/i18n/messages';
 
 export function AccountWishlist({ locale }: { locale: Locale }) {
-  const [items, setItems] = useState<WishlistEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const { add } = useCart();
-
-  useEffect(() => {
-    shopApi
-      .wishlist()
-      .then(setItems)
-      .catch((e) => setError(e instanceof ShopError ? e.message : 'Xatolik'));
-  }, []);
+  const { data: items, state, reload, setData: setItems } = useAccountData(() => shopApi.wishlist());
 
   const remove = async (variantId: string) => {
     setBusy(variantId);
@@ -44,17 +39,8 @@ export function AccountWishlist({ locale }: { locale: Locale }) {
     }
   };
 
-  if (error && !items) {
-    return (
-      <AccountCard>
-        <AccountAlert tone="danger">{error}</AccountAlert>
-      </AccountCard>
-    );
-  }
-  if (!items) {
-    return (
-      <p style={{ color: 'var(--alv-muted)' }}>{locale === 'ru' ? 'Загрузка…' : 'Yuklanmoqda…'}</p>
-    );
+  if (state.status !== 'ready' || !items) {
+    return <AccountStateView state={state} locale={locale} onRetry={reload} />;
   }
   if (items.length === 0) {
     return (

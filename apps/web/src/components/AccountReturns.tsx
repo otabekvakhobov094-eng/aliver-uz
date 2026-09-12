@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { Badge, Button, formatPrice } from '@aliver/ui';
 import { AccountAlert, AccountCard } from './AccountShell';
 import { ShopError, shopApi, type ReturnSummary, type ReturnView } from '@/lib/shop-api';
+import { AccountStateView } from './AccountState';
+import { useAccountData } from './useAccountData';
 import type { Locale } from '@/i18n/messages';
 
 const TONE: Record<string, 'mint' | 'neutral' | 'low' | 'new'> = {
@@ -22,27 +24,24 @@ export function AccountReturns({ locale }: { locale: Locale }) {
   const search = useSearchParams();
   const created = search.get('yangi');
 
-  const [items, setItems] = useState<ReturnSummary[] | null>(null);
   const [labels, setLabels] = useState<Record<string, { uz: string; ru: string }>>({});
   const [open, setOpen] = useState<ReturnView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const load = async () => {
-    try {
-      setItems(await shopApi.myReturns());
-    } catch (e) {
-      setError(e instanceof ShopError ? e.message : 'Xatolik');
-    }
-  };
+  const { data: items, state, reload, setData: setItems } = useAccountData(() => shopApi.myReturns());
 
+  /*
+   * Holat nomlari ALOHIDA yuklanadi va xatosi yutiladi: ular bo'lmasa
+   * ro'yxat baribir ko'rinadi, faqat holat kodi ko'rinishida. Butun
+   * sahifani shu sabab yiqitish nomutanosib.
+   */
   useEffect(() => {
-    void load();
     shopApi
       .returnReasons()
       .then((r) => {
         const map: Record<string, { uz: string; ru: string }> = {};
-        for (const s of r.statuses) map[s.code] = { uz: s.uz, ru: s.ru };
+        for (const st of r.statuses) map[st.code] = { uz: st.uz, ru: st.ru };
         setLabels(map);
       })
       .catch(() => undefined);
@@ -62,7 +61,7 @@ export function AccountReturns({ locale }: { locale: Locale }) {
     try {
       await shopApi.cancelReturn(id);
       setOpen(null);
-      await load();
+      await reload();
     } catch (e) {
       setError(e instanceof ShopError ? e.message : 'Xatolik');
     } finally {

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Button } from '@aliver/ui';
 import { AccountAlert, AccountCard, accountField } from './AccountShell';
 import { ShopError, shopApi, type DeliveryRegion, type SavedAddress } from '@/lib/shop-api';
+import { AccountStateView } from './AccountState';
+import { useAccountData } from './useAccountData';
 import type { Locale } from '@/i18n/messages';
 
 const EMPTY = {
@@ -25,14 +27,16 @@ export function AccountAddresses({ locale }: { locale: Locale }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { data, state, reload } = useAccountData(async () => {
+    const [a, r] = await Promise.all([shopApi.addresses(), shopApi.regions()]);
+    return { addresses: a, regions: r };
+  });
+
   useEffect(() => {
-    Promise.all([shopApi.addresses(), shopApi.regions()])
-      .then(([a, r]) => {
-        setList(a);
-        setRegions(r);
-      })
-      .catch((e) => setError(e instanceof ShopError ? e.message : 'Xatolik'));
-  }, []);
+    if (!data) return;
+    setList(data.addresses);
+    setRegions(data.regions);
+  }, [data]);
 
   const region = regions.find((r) => r.id === form.regionId);
 
@@ -103,10 +107,8 @@ export function AccountAddresses({ locale }: { locale: Locale }) {
     Boolean(form.regionId) &&
     form.street.trim().length >= 5;
 
-  if (!list) {
-    return (
-      <p style={{ color: 'var(--alv-muted)' }}>{locale === 'ru' ? 'Загрузка…' : 'Yuklanmoqda…'}</p>
-    );
+  if (state.status !== 'ready' || !list) {
+    return <AccountStateView state={state} locale={locale} onRetry={reload} />;
   }
 
   return (

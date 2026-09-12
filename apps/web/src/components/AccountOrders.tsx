@@ -6,6 +6,8 @@ import { Badge, formatPrice } from '@aliver/ui';
 import { AccountAlert, AccountCard } from './AccountShell';
 import { STATUS_LABEL } from './OrderStatusView';
 import { ShopError, shopApi } from '@/lib/shop-api';
+import { AccountStateView } from './AccountState';
+import { useAccountData } from './useAccountData';
 import type { Locale } from '@/i18n/messages';
 
 interface OrderRow {
@@ -19,28 +21,14 @@ interface OrderRow {
 }
 
 export function AccountOrders({ locale }: { locale: Locale }) {
-  const [orders, setOrders] = useState<OrderRow[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { data, state, reload } = useAccountData(
+    async () => (await shopApi.myOrders()) as unknown as OrderRow[],
+  );
 
-  useEffect(() => {
-    shopApi
-      .myOrders()
-      .then((rows) => setOrders(rows as unknown as OrderRow[]))
-      .catch((e) => setError(e instanceof ShopError ? e.message : 'Xatolik'));
-  }, []);
-
-  if (error) {
-    return (
-      <AccountCard>
-        <AccountAlert tone="danger">{error}</AccountAlert>
-      </AccountCard>
-    );
+  if (state.status !== 'ready' || !data) {
+    return <AccountStateView state={state} locale={locale} onRetry={reload} />;
   }
-  if (!orders) {
-    return (
-      <p style={{ color: 'var(--alv-muted)' }}>{locale === 'ru' ? 'Загрузка…' : 'Yuklanmoqda…'}</p>
-    );
-  }
+  const orders = data;
   if (orders.length === 0) {
     return (
       <AccountCard>

@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { Button, formatPrice } from '@aliver/ui';
 import { AccountAlert, AccountCard, accountField } from './AccountShell';
 import { ShopError, shopApi, type ConsentState, type Profile } from '@/lib/shop-api';
+import { AccountStateView } from './AccountState';
+import { useAccountData } from './useAccountData';
 import type { Locale } from '@/i18n/messages';
 
 const MARKETING: Array<{ type: string; uz: string; ru: string }> = [
@@ -22,27 +24,25 @@ export function AccountProfile({ locale }: { locale: Locale }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  /*
+   * Yuklash umumiy hookda: seans tugagani, tarmoq va server
+   * uyg'onishi alohida holatlar sifatida ajratiladi.
+   */
+  const { data, state, reload } = useAccountData(async () => {
+    const [p, c] = await Promise.all([shopApi.profile(), shopApi.consents()]);
+    return { profile: p, consents: c };
+  });
+
+  // Maydonlar ma'lumot kelgach BIR MARTA to'ldiriladi. Har chizishda
+  // to'ldirilsa, foydalanuvchi yozayotgan matn ustiga yozilardi.
   useEffect(() => {
-    Promise.all([shopApi.profile(), shopApi.consents()])
-      .then(([p, c]) => {
-        setProfile(p);
-        setConsents(c);
-        setFirstName(p.firstName ?? '');
-        setLastName(p.lastName ?? '');
-        setEmail(p.email ?? '');
-      })
-      .catch((e) =>
-        setError(
-          e instanceof ShopError && e.status === 401
-            ? locale === 'ru'
-              ? 'Войдите в кабинет'
-              : 'Kabinetga kiring'
-            : e instanceof ShopError
-              ? e.message
-              : 'Xatolik',
-        ),
-      );
-  }, [locale]);
+    if (!data) return;
+    setProfile(data.profile);
+    setConsents(data.consents);
+    setFirstName(data.profile.firstName ?? '');
+    setLastName(data.profile.lastName ?? '');
+    setEmail(data.profile.email ?? '');
+  }, [data]);
 
   const save = async () => {
     setBusy(true);
@@ -98,21 +98,8 @@ export function AccountProfile({ locale }: { locale: Locale }) {
     }
   };
 
-  if (error && !profile) {
-    return (
-      <AccountCard>
-        <AccountAlert tone="danger">{error}</AccountAlert>
-        <Link href={`/${locale}/kirish`}>
-          <Button variant="primary">{locale === 'ru' ? 'Войти' : 'Kirish'}</Button>
-        </Link>
-      </AccountCard>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <p style={{ color: 'var(--alv-muted)' }}>{locale === 'ru' ? 'Загрузка…' : 'Yuklanmoqda…'}</p>
-    );
+  if (state.status !== 'ready' || !profile) {
+    return <AccountStateView state={state} locale={locale} onRetry={reload} />;
   }
 
   const granted = (type: string) =>
