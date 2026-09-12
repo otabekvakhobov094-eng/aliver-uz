@@ -35,6 +35,67 @@ export class ProductService {
      OMMAVIY KATALOG
      ====================================================================== */
 
+  /**
+   * Filtr paneli uchun MAVJUD qiymatlar: ranglar, hajmlar, narx chegarasi.
+   *
+   * Ro'yxat qo'lda yozilmaydi va yozilmasligi kerak. aliver.com da rang
+   * filtri bor, bizda esa ranglar variantlarning `options` JSON ida
+   * yotibdi — agar filtrga qo'lda ro'yxat yozilsa, yangi rang qo'shilgan
+   * kuni u filtrda ko'rinmay qoladi va buni hech kim sezmaydi.
+   *
+   * Shuning uchun ro'yxat har doim BAZADAN chiqadi. Kategoriya yoki
+   * kolleksiya berilsa, faqat o'sha bo'limdagi ranglar qaytadi — 500 ta
+   * mahsulotning hamma rangini tirnoq bo'limida ko'rsatish foydasiz.
+   */
+  async publicFacets(query: { category?: string; collection?: string }) {
+    const productWhere: Record<string, unknown> = {
+      deletedAt: null,
+      status: 'ACTIVE',
+      isSample: false,
+    };
+    if (query.category) {
+      const ids = await this.categories.descendantIds(query.category);
+      productWhere.categories = { some: { categoryId: { in: ids } } };
+    }
+    if (query.collection) {
+      productWhere.collections = { some: { collection: { slug: query.collection } } };
+    }
+
+    const variants = await this.prisma.productVariant.findMany({
+      where: { isActive: true, deletedAt: null, product: productWhere },
+      select: { options: true, price: true },
+    });
+
+    const colors = new Map<string, number>();
+    const sizes = new Map<string, number>();
+    let min: bigint | null = null;
+    let max: bigint | null = null;
+
+    for (const v of variants) {
+      const o = (v.options ?? {}) as Record<string, unknown>;
+      const color = typeof o.color === 'string' ? o.color.trim() : '';
+      const size = typeof o.size === 'string' ? o.size.trim() : '';
+      if (color) colors.set(color, (colors.get(color) ?? 0) + 1);
+      if (size) sizes.set(size, (sizes.get(size) ?? 0) + 1);
+      if (min === null || v.price < min) min = v.price;
+      if (max === null || v.price > max) max = v.price;
+    }
+
+    const sorted = (m: Map<string, number>) =>
+      [...m.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 40)
+        .map(([value, count]) => ({ value, count }));
+
+    return {
+      colors: sorted(colors),
+      sizes: sorted(sizes),
+      // Tiyinda emas, SO'MDA: filtr maydonlariga mijoz so'm yozadi.
+      minPrice: min === null ? 0 : Number(min / 100n),
+      maxPrice: max === null ? 0 : Number(max / 100n),
+    };
+  }
+
   async publicList(query: ProductQueryDto) {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? DEFAULT_PER_PAGE;
@@ -65,21 +126,54 @@ export class ProductService {
     if (query.onSale) where.hasSale = true;
     if (query.minRating !== undefined) where.ratingAvg = { gte: query.minRating };
 
+    /*
+     * Variant xossalari bo'yicha filtr: hajm va rang.
+     *
+     * Ikkalasi ham `options` JSON ichida: {"size": "60 ml", "color": "Coral"}.
+     *
+     * Ular BITTA `where.variants` da yig'iladi va bu ataylab shunday.
+     * Ilgari hajm filtri `where.variants = {...}` deb YOZARDI; rang
+     * filtri ham xuddi shunday yozilsa, ikkinchisi birinchisini jimgina
+     * o'chirib yuborardi — foydalanuvchi ikkita filtr belgilaydi, sayt
+     * esa faqat bittasini qo'llaydi va buni hech narsa ko'rsatmaydi.
+     *
+     * `AND` ishlatilgani ham muhim: bitta variant HAM tanlangan hajmda,
+     * HAM tanlangan rangda bo'lishi shart emas — mahsulotda ikkalasi
+     * ham bo'lsa yetarli.
+     */
+    const variantFilters: Array<Record<string, unknown>> = [];
     if (query.volume && query.volume.length > 0) {
-      // Variant o'lchamlari JSON da: {"size": "60 ml"}
-      where.variants = {
+      variantFilters.push({
         some: {
           isActive: true,
           deletedAt: null,
           OR: query.volume.map((v) => ({ options: { path: ['size'], equals: v } })),
         },
-      };
+      });
     }
+    if (query.color && query.color.length > 0) {
+      variantFilters.push({
+        some: {
+          isActive: true,
+          deletedAt: null,
+          OR: query.color.map((c) => ({ options: { path: ['color'], equals: c } })),
+        },
+      });
+    }
+    /*
+     * `AND` ga hamma shart QO'SHILADI, o'rniga yozilmaydi.
+     *
+     * Ilgari qidiruv `where.AND = tokens.map(...)` deb yozardi. Agar
+     * mijoz bir vaqtda qidiruv VA variant filtrini ishlatsa, qidiruv
+     * variant filtrlarini jimgina o'chirib yuborardi. Shuning uchun
+     * bu yerda faqat `push` bor.
+     */
+    const and: Array<Record<string, unknown>> = variantFilters.map((v) => ({ variants: v }));
 
     if (query.q) {
       const tokens = searchTokens(query.q);
       if (tokens.length > 0) {
-        where.AND = tokens.map((t) => ({ searchText: { contains: t } }));
+        for (const t of tokens) and.push({ searchText: { contains: t } });
       } else {
         /*
          * So'rov berilgan, lekin undan birorta ham qidiriladigan
@@ -92,9 +186,11 @@ export class ProductService {
          *
          * To'g'ri javob — hech narsa topilmadi.
          */
-        where.AND = [{ id: '00000000-0000-0000-0000-000000000000' }];
+        and.push({ id: '00000000-0000-0000-0000-000000000000' });
       }
     }
+
+    if (and.length > 0) where.AND = and;
 
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.product.count({ where: where as never }),

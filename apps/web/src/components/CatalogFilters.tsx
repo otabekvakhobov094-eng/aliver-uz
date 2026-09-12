@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@aliver/ui';
-import type { CategoryNode } from '@/lib/catalog-api';
+import type { CatalogFacets, CategoryNode } from '@/lib/catalog-api';
 import { pick } from '@/lib/catalog-api';
 import type { Locale } from '@/i18n/messages';
 
@@ -30,10 +30,12 @@ export function CatalogFilters({
   categories,
   locale,
   total,
+  facets,
 }: {
   categories: CategoryNode[];
   locale: Locale;
   total: number;
+  facets: CatalogFacets;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -82,9 +84,16 @@ export function CatalogFilters({
   const has = (key: string, value: string) =>
     (params.get(key) ?? '').split(',').filter(Boolean).includes(value);
 
-  const activeCount = ['category', 'tags', 'onSale', 'inStock', 'minPrice', 'maxPrice'].filter(
-    (k) => Boolean(params.get(k)),
-  ).length;
+  const activeCount = [
+    'category',
+    'tags',
+    'color',
+    'volume',
+    'onSale',
+    'inStock',
+    'minPrice',
+    'maxPrice',
+  ].filter((k) => Boolean(params.get(k))).length;
 
   const clearAll = () => router.push('?', { scroll: false });
 
@@ -162,14 +171,68 @@ export function CatalogFilters({
           />
         </div>
       </div>
+
+      {facets.colors.length > 0 ? (
+        <div className="alv-filter-group">
+          <div className="alv-filter-group__title">{locale === 'ru' ? 'Цвет' : 'Rang'}</div>
+          <div className="alv-swatches">
+            {facets.colors.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                className={`alv-swatch${has('color', c.value) ? ' alv-swatch--on' : ''}`}
+                onClick={() => toggleInList('color', c.value)}
+                aria-pressed={has('color', c.value)}
+                title={`${c.value} (${c.count})`}
+              >
+                {/*
+                  Rang doirasi nom bo'yicha taxmin qilinadi. Taxmin
+                  ishlamasa NEYTRAL doira chiqadi va yozuv baribir
+                  o'qiladi — noto'g'ri rang ko'rsatishdan ko'ra rangsiz
+                  ko'rsatish yaxshiroq.
+                */}
+                <span className="alv-swatch__dot" style={swatchStyle(c.value)} aria-hidden />
+                <span>{c.value}</span>
+                <span className="alv-check__count">{c.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {facets.sizes.length > 0 ? (
+        <div className="alv-filter-group">
+          <div className="alv-filter-group__title">{locale === 'ru' ? 'Объём' : 'Hajm'}</div>
+          <div className="alv-swatches">
+            {facets.sizes.map((v) => (
+              <button
+                key={v.value}
+                type="button"
+                className={`alv-chip${has('volume', v.value) ? ' alv-chip--on' : ''}`}
+                onClick={() => toggleInList('volume', v.value)}
+                aria-pressed={has('volume', v.value)}
+              >
+                {v.value}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 
   return (
     <>
-      {/* Mobil boshqaruv paneli */}
-      <div className="alv-mobile-only" style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-        <Button variant="dark" size="sm" fullWidth onClick={() => setOpen(true)}>
+      {/*
+        Mobil boshqaruv paneli.
+
+        Bu yerda `style={{ display: 'flex' }}` YOZILMAYDI. Ilgari shunday
+        edi va inline uslub `.alv-mobile-only { display: none }` ni yengib,
+        panel katta ekranda ham chizilardi — katalog flex qatorida ortiqcha
+        ustun paydo bo'lib, butun sahifa yon tomonga surilardi.
+      */}
+      <div className="alv-catalog-bar">
+        <Button variant="dark" size="md" onClick={() => setOpen(true)}>
           {locale === 'ru' ? 'Фильтр' : 'Filtr'} {activeCount > 0 ? `(${activeCount})` : ''}
         </Button>
         <SortSelect
@@ -179,25 +242,7 @@ export function CatalogFilters({
         />
       </div>
 
-      <aside className="alv-desktop-only" style={{ width: 264, flex: 'none' }}>
-        {/*
-          Saralash DESKTOPDA ham kerak.
-
-          Ilgari `SortSelect` faqat mobil panelda chizilardi, ya'ni 900px
-          dan keng ekranda saralashni o'zgartirishning yagona yo'li
-          manzilga `?sort=` ni qo'lda yozish edi.
-        */}
-        <div style={{ marginBottom: 18 }}>
-          <strong style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
-            {locale === 'ru' ? 'Сортировка' : 'Saralash'}
-          </strong>
-          <SortSelect
-            locale={locale}
-            value={params.get('sort') ?? 'popular'}
-            onChange={(v) => setParam('sort', v)}
-          />
-        </div>
-
+      <aside className="alv-catalog-side">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
           <strong style={{ fontSize: 14 }}>{locale === 'ru' ? 'Фильтры' : 'Filtrlar'}</strong>
           {activeCount > 0 ? (
@@ -278,16 +323,11 @@ export function SortSelect({
   onChange: (v: string) => void;
 }) {
   return (
-    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+    <label className="alv-sort">
       <span className="alv-muted" style={{ fontSize: 13 }}>
         {locale === 'ru' ? 'Сортировка' : 'Saralash'}
       </span>
-      <select
-        className="alv-chip"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ paddingRight: 12 }}
-      >
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
         {SORTS.map((s) => (
           <option key={s.value} value={s.value}>
             {locale === 'ru' ? s.ru : s.uz}
@@ -296,6 +336,38 @@ export function SortSelect({
       </select>
     </label>
   );
+}
+
+/**
+ * Rang NOMIDAN doira rangini taxmin qiladi.
+ *
+ * Ranglar variant `options` ida erkin matn: «Rose Nude», «03 ESPRESSO»,
+ * «Ivory White». CSS `color` qiymati sifatida ular ishlamaydi, shuning
+ * uchun tanilgan so'zlar bo'yicha moslik qidiriladi. Topilmasa —
+ * neytral doira: noto'g'ri rang ko'rsatish umuman rang ko'rsatmaslikdan
+ * yomonroq, chunki mijoz unga ishonadi.
+ */
+const COLOR_WORDS: Array<[RegExp, string]> = [
+  [/\b(oq|white|ivory|белый|молочн)\b/i, '#f5f2ee'],
+  [/\b(qora|black|espresso|чёрн|черн)\b/i, '#2a2024'],
+  [/\b(qizil|red|ruby|красн)\b/i, '#c8102e'],
+  [/\b(pushti|pink|rose|blush|розов)\b/i, '#e8879f'],
+  [/\b(nude|beige|bej|бежев)\b/i, '#d9bda2'],
+  [/\b(coral|marjon|корал)\b/i, '#f2705a'],
+  [/\b(sariq|yellow|gold|oltin|жёлт|желт|золот)\b/i, '#e0a63c'],
+  [/\b(yashil|green|mint|зелён|зелен)\b/i, '#4e9a7a'],
+  [/\b(kok|ko'k|blue|син|голуб)\b/i, '#3f6fb5'],
+  [/\b(binafsha|violet|purple|lilac|фиолет|сирен)\b/i, '#8a5fbf'],
+  [/\b(jigarrang|brown|tan|caramel|корич|карамел)\b/i, '#8a5a3b'],
+  [/\b(kulrang|grey|gray|сер)\b/i, '#9a9298'],
+  [/\b(kumush|silver|серебр)\b/i, '#c3c7cc'],
+];
+
+function swatchStyle(name: string): React.CSSProperties {
+  for (const [re, color] of COLOR_WORDS) {
+    if (re.test(name)) return { background: color };
+  }
+  return { background: 'var(--alv-line-2)' };
 }
 
 function Check({
@@ -320,5 +392,37 @@ function Check({
       <span style={{ fontSize: 14, fontWeight: on ? 700 : 500 }}>{label}</span>
       {count !== undefined ? <span className="alv-check__count">{count}</span> : null}
     </button>
+  );
+}
+
+
+/**
+ * Grid ustidagi qator: chapda mahsulot soni, o'ngda saralash.
+ *
+ * aliver.com dagi joylashuv aynan shunday va u to'g'ri: saralash
+ * natijaga TEGISHLI, shuning uchun natijaning ustida turadi. Ilgari u
+ * chapdagi filtr ustunining tepasida edi va uni odam qidirib topardi.
+ */
+export function CatalogToolbar({ locale, total }: { locale: Locale; total: number }) {
+  const router = useRouter();
+  const params = useSearchParams();
+
+  return (
+    <div className="alv-catalog-toolbar">
+      <span className="alv-muted" style={{ fontSize: 14 }}>
+        {total} {locale === 'ru' ? 'товаров' : 'ta mahsulot'}
+      </span>
+      <SortSelect
+        locale={locale}
+        value={params.get('sort') ?? 'popular'}
+        onChange={(v) => {
+          const next = new URLSearchParams(params.toString());
+          if (v) next.set('sort', v);
+          else next.delete('sort');
+          next.delete('page');
+          router.push(`?${next.toString()}`, { scroll: false });
+        }}
+      />
+    </div>
   );
 }

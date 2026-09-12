@@ -73,6 +73,12 @@ jobs:
           for i in $(seq 1 40); do curl -fsS http://localhost:4000/api/health && curl -fsS http://localhost:3000/uz && curl -fsS http://localhost:3001/login && exit 0; sleep 2; done
           cat /tmp/aliver-api.log /tmp/aliver-web.log /tmp/aliver-admin.log
           exit 1
+      # Joylashuv: hech bir sahifa ekrandan chiqib ketmasin. Bu xato
+      # ba'zi kengliklarda ko'rinadi, ba'zilarida yo'q — shuning uchun
+      # uni odam emas, mashina qidiradi.
+      - name: Joylashuv toshishi
+        run: npm run check:layout
+
       - name: E2E smoke
         run: npm run test:e2e
       # Buyurtma oqimi — savatdan chekgacha. Bu yerda haqiqiy baza va

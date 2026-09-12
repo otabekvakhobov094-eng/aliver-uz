@@ -40,6 +40,16 @@ export class CatalogController {
   }
 
   @Public()
+  @Get('facets')
+  @ApiOperation({
+    summary: 'Filtr uchun mavjud qiymatlar',
+    description: 'Ranglar, hajmlar va narx chegarasi — bazadagi haqiqiy variantlardan.',
+  })
+  facets(@Query('category') category?: string, @Query('collection') collection?: string) {
+    return this.products.publicFacets({ category, collection });
+  }
+
+  @Public()
   @Get('products')
   @ApiOperation({ summary: 'Katalog: filtr, saralash, sahifalash' })
   list(@Query() query: ProductQueryDto) {

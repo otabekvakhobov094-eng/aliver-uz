@@ -211,58 +211,259 @@
    qoldirib qo'yish.
    ============================================================ */
 
+/* ---- Umumiy vaqt. Bir joydan boshqariladi. ----------------------
+   1.15s juda tez edi: logotip ko'rinmasdan turib ketardi. 2.6s —
+   brend bir nafas "nafas oladigan", lekin kutish his qilinmaydigan
+   oraliq. O'zgartirish kerak bo'lsa FAQAT shu qiymat o'zgaradi. */
 .alv-intro {
+  --alv-intro-dur: 2600ms;
+
   position: fixed;
   inset: 0;
   z-index: 9999;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 50% 42%, #fff 0%, #fdf1f5 38%, #f7dbe4 100%);
-  animation: alvIntroOut 1.15s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-  /* Animatsiya tugamasdan ham bosishga xalaqit bermasin. */
+    radial-gradient(120% 90% at 50% 38%, #fffdfe 0%, #fdf1f5 42%, #f6dbe5 74%, #efc9d8 100%);
+  animation: alvIntroOut var(--alv-intro-dur) cubic-bezier(0.65, 0, 0.2, 1) forwards;
   will-change: opacity, transform;
 }
 
+/*
+  Qoplamaning O'ZI hech qachon kattalashmaydi va ko'chmaydi.
+
+  Ilgari u oxirida `scale(1.08)` bo'lardi. `position: fixed` element
+  ekran chegarasidan chiqsa, hujjatga gorizontal aylantirish qo'shiladi
+  — telefonda sahifa yon tomonga surilardi va sababi ko'rinmasdi,
+  chunki qoplama o'sha paytga kelib ko'zga ko'rinmas edi.
+
+  Kengayish hissi ICHKI qatlamda beriladi (`.alv-intro__veil`), u esa
+  `overflow: hidden` ichida — ya'ni hech qayerga chiqmaydi.
+*/
 @keyframes alvIntroOut {
   0%,
-  62% {
+  74% {
     opacity: 1;
-    transform: translateY(0);
     pointer-events: auto;
   }
   100% {
     opacity: 0;
-    /* Yuqoriga ko'tarilib ketadi — parda ko'tarilgandek. */
-    transform: translateY(-14px);
     pointer-events: none;
     visibility: hidden;
   }
 }
 
+/* Kengayuvchi ichki qatlam — fon shu yerda. */
+.alv-intro__veil {
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  animation: alvIntroVeil var(--alv-intro-dur) cubic-bezier(0.65, 0, 0.2, 1) forwards;
+  will-change: transform;
+}
+
+@keyframes alvIntroVeil {
+  0%,
+  74% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+/* ---- Aura: markazdan tarqaladigan yumshoq yorug'lik --------------
+   Faqat `transform` va `opacity` — kompozitor qatlamida, ya'ni
+   telefonda ham kadr tushmaydi. */
+.alv-intro__glow {
+  position: absolute;
+  width: min(78vmin, 640px);
+  aspect-ratio: 1;
+  max-width: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.92) 0%, rgba(255, 214, 228, 0) 68%);
+  animation: alvIntroGlow var(--alv-intro-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes alvIntroGlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  74% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* ---- Sahna: chuqurlik shu yerda beriladi -------------------------
+   `perspective` ota elementda turadi, bolalari esa `rotateX` bilan
+   buriladi — shundagina burilish HAQIQIY fazoviy ko'rinadi. Bitta
+   elementga `perspective()` funksiyasini qo'yish yassi natija beradi. */
+.alv-intro__stage {
+  position: relative;
+  /* Logotip 78px balandlikda ~332px keng. Telefonda u chetga chiqardi;
+     `scale` bilan kichraytiramiz — SVG ni qayta o'lchashdan arzon va
+     kompozitor qatlamida qoladi. */
+  --alv-intro-fit: min(1, calc((100vw - 48px) / 340));
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  perspective: 900px;
+  perspective-origin: 50% 45%;
+  padding: 0 24px;
+  transform: scale(var(--alv-intro-fit));
+}
+
+/* ---- Logotip: uzoqdan yaqinlashadi, fokusga keladi --------------- */
 .alv-intro__mark {
+  position: relative;
   color: var(--alv-ink);
-  animation: alvIntroMark 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-style: preserve-3d;
+  animation: alvIntroMark var(--alv-intro-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
 }
 
 @keyframes alvIntroMark {
   0% {
     opacity: 0;
-    transform: scale(0.9) translateY(10px);
-    letter-spacing: 0.3em;
+    transform: translateZ(-160px) translateY(26px) rotateX(24deg);
+    filter: blur(14px);
   }
-  38% {
+  34% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateZ(0) translateY(0) rotateX(0deg);
+    filter: blur(0);
   }
-  62% {
+  74% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateZ(0) translateY(0) rotateX(0deg) scale(1);
+    filter: blur(0);
   }
   100% {
     opacity: 0;
-    /* Logotip sal yaqinlashib yo'qoladi — sayt uning "ichidan" ochiladi. */
-    transform: scale(1.06) translateY(-6px);
+    /* Kuzatuvchiga TOMON keladi va eriydi. */
+    transform: translateZ(140px) scale(1.14);
+    filter: blur(6px);
+  }
+}
+
+/* ---- Yaltirash: logotip bo'ylab o'tadigan yorug'lik -------------- */
+/*
+  `mix-blend-mode` ATAYLAB ishlatilmaydi.
+
+  U aralashtirish uchun alohida stacking context yaratadi va och fonda
+  elementning O'Z QUTISI oq to'rtburchak bo'lib ko'rinib qoladi —
+  logotipning yonida keraksiz oq blok paydo bo'lgan edi. Oddiy yarim
+  shaffof gradient bir xil taassurot beradi va hech qanday chekka
+  qoldirmaydi.
+*/
+.alv-intro__sheen {
+  position: absolute;
+  inset: -18% -24%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(255, 255, 255, 0) 66%
+  );
+  opacity: 0;
+  animation: alvIntroSheen var(--alv-intro-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes alvIntroSheen {
+  0%,
+  30% {
+    opacity: 0;
+    transform: translateX(-120%);
+  }
+  40% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0;
+    transform: translateX(120%);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(120%);
+  }
+}
+
+/* ---- Ingichka chiziq: markazdan ikki tomonga ochiladi ------------ */
+.alv-intro__line {
+  width: min(260px, 52vw);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(180, 22, 77, 0) 0%,
+    rgba(180, 22, 77, 0.55) 50%,
+    rgba(180, 22, 77, 0) 100%
+  );
+  transform-origin: center;
+  animation: alvIntroLine var(--alv-intro-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes alvIntroLine {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  46% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  74% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1.3);
+  }
+}
+
+/* ---- Shior ------------------------------------------------------- */
+.alv-intro__tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em; /* oxirgi harfdan keyingi bo'shliqni muvozanatlaydi */
+  text-transform: uppercase;
+  color: var(--alv-brand-on-tint);
+  animation: alvIntroTag var(--alv-intro-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes alvIntroTag {
+  0%,
+  28% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  52% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  74% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }
 

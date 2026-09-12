@@ -3,6 +3,7 @@ import { AliverLogo } from '@aliver/ui';
 import type { Locale } from '@/i18n/messages';
 import { contentApi } from '@/lib/content-api';
 import { DEFAULT_FOOTER_MENU } from '@/lib/default-menu';
+import { PaymentBadges } from './PaymentBadges';
 import styles from './SiteFooter.module.css';
 
 /**
@@ -45,6 +46,8 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             </Link>
           ))}
         </nav>
+
+        <PaymentBadges locale={locale} />
 
         <div className={styles.line} />
         <div className={styles.copyright}>

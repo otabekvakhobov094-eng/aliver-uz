@@ -542,19 +542,148 @@
 }
 
 /* Mobil / desktop ko'rinish */
+/*
+  YASHIRISH utilitasi `!important` bilan.
+
+  Sababi konkret: `<div class="alv-mobile-only" style="display:flex">`
+  deb yozilgan edi va inline uslub har doim klassdan kuchli. Natijada
+  mobil filtr paneli KATTA EKRANDA ham chizilardi va `.alv-catalog-layout`
+  flex qatorida uchinchi ustun bo'lib turardi — katalogdagi hamma narsa
+  yon tomonga surilib ketgani shundan edi.
+
+  Yashirish qoidasi hech qanday inline uslub bilan buzilmasligi kerak,
+  shuning uchun u `!important`. Ko'rsatish qoidalari esa oddiy qoladi.
+*/
 .alv-mobile-only {
-  display: none;
+  display: none !important;
 }
 .alv-desktop-only {
   display: block;
 }
 @media (max-width: 900px) {
   .alv-mobile-only {
-    display: flex;
+    display: flex !important;
   }
   .alv-desktop-only {
+    display: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Katalog boshqaruvlari                                              */
+/* ------------------------------------------------------------------ */
+
+/* Mobil qator: «Filtr» tugmasi va saralash. Balandliklari BIR XIL —
+   ilgari tugma 36px, select 32px edi va ular bir tekisda turmasdi. */
+.alv-catalog-bar {
+  display: none;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+.alv-catalog-bar > * {
+  height: 44px;
+}
+.alv-catalog-bar .alv-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* Saralash qolgan joyni oladi va QISQARA oladi. `min-width: 0`
+   bo'lmasa, flex elementi o'z tarkibidan kichrayolmaydi va uzun
+   variant nomi («Arzondan qimmatga») panelni ekrandan chiqarardi. */
+.alv-catalog-bar .alv-sort {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Desktop filtr ustuni. Kengligi qat'iy, qisqarmaydi. */
+.alv-catalog-side {
+  display: block;
+  width: 268px;
+  flex: 0 0 268px;
+}
+
+/* Grid ustidagi qator: chapda mahsulot soni, o'ngda saralash —
+   aliver.com dagidek. */
+.alv-catalog-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  min-height: 44px;
+}
+
+@media (max-width: 900px) {
+  .alv-catalog-bar {
+    display: flex;
+  }
+  .alv-catalog-side {
     display: none;
   }
+  .alv-catalog-toolbar {
+    display: none;
+  }
+}
+
+/* Rang va hajm tanlovlari. */
+.alv-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.alv-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--alv-tap-min);
+  padding: 0 12px;
+  border: 1px solid var(--alv-line-2);
+  border-radius: var(--alv-radius-pill);
+  background: var(--alv-surface);
+  color: var(--alv-ink);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.alv-swatch:hover {
+  border-color: var(--alv-brand);
+}
+.alv-swatch--on {
+  border-color: var(--alv-brand);
+  box-shadow: inset 0 0 0 1px var(--alv-brand);
+  font-weight: 700;
+}
+.alv-swatch__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex: none;
+  /* Ichki chegara: oq rang oq fonda ko'rinmay qolardi. */
+  box-shadow: inset 0 0 0 1px rgba(27, 18, 32, 0.18);
+}
+
+/* Saralash tanlagichi — tugmalar bilan bir balandlikda. */
+.alv-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.alv-sort select {
+  height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 14px;
+  border-radius: var(--alv-radius-pill);
+  border: 1px solid var(--alv-line-2);
+  background: var(--alv-surface);
+  color: var(--alv-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 /* ------------------------------------------------------------------ */

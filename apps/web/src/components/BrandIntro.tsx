@@ -20,8 +20,16 @@ import { AliverLogo } from '@aliver/ui';
  *      skript `sessionStorage` ni o'qiydi va `<html>` ga belgi qo'yadi
  *      — u chizishdan OLDIN ishlaydi, ya'ni miltillash bo'lmaydi.
  *
- * Umumiy davomiylik 1.15 soniya: mijoz brendni ko'rib ulguradi, lekin
- * kutishga majbur bo'lmaydi.
+ * Umumiy davomiylik 2.6 soniya. Ilgari 1.15 edi va bu juda tez edi:
+ * logotip ko'zga tashlanmasdan turib yo'qolardi, ya'ni animatsiya bor
+ * edi-yu, brend ko'rinmasdi. Vaqt `motion.css` dagi bitta
+ * `--alv-intro-dur` qiymatidan boshqariladi.
+ *
+ * Chuqurlik («4D») ota elementdagi `perspective` va bolalarining
+ * `translateZ`/`rotateX` i orqali beriladi — logotip uzoqdan kelib
+ * fokusga tushadi, so'ng kuzatuvchiga tomon o'tib eriydi va sayt
+ * uning ichidan ochiladi. Harakat faqat `transform`/`opacity`/`filter`
+ * bo'yicha, ya'ni kompozitor qatlamida.
  */
 export function BrandIntro() {
   return (
@@ -44,8 +52,15 @@ export function BrandIntro() {
         }}
       />
       <div className="alv-intro" aria-hidden>
-        <div className="alv-intro__mark">
-          <AliverLogo height={72} decorative />
+        <div className="alv-intro__veil" />
+        <div className="alv-intro__glow" />
+        <div className="alv-intro__stage">
+          <div className="alv-intro__mark">
+            <AliverLogo height={78} decorative />
+            <span className="alv-intro__sheen" />
+          </div>
+          <div className="alv-intro__line" />
+          <div className="alv-intro__tag">Laboratories of Nature</div>
         </div>
       </div>
     </>

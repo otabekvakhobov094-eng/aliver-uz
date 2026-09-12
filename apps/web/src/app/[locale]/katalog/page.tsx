@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { catalogApi } from '@/lib/catalog-api';
 import { ProductCardView } from '@/components/ProductCard';
-import { CatalogFilters } from '@/components/CatalogFilters';
+import { CatalogFilters, CatalogToolbar } from '@/components/CatalogFilters';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { isLocale } from '@/i18n/messages';
@@ -50,8 +50,9 @@ export default async function CatalogPage({
    *
    * Endi xato tushunarli xabarga aylanadi va sayt ochiq qoladi.
    */
-  const [categories, data] = await Promise.all([
+  const [categories, facets, data] = await Promise.all([
     catalogApi.categories().catch(() => []),
+    catalogApi.facets({ category: one(sp.category), collection: one(sp.collection) }),
     catalogApi.products({
       category: one(sp.category),
       collection: one(sp.collection),
@@ -130,14 +131,17 @@ export default async function CatalogPage({
               ? 'Каталог'
               : 'Katalog'}
         </h1>
-        <p className="alv-muted" style={{ marginTop: 8 }}>
-          {data.total} {locale === 'ru' ? 'товаров' : 'ta mahsulot'}
-        </p>
-
         <div className="alv-catalog-layout">
-          <CatalogFilters categories={categories} locale={locale} total={data.total} />
+          <CatalogFilters
+            categories={categories}
+            locale={locale}
+            total={data.total}
+            facets={facets}
+          />
 
           <div style={{ flexGrow: 1, minWidth: 0 }}>
+            <CatalogToolbar locale={locale} total={data.total} />
+
             {data.items.length === 0 ? (
               <div className="alv-card alv-empty">
                 <h2 className="alv-h3">

@@ -144,8 +144,30 @@ async function get<T>(path: string, revalidate = 120): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface CatalogFacets {
+  colors: Array<{ value: string; count: number }>;
+  sizes: Array<{ value: string; count: number }>;
+  minPrice: number;
+  maxPrice: number;
+}
+
 export const catalogApi = {
   categories: () => get<CategoryNode[]>('/catalog/categories', 300),
+
+  /**
+   * Filtr qiymatlari. Xato bo'lsa BO'SH ro'yxat — filtr paneli
+   * kamayadi, lekin katalog ochiq qoladi.
+   */
+  facets: async (params: { category?: string; collection?: string } = {}): Promise<CatalogFacets> => {
+    const qs = new URLSearchParams();
+    if (params.category) qs.set('category', params.category);
+    if (params.collection) qs.set('collection', params.collection);
+    try {
+      return await get<CatalogFacets>(`/catalog/facets${qs.size ? `?${qs}` : ''}`, 300);
+    } catch {
+      return { colors: [], sizes: [], minPrice: 0, maxPrice: 0 };
+    }
+  },
   collections: () => get<CollectionItem[]>('/catalog/collections', 300),
 
   products: (params: Record<string, string | number | boolean | undefined>) => {

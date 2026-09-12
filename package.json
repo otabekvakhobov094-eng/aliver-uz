@@ -11,6 +11,7 @@
     "lint": "npm run check:prisma && npm run check:nav && npm run typecheck",
     "check:prisma": "node scripts/check-prisma-fields.mjs",
     "check:nav": "node scripts/check-nav-targets.mjs",
+    "check:layout": "node scripts/check-layout-overflow.mjs",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:e2e": "node scripts/e2e-smoke.mjs",
