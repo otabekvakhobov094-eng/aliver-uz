@@ -95,8 +95,25 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh', padding: 20 }}>
-      <Card style={{ width: 400, padding: 28 }}>
+    <main
+      style={{
+        display: 'grid',
+        placeItems: 'center',
+        minHeight: '100vh',
+        padding: 20,
+        // Konteyner ham kichraya olishi kerak, aks holda `100%`
+        // kartochka uchun 400 px dan kichik bo'lmaydi.
+        boxSizing: 'border-box',
+      }}
+    >
+      {/*
+        Kenglik QAT'IY emas.
+        `width: 400` bo'lganda 375 px li telefonda kartochka ekrandan
+        chiqib ketardi: maydonlarning o'ng cheti va «Kirish» tugmasi
+        ko'rinmasdi, sahifa esa yon tomonga siljirdi. Admin telefondan
+        ham ochiladi — kuryer va operator ko'pincha shunday ishlaydi.
+      */}
+      <Card style={{ width: '100%', maxWidth: 400, padding: 28 }}>
         <h1 style={{ fontFamily: 'var(--alv-font-display)', fontSize: 24, margin: '0 0 6px' }}>
           {/*
             Rang paneldagidek: ish muhitida asosiy harakat qora,
