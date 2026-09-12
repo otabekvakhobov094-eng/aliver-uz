@@ -155,12 +155,49 @@ export interface ReportOverview {
   attribution: Array<{ utmSource: string | null; _count: number; _sum: { grandTotal: string | null } }>;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${apiBase()}${path}`, {
-    ...init,
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-  });
+/**
+ * So'rov muddati.
+ *
+ * Bunsiz `fetch` CHEKSIZ kutadi va aynan shu adminka «qotib qolgan»
+ * degan holatni yaratardi: tugma «Tekshirilmoqda…» da abadiy turardi,
+ * xato ham, natija ham chiqmasdi.
+ *
+ * Render'ning bepul servisi 15 daqiqa trafiksiz qolsa uxlaydi va
+ * uyg'onishi bir daqiqagacha ketadi, shuning uchun muddat 60 soniya —
+ * sovuq startni kesib yubormasligi kerak.
+ */
+const TIMEOUT_MS = 60_000;
+
+/** Tarmoq yiqilgani yoki muddat o'tgani — 4xx/5xx dan FARQLI holat. */
+export class AdminNetworkError extends Error {
+  constructor(
+    message: string,
+    readonly kind: 'timeout' | 'offline',
+  ) {
+    super(message);
+    this.name = 'AdminNetworkError';
+  }
+}
+
+async function once<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${apiBase()}${path}`, {
+      ...init,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (e) {
+    const timedOut = e instanceof DOMException && e.name === 'TimeoutError';
+    throw new AdminNetworkError(
+      timedOut
+        ? 'Server javob bermadi (60 soniya kutildi).'
+        : 'Serverga ulanib bo‘lmadi.',
+      timedOut ? 'timeout' : 'offline',
+    );
+  }
+
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as
       | { message?: string; errors?: Record<string, string> }
@@ -168,6 +205,30 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new AdminApiError(res.status, body?.message ?? res.statusText, body?.errors);
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
+}
+
+/**
+ * Sovuq startda BIR MARTA qayta urinadi.
+ *
+ * Uxlab qolgan servisga birinchi so'rov muddati o'tishi bilan tugaydi,
+ * ikkinchisi esa odatda o'tadi — chunki birinchi so'rov servisni
+ * uyg'otib yuborgan bo'ladi.
+ *
+ * Qayta urinish FAQAT o'qish so'rovlari va login uchun: `POST` bilan
+ * yozilgan amalni takrorlash uni ikki marta bajarishi mumkin.
+ */
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method ?? 'GET').toUpperCase();
+  const safeToRetry = method === 'GET' || path === '/admin/auth/login';
+
+  try {
+    return await once<T>(path, init);
+  } catch (e) {
+    if (safeToRetry && e instanceof AdminNetworkError && e.kind === 'timeout') {
+      return once<T>(path, init);
+    }
+    throw e;
+  }
 }
 
 export interface AdminProduct {

@@ -78,9 +78,17 @@ function Kpi({
   );
 }
 
-/** Oddiy ustunli grafik. Kutubxonasiz — sahifa og'irlashmasin. */
-function RevenueChart({ series }: { series: DashboardData['series'] }) {
-  if (series.length === 0) {
+/**
+ * Oddiy ustunli grafik. Kutubxonasiz — sahifa og'irlashmasin.
+ *
+ * `series` YO'Q bo'lishi mumkin: javob kutilgandan boshqa shaklda
+ * kelsa (eski API, proksi xato sahifasi, qisman javob), massiv o'rniga
+ * `undefined` keladi. Ilgari bu chizish paytida xato bo'lardi va
+ * React uni ushlay olmasdi — BUTUN panel oq ekranga aylanardi.
+ * Endi grafik shunchaki bo'sh holatini ko'rsatadi.
+ */
+function RevenueChart({ series }: { series?: DashboardData['series'] }) {
+  if (!Array.isArray(series) || series.length === 0) {
     return (
       <p style={{ color: 'var(--alv-muted)', margin: 0 }}>
         Bu davrda to&apos;langan buyurtma yo&apos;q.
@@ -164,8 +172,15 @@ export default function AdminHome() {
     void load();
   }, [load]);
 
-  const revenueDelta = data ? delta(data.revenue, data.previous.revenue) : null;
-  const ordersDelta = data
+  /*
+   * `data.previous` YO'Q bo'lishi mumkin: javob kutilgandan boshqa
+   * shaklda kelsa (proksi xato sahifasi, eski API, qisman javob),
+   * `data` haqiqiy bo'ladi-yu, ichi bo'sh qoladi. Ilgari shu yerda
+   * chizish paytida xato bo'lardi va React uni ushlay olmasdi —
+   * natijada BUTUN panel oq ekranga aylanardi.
+   */
+  const revenueDelta = data?.previous ? delta(data.revenue, data.previous.revenue) : null;
+  const ordersDelta = data?.previous
     ? delta(String(data.orders), String(data.previous.orders))
     : null;
 

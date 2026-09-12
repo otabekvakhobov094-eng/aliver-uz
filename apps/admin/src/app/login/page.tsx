@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Input } from '@aliver/ui';
-import { AdminApiError, adminApi } from '@/lib/api';
+import { AdminApiError, AdminNetworkError, adminApi } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -13,6 +13,31 @@ export default function AdminLoginPage() {
   const [needsTotp, setNeedsTotp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /**
+   * Uzoq kutish haqidagi xabar.
+   *
+   * Render'ning bepul servisi 15 daqiqa trafiksiz qolsa uxlaydi va
+   * uyg'onishi bir daqiqagacha ketadi. Bu paytda tugma shunchaki
+   * «Tekshirilmoqda…» deb turardi va foydalanuvchi uchun bu SAYT
+   * QOTIB QOLGAN degani edi — u kutmasdan sahifani yangilardi yoki
+   * ketardi.
+   */
+  const [waking, setWaking] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!busy) {
+      setWaking(false);
+      if (timer.current) clearTimeout(timer.current);
+      return;
+    }
+    // To'rt soniya — oddiy javob shundan tez keladi, ya'ni xabar
+    // faqat haqiqatan sekin bo'lganda chiqadi.
+    timer.current = setTimeout(() => setWaking(true), 4000);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [busy]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,8 +64,17 @@ export default function AdminLoginPage() {
       router.replace('/');
       router.refresh();
     } catch (err) {
+      if (err instanceof AdminNetworkError) {
+        setError(
+          err.kind === 'timeout'
+            ? 'Server javob bermadi. Bepul serverda birinchi kirish bir daqiqagacha ketishi ' +
+              'mumkin — biroz kutib, «Kirish» ni yana bosing.'
+            : 'Serverga ulanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.',
+        );
+        return;
+      }
       if (!(err instanceof AdminApiError)) {
-        setError('Server bilan bog‘lanib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.');
+        setError('Kutilmagan xatolik. Qayta urinib ko‘ring.');
         return;
       }
       if (err.message.includes('2FA')) {
@@ -98,6 +132,15 @@ export default function AdminLoginPage() {
               onChange={(e) => setTotp(e.target.value)}
             />
           ) : null}
+          {waking ? (
+            <p
+              role="status"
+              style={{ color: 'var(--alv-muted)', fontSize: 13, margin: 0, lineHeight: 1.6 }}
+            >
+              Server uyg‘onmoqda — bu bir daqiqagacha ketishi mumkin. Sahifani yangilamang.
+            </p>
+          ) : null}
+
           {error ? (
             <p
               role="alert"
