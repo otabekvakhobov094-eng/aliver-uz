@@ -4,7 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
 import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
-import { adminApi, type LowStockRow, type StockMovement } from '@/lib/api';
+import {
+  adminApi,
+  type LowStockRow,
+  type StockImportResult,
+  type StockMovement,
+} from '@/lib/api';
 import { fmtDateTime } from '@/lib/order-labels';
 
 const REASONS = [
@@ -82,6 +87,11 @@ const COLUMNS: Array<DataColumn<LowStockRow>> = [
 const EMPTY_FILTERS = { q: '', onlyZero: '' };
 
 export default function InventoryPage() {
+  const [stockFile, setStockFile] = useState<File | null>(null);
+  const [stockResult, setStockResult] = useState<StockImportResult | null>(null);
+  const [stockBusy, setStockBusy] = useState(false);
+  const [stockError, setStockError] = useState<string | null>(null);
+
   const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LowStockRow[]>([]);
@@ -218,6 +228,140 @@ export default function InventoryPage() {
           Muddati o‘tgan rezervlarni bo‘shatish
         </Button>
       </div>
+
+      {/*
+        FAYLDAN QOLDIQ KIRITISH.
+        556 ta mahsulotga qoldiqni bittalab kiritib bo'lmaydi: xodim
+        buni boshlaydi va tashlab yuboradi, katalog esa «Tugagan»
+        bo'lib qolaveradi. Shuning uchun fayl — yagona amaldagi yo'l.
+      */}
+      <section
+        className="alv-card"
+        style={{ padding: 18, marginBottom: 18, display: 'grid', gap: 12 }}
+      >
+        <div>
+          <h2 style={{ margin: 0, fontSize: 16 }}>Fayldan qoldiq kiritish</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--alv-muted)', maxWidth: '72ch' }}>
+            CSV fayl: <code>SKU</code> va <code>Qoldiq</code> ustunlari. Ma’no —{' '}
+            <b>«shu son bo‘lsin»</b>, qo‘shish emas: faylni ikki marta yuklasangiz qoldiq ikki
+            barobar bo‘lib ketmaydi. Har bir o‘zgarish ombor harakati sifatida yoziladi.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <label className="alv-btn alv-btn--outline alv-btn--md" style={{ cursor: 'pointer' }}>
+            {stockFile ? stockFile.name : 'Fayl tanlash'}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                // Maydon tozalanadi: bir xil faylni qayta tanlash
+                // mumkin bo'lishi kerak, aks holda `change` hodisasi
+                // ikkinchi marta umuman kelmaydi.
+                e.target.value = '';
+                setStockFile(f);
+                setStockResult(null);
+                setStockError(null);
+              }}
+            />
+          </label>
+
+          <Button
+            variant="outline"
+            disabled={!stockFile || stockBusy}
+            onClick={() => {
+              if (!stockFile) return;
+              setStockBusy(true);
+              setStockError(null);
+              void adminApi
+                .bulkStock(stockFile, { dryRun: true })
+                .then(setStockResult)
+                .catch((e: unknown) => setStockError(e instanceof Error ? e.message : 'Xatolik'))
+                .finally(() => setStockBusy(false));
+            }}
+          >
+            {stockBusy ? 'Tekshirilmoqda…' : 'Ko‘rib chiqish'}
+          </Button>
+
+          {/* Yozish tugmasi FAQAT ko'rib chiqilgandan keyin ochiladi:
+              omborni ko'rmasdan o'zgartirish eng qimmat xato. */}
+          <Button
+            variant="primary"
+            disabled={!stockFile || stockBusy || !stockResult?.dryRun || stockResult.updated === 0}
+            onClick={() => {
+              if (!stockFile) return;
+              if (!window.confirm(`${stockResult?.updated ?? 0} ta variantda qoldiq o‘zgartiriladi. Davom etamizmi?`))
+                return;
+              setStockBusy(true);
+              setStockError(null);
+              void adminApi
+                .bulkStock(stockFile, { dryRun: false })
+                .then((res) => {
+                  setStockResult(res);
+                  void load();
+                })
+                .catch((e: unknown) => setStockError(e instanceof Error ? e.message : 'Xatolik'))
+                .finally(() => setStockBusy(false));
+            }}
+          >
+            Yozish
+          </Button>
+        </div>
+
+        {stockError ? (
+          <p role="alert" style={{ margin: 0, color: 'var(--alv-danger)', fontSize: 13.5 }}>
+            {stockError}
+          </p>
+        ) : null}
+
+        {stockResult ? (
+          <div style={{ fontSize: 13.5, lineHeight: 1.7 }}>
+            <b>
+              {stockResult.dryRun
+                ? `Ko‘rib chiqish: ${stockResult.updated} ta o‘zgaradi`
+                : `Yozildi: ${stockResult.updated} ta variant`}
+            </b>
+            {stockResult.unchanged > 0 ? `, ${stockResult.unchanged} tasi o‘zgarishsiz` : ''}
+            {stockResult.parse ? ` — faylda ${stockResult.parse.total} qator` : ''}
+
+            {stockResult.changes.length > 0 ? (
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+                {stockResult.changes.slice(0, 12).map((c) => (
+                  <li key={c.sku}>
+                    <code>{c.sku}</code>: {c.from} → <b>{c.to}</b>
+                  </li>
+                ))}
+                {stockResult.changes.length > 12 ? (
+                  <li style={{ color: 'var(--alv-muted)' }}>
+                    va yana {stockResult.changes.length - 12} ta
+                  </li>
+                ) : null}
+              </ul>
+            ) : null}
+
+            {stockResult.unknownSkus.length > 0 ? (
+              <p style={{ margin: '8px 0 0', color: 'var(--alv-warn)' }}>
+                Topilmadi yoki o‘tkazib yuborildi: {stockResult.unknownSkus.slice(0, 8).join(', ')}
+                {stockResult.unknownSkus.length > 8
+                  ? ` va yana ${stockResult.unknownSkus.length - 8} ta`
+                  : ''}
+              </p>
+            ) : null}
+
+            {stockResult.parse && stockResult.parse.problems.length > 0 ? (
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: 'var(--alv-warn)' }}>
+                {stockResult.parse.problems.slice(0, 6).map((p) => (
+                  <li key={p.line}>
+                    {p.line}-qator: {p.reason}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
 
       {error ? (
         <div

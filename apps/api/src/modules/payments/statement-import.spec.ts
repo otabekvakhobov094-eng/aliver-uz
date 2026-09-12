@@ -1,4 +1,5 @@
-import { parseCsv, parseStatement, sumTextToTiyin } from './statement-import';
+import { parseCsv } from '../../common/csv';
+import { parseStatement, sumTextToTiyin } from './statement-import';
 
 /**
  * Vypiskani o'qish.

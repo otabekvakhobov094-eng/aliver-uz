@@ -406,6 +406,97 @@ export class InventoryService {
     return map.get(params.variantId)!;
   }
 
+  /**
+   * Fayldan ommaviy qoldiq kiritish — INVENTARIZATSIYA.
+   *
+   * Semantika «qo'shish» emas, «shu son bo'lsin»: xodim omborni
+   * sanaydi va natijani yozadi. Qo'shish bo'lganda faylni ikki marta
+   * yuklash qoldiqni ikki barobar qilib qo'yardi — va buni faqat
+   * tovar tugagach sezish mumkin bo'lardi.
+   *
+   * Har bir o'zgarish HARAKAT sifatida yoziladi: ombor tarixi
+   * uzilmasligi kerak, aks holda «qayerdan keldi» degan savolga
+   * javob yo'qoladi.
+   */
+  async bulkSetStock(
+    rows: Array<{ sku: string; quantity: number }>,
+    options: { adminId?: string; comment?: string; dryRun?: boolean } = {},
+  ): Promise<{
+    updated: number;
+    unchanged: number;
+    unknownSkus: string[];
+    changes: Array<{ sku: string; from: number; to: number }>;
+    dryRun: boolean;
+  }> {
+    // Standart — YOZADI. «Ko'rib chiqish» rejimi adminda tugma
+    // bilan tanlanadi, ya'ni xodim nima bo'lishini oldin ko'radi.
+    const dryRun = options.dryRun ?? false;
+    if (rows.length === 0) {
+      return { updated: 0, unchanged: 0, unknownSkus: [], changes: [], dryRun };
+    }
+
+    const warehouseId = await this.defaultWarehouseId();
+    const skus = [...new Set(rows.map((r) => r.sku))];
+
+    const variants = await this.prisma.productVariant.findMany({
+      where: { sku: { in: skus }, deletedAt: null },
+      select: {
+        id: true,
+        sku: true,
+        inventory: { where: { warehouseId }, select: { totalStock: true, reservedStock: true } },
+      },
+    });
+    const bySku = new Map(variants.map((v) => [v.sku, v]));
+
+    const unknownSkus = skus.filter((sku) => !bySku.has(sku));
+    const changes: Array<{ sku: string; from: number; to: number }> = [];
+    let unchanged = 0;
+
+    for (const row of rows) {
+      const variant = bySku.get(row.sku);
+      if (!variant) continue;
+
+      const current = variant.inventory[0]?.totalStock ?? 0;
+      const reserved = variant.inventory[0]?.reservedStock ?? 0;
+      if (current === row.quantity) {
+        unchanged += 1;
+        continue;
+      }
+
+      /*
+       * Band qilingan miqdordan past tushirib bo'lmaydi: o'sha
+       * tovar allaqachon kimningdir buyurtmasida turibdi va uni
+       * «yo'q» deb belgilash buyurtmani bajarib bo'lmaydigan holga
+       * keltirardi.
+       */
+      if (row.quantity < reserved) {
+        unknownSkus.push(`${row.sku} (${reserved} dona band qilingan)`);
+        continue;
+      }
+
+      changes.push({ sku: row.sku, from: current, to: row.quantity });
+
+      if (!dryRun) {
+        await this.prisma.inventory.upsert({
+          where: { variantId_warehouseId: { variantId: variant.id, warehouseId } },
+          update: { totalStock: row.quantity },
+          create: { variantId: variant.id, warehouseId, totalStock: row.quantity },
+        });
+        await this.writeMovement({
+          variantId: variant.id,
+          warehouseId,
+          reason: 'ADJUSTMENT',
+          quantity: row.quantity - current,
+          adminId: options.adminId,
+          comment: options.comment?.trim() || 'Fayldan ommaviy qoldiq kiritildi',
+        });
+        await this.syncProductStockFlag(variant.id);
+      }
+    }
+
+    return { updated: changes.length, unchanged, unknownSkus, changes, dryRun };
+  }
+
   async movements(variantId: string, limit = 50) {
     return this.prisma.inventoryMovement.findMany({
       where: { variantId },

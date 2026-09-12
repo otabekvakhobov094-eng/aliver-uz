@@ -114,6 +114,19 @@ export interface LoyaltyView {
   history: LoyaltyEntry[];
 }
 
+export interface StockImportResult {
+  updated: number;
+  unchanged: number;
+  unknownSkus: string[];
+  changes: Array<{ sku: string; from: number; to: number }>;
+  dryRun: boolean;
+  parse?: {
+    total: number;
+    problems: Array<{ line: number; reason: string }>;
+    columns: { sku: string | null; quantity: string | null };
+  };
+}
+
 export interface UzumSyncRow {
   sku: string;
   externalId: string | null;
@@ -1623,6 +1636,34 @@ export const adminApi = {
 
   /** Ikki do'kon o'rtasidagi farq — narx va qoldiq. */
   uzumSyncPlan: () => request<UzumSyncPlan>('/admin/uzum/sync/plan'),
+
+  /**
+   * Fayldan ommaviy qoldiq kiritish.
+   *
+   * `Content-Type` QO'LDA QO'YILMAYDI: brauzer `FormData` uchun uni
+   * chegara (boundary) bilan birga o'zi qo'yadi, qo'lda qo'yilgani
+   * esa chegarani yo'qotib, serverda «fayl yo'q» xatosiga olib keladi.
+   */
+  bulkStock: async (
+    file: File,
+    options: { dryRun: boolean; comment?: string },
+  ): Promise<StockImportResult> => {
+    const qs = new URLSearchParams({ dryRun: String(options.dryRun) });
+    if (options.comment) qs.set('comment', options.comment);
+    const body = new FormData();
+    body.append('file', file);
+
+    const res = await fetch(`${apiBase()}/admin/inventory/bulk/stock?${qs.toString()}`, {
+      method: 'POST',
+      credentials: 'include',
+      body,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(text || `Xatolik: ${res.status}`);
+    }
+    return (await res.json()) as StockImportResult;
+  },
 
   /**
    * CSV manzili.

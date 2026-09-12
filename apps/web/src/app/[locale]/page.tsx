@@ -129,7 +129,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           const real = 'id' in category;
           const categoryTitle = real ? pick(category as never, 'name', locale) : category[locale];
           const count = real ? category.productCount ?? 0 : null;
-          return <Link key={category.slug} href={`/${locale}/katalog?category=${category.slug}`} className={`${styles.categoryCard} alv-tilt`}><span className={styles.categoryNumber}>{String(index + 1).padStart(2, '0')}</span><div><h3>{categoryTitle}</h3><p>{count === null ? (locale === 'ru' ? 'Открыть коллекцию' : 'Kolleksiyani ochish') : `${count} ${locale === 'ru' ? 'товаров' : 'ta mahsulot'}`}</p></div><span className={styles.categoryArrow}>↗</span></Link>;
+          // Rasm bo'lsa u fon bo'ladi: bo'sh gradient kartochka
+          // kosmetika do'konida eng yomon birinchi taassurot.
+          const photo = real ? ((category as { imageUrl?: string | null }).imageUrl ?? null) : null;
+          return <Link key={category.slug} href={`/${locale}/katalog?category=${category.slug}`} className={`${styles.categoryCard} ${photo ? styles['categoryCard--photo'] : ''} alv-tilt`} style={photo ? { backgroundImage: `url(${photo})` } : undefined}><span className={styles.categoryNumber}>{String(index + 1).padStart(2, '0')}</span><div><h3>{categoryTitle}</h3><p>{count === null ? (locale === 'ru' ? 'Открыть коллекцию' : 'Kolleksiyani ochish') : `${count} ${locale === 'ru' ? 'товаров' : 'ta mahsulot'}`}</p></div><span className={styles.categoryArrow}>↗</span></Link>;
         })}</div>
       </Reveal>
 

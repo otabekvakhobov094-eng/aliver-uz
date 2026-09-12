@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
@@ -16,6 +28,7 @@ import {
 import { Type } from 'class-transformer';
 import { Audit, AuthPrincipal, CurrentUser, RequirePermissions } from '../../common/decorators';
 import { InventoryService } from './inventory.service';
+import { parseStockFile } from './stock-import';
 
 class AdjustStockDto {
   @Type(() => Number)
@@ -66,9 +79,10 @@ export class InventoryController {
    * ketadigan asbob uchun esa erta. Ostonani bittalab to'g'rilash
    * 500 ta SKU da ish emas — shuning uchun ommaviy amal.
    *
-   * Qoldiqni O'ZINI ommaviy o'zgartirish ataylab YO'Q: turli SKU ni
-   * bir xil songa surish ma'noga ega emas va har bir o'zgarish sababi
-   * bilan jurnalga yozilishi kerak.
+   * Qoldiqni O'ZINI bitta songa surish ataylab YO'Q: turli SKU ni
+   * bir xil songa qo'yish ma'noga ega emas. Fayldan kiritish esa
+   * boshqa narsa — u yerda har bir SKU ning O'Z soni bor va har bir
+   * o'zgarish harakat sifatida jurnalga tushadi (`bulk/stock`).
    */
   @Post('bulk/threshold')
   @RequirePermissions('inventory.update')
@@ -76,6 +90,52 @@ export class InventoryController {
   @ApiOperation({ summary: 'Bir nechta variant uchun kam qoldiq ostonasi' })
   bulkThreshold(@Body() dto: BulkThresholdDto) {
     return this.inventory.setThresholds(dto.variantIds, dto.threshold);
+  }
+
+  /**
+   * Fayldan ommaviy qoldiq kiritish.
+   *
+   * NEGA BU KERAK. Katalogda 556 ta mahsulot bor va ularning bir
+   * qismida o'nlab variant. Qoldiqni bittalab kiritish amalda
+   * bajarilmaydigan ish: xodim boshlaydi va tashlab yuboradi, katalog
+   * esa «Tugagan» bo'lib qolaveradi. Ya'ni qo'lda kiritish yo'li
+   * mavjud bo'lsa ham, u ishlamaydi.
+   *
+   * Fayl SAQLANMAYDI: xotirada o'qiladi va hisobot qaytariladi.
+   *
+   * `dryRun=true` — hech narsa yozilmaydi, faqat nima o'zgarishi
+   * ko'rsatiladi. Adminda birinchi bosqich aynan shu.
+   */
+  @Post('bulk/stock')
+  @RequirePermissions('inventory.update')
+  @Audit('inventory', 'bulk_stock')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  @ApiOperation({
+    summary: 'Fayldan ommaviy qoldiq kiritish (inventarizatsiya)',
+    description:
+      'CSV: SKU va qoldiq ustunlari. Semantika — «shu son bo‘lsin», qo‘shish emas. ' +
+      'Har bir o‘zgarish ombor harakati sifatida yoziladi.',
+  })
+  async bulkStock(
+    @UploadedFile() file: { buffer?: Buffer } | undefined,
+    @Query('dryRun') dryRun?: string,
+    @Query('comment') comment?: string,
+    @CurrentUser() user?: AuthPrincipal,
+  ) {
+    if (!file?.buffer || file.buffer.length === 0) {
+      throw new BadRequestException('Fayl yuklanmadi');
+    }
+    const parsed = parseStockFile(file.buffer.toString('utf8'));
+    if (parsed.rows.length === 0) {
+      return { ...parsed, updated: 0, unchanged: 0, unknownSkus: [], changes: [], dryRun: true };
+    }
+
+    const result = await this.inventory.bulkSetStock(parsed.rows, {
+      adminId: user?.sub,
+      comment,
+      dryRun: dryRun !== 'false',
+    });
+    return { ...result, parse: { total: parsed.total, problems: parsed.problems, columns: parsed.columns } };
   }
 
   @Get('variants/:variantId')

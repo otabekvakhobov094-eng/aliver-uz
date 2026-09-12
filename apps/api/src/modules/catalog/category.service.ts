@@ -44,6 +44,56 @@ export class CategoryService {
       },
     });
 
+    /*
+     * Rasmi yo'q kategoriyaga MAHSULOT SURATI qo'yiladi.
+     *
+     * Bosh sahifadagi kategoriya kartochkalari bo'sh pushti
+     * to'rtburchak bo'lib turardi: rasm adminda yuklanmagan va uni
+     * 8 ta kategoriyaga alohida tayyorlash kerak edi. Kosmetika
+     * do'konida esa rasmsiz blok — eng yomon birinchi taassurot.
+     *
+     * Zaxira rasm HAR DOIM to'g'ri bo'ladi: u aynan shu
+     * kategoriyadagi mahsulotdan olinadi. Admin o'z rasmini
+     * yuklaganda u ustun turadi.
+     */
+    const withoutImage = rows.filter((r) => !r.imageUrl).map((r) => r.id);
+    const fallback = new Map<string, string>();
+
+    if (withoutImage.length > 0) {
+      const links = await this.prisma.productCategory.findMany({
+        where: {
+          categoryId: { in: withoutImage },
+          product: {
+            is: {
+              deletedAt: null,
+              status: 'ACTIVE',
+              images: { some: { kind: 'MAIN' } },
+            },
+          },
+        },
+        select: {
+          categoryId: true,
+          product: {
+            select: {
+              images: {
+                where: { kind: 'MAIN' },
+                orderBy: { sortOrder: 'asc' },
+                take: 1,
+                select: { url: true },
+              },
+            },
+          },
+        },
+        take: 500,
+      });
+
+      for (const link of links) {
+        if (fallback.has(link.categoryId)) continue;
+        const url = link.product?.images?.[0]?.url;
+        if (url) fallback.set(link.categoryId, url);
+      }
+    }
+
     return buildTree(
       rows.map((r) => ({
         id: r.id,
@@ -56,7 +106,7 @@ export class CategoryService {
         depth: r.depth,
         path: r.path,
         productCount: r._count.products,
-        imageUrl: r.imageUrl,
+        imageUrl: r.imageUrl ?? fallback.get(r.id) ?? null,
         iconUrl: r.iconUrl,
       })) as never,
     );

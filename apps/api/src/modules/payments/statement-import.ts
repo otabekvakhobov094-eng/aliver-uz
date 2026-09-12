@@ -1,3 +1,4 @@
+import { findColumn, parseCsv } from '../../common/csv';
 import type { Tiyin } from '../../common/money';
 import type { ProviderRecord } from './reconcile.util';
 
@@ -71,91 +72,10 @@ export interface StatementParseResult {
   columns: Record<string, string | null>;
 }
 
-/**
- * CSV ni ajratish.
- *
- * Qo'lda yozilgan, chunki bitta kichik ish uchun kutubxona olib
- * kelish shart emas va bu yerda faqat ikkita murakkablik bor:
- * qo'shtirnoq ichidagi ajratgich va qo'shtirnoqning o'zi.
- */
-export function parseCsv(text: string, delimiter?: string): string[][] {
-  // BOM — Excel qo'shadi va u birinchi ustun nomiga yopishib qoladi.
-  const clean = text.replace(/^﻿/, '');
-  const sep = delimiter ?? detectDelimiter(clean);
-
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = '';
-  let quoted = false;
-
-  for (let i = 0; i < clean.length; i += 1) {
-    const ch = clean[i]!;
-    if (quoted) {
-      if (ch === '"') {
-        if (clean[i + 1] === '"') {
-          cell += '"';
-          i += 1;
-        } else {
-          quoted = false;
-        }
-      } else {
-        cell += ch;
-      }
-      continue;
-    }
-    if (ch === '"') {
-      quoted = true;
-    } else if (ch === sep) {
-      row.push(cell);
-      cell = '';
-    } else if (ch === '\n') {
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = '';
-    } else if (ch !== '\r') {
-      cell += ch;
-    }
-  }
-  if (cell !== '' || row.length > 0) {
-    row.push(cell);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((c) => c.trim() !== ''));
-}
-
-/**
- * Ajratgichni topish.
- *
- * Ruscha Excel nuqtali vergul bilan eksport qiladi, ingliz tilidagisi
- * vergul bilan. Noto'g'ri tanlansa butun fayl bitta ustunga tushadi
- * va import «hech narsa topilmadi» deb jimgina tugaydi.
- */
-function detectDelimiter(text: string): string {
-  const head = text.split('\n', 1)[0] ?? '';
-  const counts = [';', ',', '\t'].map((d) => ({ d, n: head.split(d).length - 1 }));
-  counts.sort((a, b) => b.n - a.n);
-  return counts[0]!.n > 0 ? counts[0]!.d : ';';
-}
-
 function normalise(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-function findColumn(header: string[], names: readonly string[]): number {
-  const norm = header.map(normalise);
-  // Avval TO'LIQ moslik. Qismiy moslik keyin: «amount» «refund_amount»
-  // ga ham mos kelardi va noto'g'ri ustun tanlanardi.
-  for (const name of names) {
-    const i = norm.indexOf(name);
-    if (i !== -1) return i;
-  }
-  for (const name of names) {
-    const i = norm.findIndex((h) => h.includes(name));
-    if (i !== -1) return i;
-  }
-  return -1;
-}
 
 /**
  * Summani tiyinga o'girish.
