@@ -26,3 +26,33 @@
 - Schema mos bo‘lmasa backupni alohida bazaga tiklab tekshirish
 - Legacy importni `--rollback --checkpoint=...` bilan qaytarish
 - To‘lov yoki OFD xatosida yangi checkoutni vaqtincha yopish, mavjud webhooklarni yo‘qotmaslik
+
+## Ballar va sertifikatlar muddati (yangi)
+
+- [ ] `loyalty-expiry` vazifasi kuniga 03:00 da ishlayotganini tekshiring
+      (loglar: «Ballar: N ogohlantirish, M ball kuydirildi»).
+- [ ] Birinchi kuydirishdan OLDIN adminda «Bonus ballar → Tez orada
+      kuyadi» ro'yxatini ko'rib chiqing. Ro'yxat kutilmaganda katta
+      bo'lsa — sabab eski import bo'lishi mumkin, kuydirishni
+      to'xtatib turing.
+- [ ] SMS yuborilishini tekshiring: kuyishga 14 kun qolgan bitta
+      test mijozi.
+- [ ] Sertifikatlar: «Sovg'a sertifikatlari» ekranida 30 kunlik
+      ogohlantirish bloki ko'rinishini tekshiring.
+
+## To'lovlarni moslashtirish (yangi)
+
+- [ ] Birinchi haqiqiy hafta tugagach: Click va Payme kabinetidan
+      vypiskani yuklab oling va «Moslashtirish → Vypiska fayli»
+      orqali solishtiring. Hisobotda «Manba: ... kabinetidan
+      yuklangan vypiska» deb yozilishi kerak.
+- [ ] Agar ogohlantirish «MUSTAQIL MANBA EMAS» deb tursa — hisobot
+      hech narsani isbotlamaydi, faylni yuklang.
+
+## Uzum bilan tenglashtirish (yangi)
+
+- [ ] `UZUM_PRICE_MARKUP_PERCENT` ni belgilang (komissiya + foyda).
+      Bo'sh qolsa narx umuman solishtirilmaydi.
+- [ ] `UZUM_STOCK_RESERVE` — oxirgi donani ikki joyda sotmaslik uchun.
+- [ ] «Uzum Seller → Farqni hisoblash» dan CSV oling va Uzum
+      kabinetidagi ommaviy tahrirlashga yuklang.
