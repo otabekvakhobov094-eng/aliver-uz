@@ -197,3 +197,91 @@
     transform: none !important;
   }
 }
+
+
+/* ============================================================
+   Brend kirish animatsiyasi.
+
+   Qoplama sahifaning USTIDA turadi — tarkib ostida odatdagidek
+   chiziladi va birinchi HTML da to'liq mavjud bo'ladi. Uni yashirish
+   qidiruv tizimi uchun ham, ekran o'quvchi uchun ham zarar bo'lardi.
+
+   Animatsiya SOF CSS: skript yiqilsa ham qoplama ketadi. Bu shunday
+   ekranlardagi eng jiddiy xato — foydalanuvchini oq ekran ostida
+   qoldirib qo'yish.
+   ============================================================ */
+
+.alv-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, #fff 0%, #fdf1f5 38%, #f7dbe4 100%);
+  animation: alvIntroOut 1.15s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  /* Animatsiya tugamasdan ham bosishga xalaqit bermasin. */
+  will-change: opacity, transform;
+}
+
+@keyframes alvIntroOut {
+  0%,
+  62% {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  100% {
+    opacity: 0;
+    /* Yuqoriga ko'tarilib ketadi — parda ko'tarilgandek. */
+    transform: translateY(-14px);
+    pointer-events: none;
+    visibility: hidden;
+  }
+}
+
+.alv-intro__mark {
+  color: var(--alv-ink);
+  animation: alvIntroMark 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes alvIntroMark {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+    letter-spacing: 0.3em;
+  }
+  38% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    /* Logotip sal yaqinlashib yo'qoladi — sayt uning "ichidan" ochiladi. */
+    transform: scale(1.06) translateY(-6px);
+  }
+}
+
+/*
+ * Bir seansda bir marta. Belgi `<html>` ga chizishdan OLDIN qo'yiladi,
+ * ya'ni qoplama umuman ko'rinmaydi — miltillash yo'q.
+ */
+.alv-intro-seen .alv-intro {
+  display: none;
+}
+
+/*
+ * Harakatga sezgir foydalanuvchi uchun qoplama UMUMAN ko'rsatilmaydi.
+ *
+ * Uni shunchaki "animatsiyasiz" qilish yaramaydi: animatsiyasiz qoplama
+ * ekranda abadiy qolib, butun saytni to'sib qo'yardi.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .alv-intro {
+    display: none;
+  }
+}

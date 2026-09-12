@@ -918,3 +918,71 @@
   letter-spacing: -0.03em;
   line-height: 1.15;
 }
+
+
+/* ============================================================
+   Sarlavhadagi ikonka tugmalari — aliver.com dagidek.
+
+   Matnli chiplar o'rniga ikonka: logotip markazda turishi uchun yon
+   ustunlar teng bo'lishi kerak edi, «Savat», «Kabinet», «Kuzatuv»
+   so'zlari esa o'ng ustunni kengaytirib logotipni chapga surardi.
+
+   44px — barmoq uchun eng kichik ishonchli o'lcham; undan kichigi
+   mobilda tegib bo'lmaydigan tugma degani.
+   ============================================================ */
+.alv-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  color: var(--alv-ink);
+  transition:
+    background 0.22s,
+    color 0.22s,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.alv-icon-btn:hover {
+  background: var(--alv-surface-2);
+  color: var(--alv-brand);
+  transform: translateY(-1px);
+}
+.alv-icon-btn:focus-visible {
+  outline: 2px solid var(--alv-brand);
+  outline-offset: 2px;
+}
+.alv-icon-btn__count {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--alv-brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  /* Sanoq o'zgarganda kichik turtki — mijoz qo'shilganini sezadi. */
+  animation: alvCountPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes alvCountPop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alv-icon-btn,
+  .alv-icon-btn__count {
+    transition: none;
+    animation: none;
+  }
+  .alv-icon-btn:hover {
+    transform: none;
+  }
+}

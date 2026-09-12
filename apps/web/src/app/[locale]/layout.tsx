@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { isLocale } from '@/i18n/messages';
 import { CartProvider } from '@/components/CartProvider';
 import { CookieConsent } from '@/components/CookieConsent';
+import { BrandIntro } from '@/components/BrandIntro';
 import '@aliver/ui/tokens.css';
 import '@aliver/ui/components.css';
 import '@aliver/ui/motion.css';
@@ -39,6 +40,12 @@ export default async function LocaleLayout({
         />
       </head>
       <body>
+        {/*
+          Kirish animatsiyasi tarkibdan OLDIN turadi, lekin uni
+          yashirmaydi: u `position: fixed` qoplama va sayt uning ostida
+          odatdagidek chiziladi.
+        */}
+        <BrandIntro />
         <CartProvider>{children}</CartProvider>
         <CookieConsent locale={lang} />
       </body>

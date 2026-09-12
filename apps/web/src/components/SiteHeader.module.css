@@ -1,7 +1,17 @@
+/* ============================================================
+   Sayt sarlavhasi — aliver.com joylashuvi.
+
+   Uch qator: ikonkalar | LOGO | ikonkalar, so'ng pastda navigatsiya.
+   Logotip markazda, chunki brend do'konida u birinchi ko'riladigan
+   narsa bo'lishi kerak.
+   ============================================================ */
+
 .header {
   position: relative;
   z-index: 50;
+  background: var(--alv-surface);
 }
+
 .announcement {
   background: var(--alv-ink);
   color: #fff;
@@ -10,253 +20,363 @@
   text-align: center;
   padding: 10px 16px;
 }
+
 .bar {
   background: var(--alv-surface);
-  border-bottom: 1px solid var(--alv-line);
 }
+
 /*
- * Sarlavha joylashuvi — aliver.com dagidek.
+ * Yon ustunlar `minmax(0, 1fr)`.
  *
- * Logotip MARKAZDA va bu bilarak: brend do'konida logotip birinchi
- * ko'riladigan narsa bo'lishi kerak, chapdagi kichik logotip esa
- * ko'zni darhol menyuga olib ketadi. Markazdagi logotip kattaroq ham
- * bo'la oladi — chapda u navigatsiya bilan joy talashardi.
- *
- * Uch qator: qidiruv | LOGO | amallar, so'ng pastda navigatsiya.
- * Grid ustunlari `1fr auto 1fr` — yon ustunlar teng, ya'ni logotip
- * ekranning haqiqiy markazida turadi, tarkib kengligidan qat'i nazar.
+ * Oddiy `1fr` aslida `minmax(auto, 1fr)` — ustun O'Z TARKIBIDAN
+ * kichrayolmaydi. O'ngdagi ikonkalar shu sababdan o'z ustunini
+ * kengaytirib, logotipni chapga surib qo'yardi.
  */
 .inner {
-  min-height: 92px;
+  min-height: 96px;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
-  padding-block: 12px;
+  gap: 12px;
+  padding-block: 10px;
 }
+
+.left {
+  grid-column: 1;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+}
+
+.right {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.lang {
+  min-width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--alv-ink);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, color 0.2s;
+}
+.lang:hover {
+  background: var(--alv-surface-2);
+  color: var(--alv-brand);
+}
+
 .logo {
   grid-column: 2;
   justify-self: center;
   display: inline-flex;
   color: var(--alv-ink);
-  /* Logotip sekin va bir marta paydo bo'ladi — sahifa "jonlanadi",
-     lekin doimiy harakat o'qishga xalaqit bermaydi. */
-  animation: alvLogoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes alvLogoIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.97);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .logo {
-    animation: none;
-  }
 }
 
-/* Navigatsiya logotip OSTIDA, alohida qatorda va markazlashgan. */
+/* ------------------------------------------------ navigatsiya qatori */
+
 .navRow {
   border-top: 1px solid var(--alv-line);
+  border-bottom: 1px solid var(--alv-line);
+  background: var(--alv-surface);
 }
+
 .desktopNav {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 30px;
-  min-height: 52px;
+  flex-wrap: wrap;
+  gap: 2px;
   font-size: 14.5px;
   font-weight: 600;
 }
+
+/*
+ * `position: static` — panel ota elementga emas, BUTUN qatorga
+ * nisbatan joylashadi. Aks holda chekka bo'limning paneli ekrandan
+ * chiqib ketardi.
+ */
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .navLink {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 54px;
+  padding: 0 14px;
   color: var(--alv-ink);
   white-space: nowrap;
-  padding-block: 4px;
 }
-/*
- * Tagchiziq markazdan ikki tomonga ochiladi. `width` emas,
- * `transform: scaleX` — u kompozitor qatlamida ishlaydi va
- * sahifani qayta hisoblashga majbur qilmaydi.
- */
+.navLink:hover {
+  color: var(--alv-brand);
+}
+
+.caret {
+  font-size: 9px;
+  opacity: 0.55;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.navItem:hover .caret,
+.navItem:focus-within .caret {
+  transform: rotate(180deg);
+}
+
+/* Tagchiziq markazdan ochiladi. `scaleX` — kompozitor qatlamida
+   ishlaydi va sahifani qayta hisoblashga majbur qilmaydi. */
 .navLink::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
   height: 1.5px;
   background: var(--alv-brand);
   transform: scaleX(0);
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.navLink:hover {
-  color: var(--alv-brand);
-}
 .navLink:hover::after,
-.navLink:focus-visible::after {
+.navLink:focus-visible::after,
+.navItem:focus-within .navLink::after {
   transform: scaleX(1);
 }
-@media (prefers-reduced-motion: reduce) {
-  .navLink::after {
-    transition: none;
-  }
+
+/* ------------------------------------------------- ochiluvchi panel */
+
+/*
+ * Panel X o'qi bo'ylab ochiladi — eshik ochilgandek.
+ *
+ * `perspective` ota elementga qo'yilgan va `transform-origin` tepada:
+ * shu ikkisi birgalikda panelni tekis "paydo bo'lish" o'rniga
+ * haqiqiy burilish qilib ko'rsatadi.
+ *
+ * `visibility` ham boshqariladi: faqat `opacity: 0` bo'lsa panel
+ * ko'rinmas holda bosilaveradi va ostidagi havolalarni to'sib turardi.
+ */
+.navItem {
+  perspective: 1200px;
 }
-.search {
-  grid-column: 1;
-  justify-self: start;
-  min-width: 190px;
-  justify-content: flex-start;
-  color: var(--alv-muted);
+
+.panel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% 0;
+  min-width: 280px;
+  padding-top: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: rotateX(-12deg) translateY(-6px);
+  transform-origin: top center;
+  transition:
+    opacity 0.24s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.32s;
+  pointer-events: none;
+  z-index: 60;
 }
-.desktopActions {
-  grid-column: 3;
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+
+.navItem:hover .panel,
+.navItem:focus-within .panel {
+  opacity: 1;
+  visibility: visible;
+  transform: rotateX(0) translateY(0);
+  pointer-events: auto;
+  transition-delay: 0s;
 }
-.desktopActions :global(.alv-chip) {
-  min-height: 40px;
-  padding: 0 13px;
-}
-.mobileActions {
-  grid-column: 3;
-  justify-self: end;
-  display: none;
-  align-items: center;
-  gap: 8px;
-}
-.iconLink,
-.menu summary {
-  width: 44px;
-  height: 44px;
+
+.panelInner {
   display: grid;
-  place-items: center;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1.5px var(--alv-line-2);
-  color: var(--alv-ink);
-  font-size: 23px;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--alv-surface);
+  border: 1px solid var(--alv-line);
+  box-shadow: 0 24px 60px rgba(48, 26, 36, 0.18);
 }
+
+.panelLink {
+  display: grid;
+  gap: 2px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  color: var(--alv-ink);
+  transition: background 0.18s, transform 0.18s;
+}
+.panelLink:hover,
+.panelLink:focus-visible {
+  background: var(--alv-surface-2);
+  color: var(--alv-ink);
+  transform: translateX(3px);
+}
+.panelLink strong {
+  font-size: 14.5px;
+  font-weight: 650;
+}
+.panelLink span {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--alv-muted);
+  line-height: 1.45;
+}
+
+/* -------------------------------------------------------- mobil menyu */
+
 .menu {
   position: relative;
 }
 .menu summary {
-  list-style: none;
+  width: 44px;
+  height: 44px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
   cursor: pointer;
+  list-style: none;
+  color: var(--alv-ink);
 }
 .menu summary::-webkit-details-marker {
   display: none;
 }
+.menu summary:hover {
+  background: var(--alv-surface-2);
+}
+
+/* Uch chiziq — ochilganda xochga aylanadi. */
+.burger {
+  display: grid;
+  gap: 4px;
+  width: 20px;
+}
+.burger i {
+  display: block;
+  height: 1.8px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s;
+}
+.menu[open] .burger i:nth-child(1) {
+  transform: translateY(5.8px) rotate(45deg);
+}
+.menu[open] .burger i:nth-child(2) {
+  opacity: 0;
+}
+.menu[open] .burger i:nth-child(3) {
+  transform: translateY(-5.8px) rotate(-45deg);
+}
+
 .mobileMenu {
   position: absolute;
-  top: 52px;
+  top: 54px;
   right: 0;
-  width: min(310px, calc(100vw - 32px));
+  width: min(320px, calc(100vw - 24px));
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
   display: grid;
+  gap: 2px;
   padding: 10px;
   border-radius: 18px;
   background: var(--alv-surface);
-  box-shadow: 0 18px 50px rgba(35, 22, 29, 0.18);
   border: 1px solid var(--alv-line);
+  box-shadow: 0 22px 60px rgba(40, 22, 30, 0.2);
+  animation: alvMenuIn 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes alvMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.mobileGroup {
+  display: grid;
+  gap: 1px;
 }
 .mobileMenu a {
-  min-height: 46px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   padding: 0 14px;
-  border-radius: 12px;
+  border-radius: 11px;
   color: var(--alv-ink);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
 }
 .mobileMenu a:hover {
-  background: var(--alv-brand-soft);
-  color: var(--alv-brand-deep);
+  background: var(--alv-surface-2);
 }
-@media (max-width: 1120px) {
-  .desktopNav {
-    gap: 13px;
-  }
-  .search {
-    display: none;
-  }
-  .desktopActions > a:nth-child(2) {
-    display: none;
-  }
+.mobileChild {
+  min-height: 40px !important;
+  padding-left: 28px !important;
+  font-weight: 500 !important;
+  font-size: 13.5px !important;
+  color: var(--alv-ink-2) !important;
 }
-@media (max-width: 820px) {
-  .announcement {
-    font-size: 11px;
-    line-height: 1.35;
-    padding: 8px 12px;
-  }
-  .inner {
-    height: 62px;
-    gap: 12px;
-  }
-  .desktopNav,
-  .desktopActions {
-    display: none;
-  }
-  .mobileActions {
-    display: flex;
-  }
-  .logo {
-    font-size: 20px;
-  }
-}
-@media (max-width: 360px) {
-  .announcement {
-    font-size: 10.5px;
-  }
-  .mobileActions {
-    gap: 5px;
-  }
-  .logo {
-    font-size: 18px;
-  }
-}
-
 
 /* ============================================================
-   Mobil sarlavha.
-
-   Logotip MARKAZDA qoladi — brend belgisi eng muhim element va uni
-   chapga surish hech narsa yutmaydi. Qidiruv o'rniga ikonka, pastdagi
-   navigatsiya qatori esa menyuga yig'iladi.
+   Ekran o'lchamlari
    ============================================================ */
+
+@media (max-width: 1100px) {
+  .desktopNav {
+    font-size: 13.5px;
+    gap: 0;
+  }
+  .navLink {
+    padding: 0 10px;
+  }
+}
+
 @media (max-width: 900px) {
   .inner {
     min-height: 68px;
-    /*
-     * `1fr` aslida `minmax(auto, 1fr)` — ustun O'Z TARKIBIDAN
-     * kichrayolmaydi. Shuning uchun o'ngdagi ikonkalar o'z ustunini
-     * kengaytirib, logotipni chapga surib qo'yardi. `minmax(0, 1fr)`
-     * bunga ruxsat beradi va ikkala yon ustun haqiqatan teng bo'ladi.
-     */
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
-  .search {
-    display: none;
-  }
-  /* Mobilda logotip kichikroq: 34px da yon ustunlarga joy qolmasdi. */
   .logo :global(svg) {
-    height: 24px;
+    height: 30px;
   }
-  .desktopActions {
+  .lang {
     display: none;
-  }
-  .mobileActions {
-    display: flex;
-    gap: 8px;
   }
   .navRow {
     display: none;
   }
-  /* Chap ustun bo'sh qolmasin — logotip markazda tursin. */
-  .inner::before {
-    content: '';
-    grid-column: 1;
+  .menu summary {
+    display: flex;
+  }
+}
+
+/* Harakatga sezgir foydalanuvchi uchun. `opacity` ham qaytariladi —
+   uni unutish elementni ko'rinmas holda qoldiradi. */
+@media (prefers-reduced-motion: reduce) {
+  .caret,
+  .panel,
+  .panelLink,
+  .navLink::after,
+  .burger i {
+    transition: none;
+  }
+  .mobileMenu {
+    animation: none;
+  }
+  .panel {
+    transform: none;
+  }
+  .navItem:hover .panel,
+  .navItem:focus-within .panel {
+    opacity: 1;
+    transform: none;
   }
 }
