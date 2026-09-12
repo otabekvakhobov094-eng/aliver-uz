@@ -78,6 +78,15 @@ interface Props<T> {
   onDone?: () => void | Promise<void>;
   /** Jadval ostidagi joy — odatda sahifalash. */
   footer?: React.ReactNode;
+  /**
+   * Qator bosilganda. Ro'yxat yonida kartochka paneli bo'lgan
+   * sahifalar uchun (Ombor). Berilsa qator bosiladigan bo'ladi va
+   * klaviatura bilan ham ochiladi — sichqonchasiz ishlash uchun.
+   *
+   * Tanlash katakchasi bosilganda ISHLAMAYDI: u tanlov uchun, ochish
+   * uchun emas.
+   */
+  onRowClick?: (row: T) => void;
 }
 
 function readViews(key: string): SavedView[] {
@@ -114,6 +123,7 @@ export function DataList<T>({
   onClearFilters,
   onDone,
   footer,
+  onRowClick,
 }: Props<T>) {
   const [views, setViews] = useState<SavedView[]>([]);
   const [activeView, setActiveView] = useState<string>('');
@@ -527,9 +537,27 @@ export function DataList<T>({
                   const id = rowKey(row);
                   const on = selected.has(id);
                   return (
-                    <tr key={id} style={on ? { background: 'var(--alv-brand-soft)' } : undefined}>
+                    <tr
+                      key={id}
+                      onClick={onRowClick ? () => onRowClick(row) : undefined}
+                      onKeyDown={
+                        onRowClick
+                          ? (e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onRowClick(row);
+                              }
+                            }
+                          : undefined
+                      }
+                      tabIndex={onRowClick ? 0 : undefined}
+                      style={{
+                        ...(on ? { background: 'var(--alv-brand-soft)' } : undefined),
+                        ...(onRowClick ? { cursor: 'pointer' } : undefined),
+                      }}
+                    >
                       {bulkActions.length > 0 ? (
-                        <td style={td}>
+                        <td style={td} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             aria-label="Qatorni tanlash"

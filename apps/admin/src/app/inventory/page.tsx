@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, Button } from '@aliver/ui';
 import { AdminShell } from '@/components/AdminShell';
+import { DataList, type BulkAction, type DataColumn } from '@/components/DataList';
 import { adminApi, type LowStockRow, type StockMovement } from '@/lib/api';
 import { fmtDateTime } from '@/lib/order-labels';
 
@@ -30,7 +31,59 @@ const MOVEMENT_LABEL: Record<string, string> = {
  * bo'yicha harakatlar jurnali. Qoldiq faqat harakat orqali o'zgaradi —
  * "shunchaki sonni tahrirlash" imkoni ataylab yo'q (ekspertiza A-6).
  */
+/**
+ * Ro'yxat ustunlari.
+ *
+ * Ombor ro'yxati platformaga eng oxirida o'tkazildi, chunki avval
+ * uning ommaviy amali nimaligini bilish kerak edi. Qoldiqni O'ZINI
+ * ommaviy o'zgartirish MA'NOSIZ: turli SKU ni bir xil songa surish
+ * hech qanday haqiqiy amalga mos kelmaydi va har bir o'zgarish sababi
+ * bilan jurnalga yozilishi shart.
+ *
+ * Ma'noli ommaviy amal — kam qoldiq OSTONASI. U sukut bo'yicha hamma
+ * uchun 10, amalda esa mahsulotlar turlicha aylanadi va ostonani
+ * 500 ta SKU da bittalab to'g'rilab bo'lmaydi.
+ */
+const COLUMNS: Array<DataColumn<LowStockRow>> = [
+  {
+    key: 'product',
+    label: 'Mahsulot',
+    locked: true,
+    minWidth: 220,
+    render: (r) => (
+      <>
+        <div style={{ fontWeight: 600 }}>{r.productName}</div>
+        <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
+          {[Object.values(r.options ?? {}).join(' / '), r.sku].filter(Boolean).join(' · ')}
+        </div>
+      </>
+    ),
+  },
+  {
+    key: 'available',
+    label: 'Mavjud',
+    align: 'right',
+    render: (r) => <Badge tone={r.available === 0 ? 'low' : 'neutral'}>{r.available}</Badge>,
+  },
+  {
+    key: 'threshold',
+    label: 'Chegara',
+    align: 'right',
+    render: (r) => <span style={{ color: 'var(--alv-muted)' }}>{r.threshold}</span>,
+  },
+  {
+    key: 'sku',
+    label: 'SKU',
+    defaultVisible: false,
+    render: (r) => <code style={{ fontSize: 12 }}>{r.sku}</code>,
+  },
+];
+
+const EMPTY_FILTERS = { q: '', onlyZero: '' };
+
 export default function InventoryPage() {
+  const [filters, setFilters] = useState<Record<string, unknown>>(EMPTY_FILTERS);
+  const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LowStockRow[]>([]);
   const [selected, setSelected] = useState<LowStockRow | null>(null);
   const [movements, setMovements] = useState<StockMovement[]>([]);
@@ -42,11 +95,14 @@ export default function InventoryPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       setRows(await adminApi.lowStock());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Xatolik');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -94,6 +150,48 @@ export default function InventoryPage() {
       setBusy(false);
     }
   };
+
+  /**
+   * Ro'yxat serverdan to'liq keladi (500 tagacha), shuning uchun filtr
+   * mijozda: qo'shimcha so'rov yubormaydi va darhol ishlaydi.
+   */
+  const shown = useMemo(() => {
+    const f = filters as Record<string, string>;
+    const needle = (f.q ?? '').trim().toLowerCase();
+    return rows.filter((r) => {
+      if (f.onlyZero === 'yes' && r.available !== 0) return false;
+      if (!needle) return true;
+      return (
+        r.productName.toLowerCase().includes(needle) || r.sku.toLowerCase().includes(needle)
+      );
+    });
+  }, [rows, filters]);
+
+  const bulkActions: BulkAction[] = useMemo(
+    () => [
+      {
+        key: 'threshold',
+        label: 'Chegarani o‘zgartirish',
+        run: async (ids) => {
+          const raw = window.prompt('Yangi kam qoldiq chegarasi (0 dan katta yoki teng):')?.trim();
+          if (raw === undefined || raw === '') return 'Chegara kiritilmadi.';
+          const value = Number(raw);
+          if (!Number.isInteger(value) || value < 0) return 'Chegara butun va manfiy bo‘lmagan son bo‘lishi kerak.';
+          const res = await adminApi.bulkThreshold(ids, value);
+          // Farqni yashirmaymiz: ba'zi variantda ombor yozuvi bo'lmasligi
+          // mumkin va operator 10 tadan 7 tasi o'zgarganini bilishi kerak.
+          if (res.updated === res.requested) {
+            return `${res.updated} ta variant chegarasi ${res.threshold} ga o‘zgartirildi.`;
+          }
+          return (
+            `${res.updated} ta variant o‘zgartirildi (${res.requested} tadan). ` +
+            'Qolganlarida ombor yozuvi topilmadi.'
+          );
+        },
+      },
+    ],
+    [],
+  );
 
   const canSubmit =
     !busy &&
@@ -154,57 +252,46 @@ export default function InventoryPage() {
       ) : null}
 
       <div className="alv-admin-cols">
-        <section
-          style={{
-            background: 'var(--alv-surface)',
-            borderRadius: 'var(--alv-radius-lg)',
-            padding: 18,
-            boxShadow: 'var(--alv-shadow-sm)',
-            overflowX: 'auto',
-          }}
-        >
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
-            <thead>
-              <tr style={{ fontSize: 12.5, color: 'var(--alv-muted)', textAlign: 'left' }}>
-                <th style={{ padding: '10px 12px' }}>Mahsulot</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right' }}>Mavjud</th>
-                <th style={{ padding: '10px 12px', textAlign: 'right' }}>Chegara</th>
-                <th style={{ padding: '10px 12px' }} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.variantId} style={{ borderTop: '1px solid var(--alv-line)' }}>
-                  <td style={{ padding: 12, fontSize: 13.5 }}>
-                    <div style={{ fontWeight: 600 }}>{r.productName}</div>
-                    <div style={{ fontSize: 12, color: 'var(--alv-muted)' }}>
-                      {[Object.values(r.options ?? {}).join(' / '), r.sku]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </div>
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'right' }}>
-                    <Badge tone={r.available === 0 ? 'low' : 'neutral'}>{r.available}</Badge>
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'right', color: 'var(--alv-muted)' }}>
-                    {r.threshold}
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'right' }}>
-                    <Button variant="ghost" size="sm" onClick={() => void open(r)}>
-                      Ochish
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {rows.length === 0 ? (
-            <p style={{ color: 'var(--alv-muted)', fontSize: 13.5 }}>
-              Qoldig‘i kam mahsulot yo‘q — hammasi chegaradan yuqori.
-            </p>
-          ) : null}
-        </section>
+        <div>
+          <DataList<LowStockRow>
+            storageKey="inventory"
+            columns={COLUMNS}
+            rows={shown}
+            rowKey={(r) => r.variantId}
+            filters={filters}
+            onFiltersChange={setFilters}
+            loading={loading}
+            bulkActions={bulkActions}
+            onDone={load}
+            onClearFilters={() => setFilters(EMPTY_FILTERS)}
+            onRowClick={(r) => void open(r)}
+            emptyTitle="Qoldig‘i kam mahsulot yo‘q"
+            emptyHint="Hammasi chegaradan yuqori — bu yaxshi xabar."
+            noResultsTitle="Bu shartlarga mos mahsulot topilmadi"
+            filterBar={
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                <input
+                  type="search"
+                  value={(filters as Record<string, string>).q ?? ''}
+                  onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+                  placeholder="Mahsulot nomi yoki SKU"
+                  aria-label="Ombor qidirish"
+                  style={{ ...field, minHeight: 38, flex: '1 1 220px', maxWidth: 320 }}
+                />
+                <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13.5 }}>
+                  <input
+                    type="checkbox"
+                    checked={(filters as Record<string, string>).onlyZero === 'yes'}
+                    onChange={(e) =>
+                      setFilters({ ...filters, onlyZero: e.target.checked ? 'yes' : '' })
+                    }
+                  />
+                  Faqat tugaganlari
+                </label>
+              </div>
+            }
+          />
+        </div>
 
         <section
           style={{

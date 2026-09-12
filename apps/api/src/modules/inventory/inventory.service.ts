@@ -444,6 +444,30 @@ export class InventoryService {
       .slice(0, limit);
   }
 
+  /**
+   * Kam qoldiq ostonasini bir nechta variant uchun qo'yish.
+   *
+   * `updateMany` bitta so'rov bilan bajaradi — 200 ta variant uchun
+   * 200 ta so'rov yuborish kerak emas. Ostona qoldiqning O'ZIGA
+   * tegmaydi, shuning uchun bu yerda harakat jurnaliga yozuv yo'q:
+   * jurnal `totalStock` o'zgarishini qayd etadi, ostona esa sozlama.
+   * Amalning o'zi audit logga `Audit` dekoratori orqali tushadi.
+   */
+  async setThresholds(variantIds: string[], threshold: number) {
+    const result = await this.prisma.inventory.updateMany({
+      where: { variantId: { in: variantIds } },
+      data: { lowStockThreshold: threshold },
+    });
+    return {
+      updated: result.count,
+      // Farq bo'lsa — ba'zi variantda ombor yozuvi umuman yo'q.
+      // Buni jimgina yutib yuborish xato bo'lardi: operator 10 ta
+      // tanlab, 7 tasi o'zgarganini bilishi kerak.
+      requested: variantIds.length,
+      threshold,
+    };
+  }
+
   /* ---------------------------- ichki ---------------------------- */
 
   private async decrementReserved(variantId: string, warehouseId: string, quantity: number) {

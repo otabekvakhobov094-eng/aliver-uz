@@ -870,6 +870,24 @@ export const adminApi = {
 
   lowStock: () => request<LowStockRow[]>('/admin/inventory/low-stock'),
 
+  bulkThreshold: (variantIds: string[], threshold: number) =>
+    request<{ updated: number; requested: number; threshold: number }>(
+      '/admin/inventory/bulk/threshold',
+      { method: 'POST', body: JSON.stringify({ variantIds, threshold }) },
+    ),
+
+  bulkRetryFiscal: (ids: string[]) =>
+    request<{ sent: number; failed: Array<{ id: string; message?: string }> }>(
+      '/admin/fiscal/receipts/bulk/retry',
+      { method: 'POST', body: JSON.stringify({ ids }) },
+    ),
+
+  bulkCancelFiscal: (ids: string[], reason: string) =>
+    request<{ cancelled: number; failed: Array<{ id: string; message?: string }> }>(
+      '/admin/fiscal/receipts/bulk/cancel',
+      { method: 'POST', body: JSON.stringify({ ids, reason }) },
+    ),
+
   variantStock: (variantId: string) =>
     request<{ totalStock: number; reservedStock: number; availableStock: number } | null>(
       `/admin/inventory/variants/${variantId}`,

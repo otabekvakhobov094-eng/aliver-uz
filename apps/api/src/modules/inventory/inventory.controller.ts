@@ -1,6 +1,18 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsIn, IsInt, IsString, Length, NotEquals } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsString,
+  IsUUID,
+  Length,
+  Max,
+  Min,
+  NotEquals,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Audit, AuthPrincipal, CurrentUser, RequirePermissions } from '../../common/decorators';
 import { InventoryService } from './inventory.service';
@@ -19,6 +31,20 @@ class AdjustStockDto {
   comment!: string;
 }
 
+class BulkThresholdDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayMaxSize(200)
+  @IsUUID('4', { each: true })
+  variantIds!: string[];
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(100000)
+  threshold!: number;
+}
+
 @ApiTags('admin-inventory')
 @Controller('admin/inventory')
 export class InventoryController {
@@ -29,6 +55,27 @@ export class InventoryController {
   @ApiOperation({ summary: 'Qoldig‘i kam mahsulotlar (TZ 17)' })
   lowStock(@Query('limit') limit?: string) {
     return this.inventory.lowStock(limit ? Number(limit) : 50);
+  }
+
+  /**
+   * Ostonani bir nechta variant uchun birdan qo'yish.
+   *
+   * «Qoldig'i kam» ro'yxati ostona bilan hisoblanadi va sukut bo'yicha
+   * u hamma uchun 10. Amalda esa mahsulotlar juda turlicha aylanadi:
+   * kuniga sotiladigan moy uchun 10 kech, yiliga bir necha marta
+   * ketadigan asbob uchun esa erta. Ostonani bittalab to'g'rilash
+   * 500 ta SKU da ish emas — shuning uchun ommaviy amal.
+   *
+   * Qoldiqni O'ZINI ommaviy o'zgartirish ataylab YO'Q: turli SKU ni
+   * bir xil songa surish ma'noga ega emas va har bir o'zgarish sababi
+   * bilan jurnalga yozilishi kerak.
+   */
+  @Post('bulk/threshold')
+  @RequirePermissions('inventory.update')
+  @Audit('inventory', 'bulk_threshold')
+  @ApiOperation({ summary: 'Bir nechta variant uchun kam qoldiq ostonasi' })
+  bulkThreshold(@Body() dto: BulkThresholdDto) {
+    return this.inventory.setThresholds(dto.variantIds, dto.threshold);
   }
 
   @Get('variants/:variantId')
