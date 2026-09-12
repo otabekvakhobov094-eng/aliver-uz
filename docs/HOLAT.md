@@ -1,6 +1,6 @@
 # ALIVER.UZ — nima qilindi, nima qolди
 
-**Sana:** 2026-09-12 · **Oxirgi commit:** `892123c` · **Muhit:** Render staging
+**Sana:** 2026-09-12 · **Oxirgi commit:** `bb1cc7f` · **Muhit:** Render staging
 
 Bu hujjat kodga qarab yozildi, eski hujjatdan ko'chirilmadi. Har bir
 raqam shu kungi holatdan olingan.
@@ -13,11 +13,11 @@ raqam shu kungi holatdan olingan.
 |---|---|
 | Admin panel sahifalari | 32 |
 | Sayt sahifalari | 29 |
-| API modullari | 31 |
-| API endpointlari | 218 |
+| API modullari | 32 |
+| API endpointlari | 221 |
 | Ma'lumotlar bazasi modellari | 61 |
-| Migratsiyalar | 7 |
-| Avtomatik testlar | 465 (API) + 2 (admin) + E2E buyurtma oqimi |
+| Migratsiyalar | 8 |
+| Avtomatik testlar | 495 (API) + 2 (admin) + E2E buyurtma oqimi |
 | Katalogdagi mahsulotlar | 556 (aliver.com dan import qilingan) |
 
 Staging ishlab turibdi: `aliver-uz-api-stage.onrender.com/api/health` →
@@ -149,20 +149,39 @@ o'tmaydi.
 
 ---
 
-## 4. Hali qilinmagani
+## 4. Chala qolgani
 
-**Admin tomonda sodiqlik ekrani.** API bor (balans, tarix, qo'lda
-tuzatish), alohida sahifa yo'q — hozircha mijoz kartochkasidan
-foydalaniladi.
+**Sodiqlik va Uzum uchun admin ekrani yo'q.** Ikkalasining ham API si
+ishlaydi — sodiqlikda beshta endpoint (balans, tarix, qo'lda tuzatish),
+Uzumda uchta (holat, mahsulot ko'rigi, sharh importi) — lekin adminkada
+sahifa ham, menyuda yozuv ham yo'q. Ya'ni ularga faqat dasturchi yetib
+bora oladi.
 
-**Sayt va admin uchun testlar** hali kam: API da 465 ta, adminkada 2 ta,
-saytda 0. Bugun yozilgan sof mantiq (namuna qoidalari, sharh fasetlari,
-sodiqlik, sertifikat) API tomonida test bilan qoplangan, React
-komponentlari esa brauzerda qo'lda tekshirilgan.
+Bu aynan shu hujjatning o'zi avval tanqid qilgan bo'shliqning o'zi va uni
+men yaratdim. Eng tez tuzatiladigan ish ham shu: mexanizm tayyor, faqat
+ekran kerak.
 
-**Ball va sertifikatning muddati o'tganini avtomatik kuydirish** —
-qoida va hisob yozilgan, lekin uni davriy ishga tushiradigan vazifa
-qo'yilmagan.
+**Ball va sertifikat muddati avtomatik kuymaydi.** Qoida yozilgan
+(oxirgi harakatdan 12 oy) va sana mijozga ko'rsatiladi, lekin uni davriy
+bajaradigan vazifa qo'yilmagan. Loyihada allaqachon uchta shunday vazifa
+bor — rezerv, fiskal navbat, bildirishnomalar — ya'ni naqsh tayyor.
+
+**Uzum mahsulotlari faqat ko'rib chiqiladi.** Import nima bo'lishini
+ko'rsatadi, lekin yozmaydi. Bu ataylab: 500 ta mahsulotni ko'r-ko'rona
+yozib qo'yib, keyin orqaga qaytarish adminka bilan qilinadigan ish emas.
+Yozish qismini ko'rik natijasi ko'rilgach qo'shish kerak.
+
+**Uzum Seller yo'llari tasdiqlanmagan.** Rasmiy OpenAPI bor, lekin
+spetsifikatsiya kalit bilan beriladi. Yo'llar sozlamada — hujjat kelgach
+`.env` da to'rtta qator to'ldiriladi, kodga tegilmaydi.
+
+**Sayt va admin testlari kam.** API da 495 ta, adminkada 2 ta, saytda 0.
+Bugun yozilgan sof mantiq API tomonida to'liq qoplangan; React
+komponentlari esa faqat brauzerda qo'lda tekshirilgan.
+
+**Sephora naqshlari faqat bosh sahifada.** Siz shu hajmni tanlagansiz.
+Katalog, mahsulot sahifasi, savat va checkout eski joylashuvda qolgan —
+ular ishlaydi, lekin bosh sahifa bilan bir xil darajada emas.
 
 ---
 
@@ -230,7 +249,8 @@ parallel ketadi.
 **To'rtinchi — kontent:** suratlar va mahsulot matnlari. Bu dasturchi
 ishi emas, shuning uchun boshqa ishlar bilan parallel bajariladi.
 
-**Beshinchi** — kuydirish vazifasi va admin sodiqlik ekrani.
+**Beshinchi** — sodiqlik va Uzum uchun admin ekranlari, so'ng kuydirish
+vazifasi. Ikkalasi ham kichik ish: mexanizm tayyor.
 
 Dasturiy tomonda kritik yo'lda hech narsa qolmadi: TZ-3 dagi barcha
 imkoniyatlar, E2E test va to'lov qatlami bajarildi.
