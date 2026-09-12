@@ -1,6 +1,6 @@
 # ALIVER.UZ — nima qilindi, nima qolди
 
-**Sana:** 2026-09-12 · **Oxirgi commit:** `b99c0f7` · **Muhit:** Render staging
+**Sana:** 2026-09-12 · **Oxirgi commit:** `892123c` · **Muhit:** Render staging
 
 Bu hujjat kodga qarab yozildi, eski hujjatdan ko'chirilmadi. Har bir
 raqam shu kungi holatdan olingan.
@@ -11,12 +11,13 @@ raqam shu kungi holatdan olingan.
 
 | | Soni |
 |---|---|
-| Admin panel sahifalari | 30 |
-| Sayt sahifalari | 26 |
-| API modullari | 29 |
-| API endpointlari | 197 |
-| Ma'lumotlar bazasi modellari | 58 |
-| Avtomatik testlar | 365 (API) + 2 (admin) |
+| Admin panel sahifalari | 32 |
+| Sayt sahifalari | 29 |
+| API modullari | 31 |
+| API endpointlari | 218 |
+| Ma'lumotlar bazasi modellari | 61 |
+| Migratsiyalar | 7 |
+| Avtomatik testlar | 465 (API) + 2 (admin) + E2E buyurtma oqimi |
 | Katalogdagi mahsulotlar | 556 (aliver.com dan import qilingan) |
 
 Staging ishlab turibdi: `aliver-uz-api-stage.onrender.com/api/health` →
@@ -82,52 +83,86 @@ login ochilmayotganining sababi edi.
 
 ---
 
-## 3. Yarim qilingan — ishlaydi, lekin to'liq emas
+## 3. Shu kunda yopilgan ishlar
 
-**Rasm yuklash.** API tayyor (`POST /media/products/:id`,
-`DELETE`), adminkada esa yuklash oynasi yo'q. Hozir rasm faqat import
-orqali kiradi. Bu mahsulot tahrirlash sahifasi bilan bir xil turdagi
-bo'shliq edi — API bor, forma yo'q.
+Quyidagilar «yarim» yoki «boshlanmagan» ro'yxatidan chiqdi.
 
-**Kategoriyalar.** Adminkada faqat daraxt ko'rinadi. Yaratish,
-tahrirlash va o'chirish API da bor, sahifada yo'q.
+**Rasm yuklash.** Adminkada mahsulot formasida yuklash oynasi: yuklash,
+tartiblash, asosiy qilish, o'chirish. Alt matn ikkala tilda majburiy va
+u YUBORISHDAN OLDIN tekshiriladi — server ham tekshiradi, lekin uning
+rad javobi fayl to'liq yuklangandan keyin keladi.
 
-**Brendlar.** Ro'yxat endpointi bugun qo'shildi (mahsulot formasi uchun
-kerak edi), lekin yangi brend qo'shish sahifasi yo'q.
+**Kategoriyalar va brendlar.** Ikkalasida ham yaratish, tahrirlash,
+o'chirish. Kategoriyada ota tanlovidan kategoriyaning o'zi va avlodlari
+chiqarib tashlangan — aks holda daraxt halqaga aylanardi. Brendni
+mahsulot ishlatayotgan bo'lsa o'chirib bo'lmaydi.
 
-**Hisobotlar.** To'rtta raqam, top mahsulotlar va UTM atributsiyasi bor.
-Sana oralig'i bo'yicha filtr, eksport va xato holati yo'q — API yiqilsa
-sahifa cheksiz «Yuklanmoqda…» da qoladi.
+**Hisobotlar.** Davr tanlagichi, ixtiyoriy sana oralig'i, CSV eksport va
+haqiqiy xato holati. Ilgari API yiqilsa sahifa cheksiz «Yuklanmoqda…»
+da qolardi.
 
-**Ombor va Fiskal cheklar ro'yxatlari** hali yangi platformaga
-o'tkazilmagan. Avval ularning ommaviy amallari loyihalanishi kerak, aks
-holda ko'chirishdan foyda chiqmaydi.
+**Ombor va fiskal cheklar** ro'yxat platformasiga o'tkazildi. Fiskalda
+ommaviy qayta yuborish (OFD yiqilgan kun eng kerakli amal), omborda esa
+kam qoldiq ostonasini ommaviy o'zgartirish.
 
-**Saqlangan ko'rinishlar** brauzerda saqlanadi. Serverga o'tkazish
-xodimlar o'rtasida ulashish bilan birga qilinishi kerak.
+**Buyurtma oqimi uchun E2E test.** Savatdan chekgacha 13 ta tekshiruv.
+Undan muhimi — testning O'ZI tekshiriladi: bilarak buzilgan beshta
+holatda yiqilishi isbotlangan. Yiqilmaydigan test testdan ham yomon.
 
-**E2E testi** faqat sahifalar ochilishini tekshiradi. **Buyurtma berish
-oqimi uchun avtomatik test yo'q** — savatga qo'shish, checkout, to'lov,
-ombor rezervi, chek. Bu tizimdagi eng muhim tekshirilmagan yo'l.
+**Uzum to'lovi.** Butun tizim bo'ylab haqiqiy provayder. Jangovar rejim
+ATAYLAB to'siqlangan: callback maydonlari Uzum hujjatidan olinadi va
+hujjat shartnoma bilan keladi. Taxminiy maydon nomlari bilan yozilgan
+webhook ishlayotgandek ko'rinadi va faqat birinchi haqiqiy to'lovda
+yiqiladi — ya'ni pul bilan.
+
+**Kuryer qatlami.** Adapter interfeysi, reyestr, ishlaydigan «o'z
+kuryerimiz». EMU, BTS va pochta shartnoma kutyapti va buni ochiq aytadi
+— yolg'on holat qaytarmaydi.
+
+**Sharhlar.** Bu eng kutilmagan topilma bo'ldi: mijoz sharhni NA O'QIY
+oladi, NA YOZA olardi — adminkada faqat moderatsiya bor edi. Endi ommaviy
+ro'yxat, xulosa, yulduz taqsimoti, sharh qoldirish (yetkazilgan buyurtma
+egasi uchun) va «menga o'xshaganlar» filtri.
+
+**Savatda namuna.** 300 000 so'mdan yuqori buyurtmaga bepul namuna,
+progress chizig'i bilan. Tanlangan namuna buyurtmaga nol narxli pozitsiya
+bo'lib o'tadi — busiz yig'uvchi uni solmasdi.
+
+**SEO filtr sahifalari** (`/f/…`) — sakkizta, qo'lda yozilgan. Avtomatik
+yaratish ATAYLAB qilinmadi: har bir filtr kombinatsiyasi uchun sahifa
+minglab yupqa nusxa yaratadi va butun domen reytingini tushiradi.
+
+**Vosita tanlagich** — uchta savol, har birini o'tkazib yuborish mumkin,
+natija odatdagi katalog havolasi.
+
+**Sodiqlik dasturi.** Ball berish (to'lov tasdiqlanganda, buyurtma
+berilganda emas), ishlatish (buyurtmaning 50% gacha), bekor qilishda
+ikki tomonlama qaytarish, kabinetda balans va tarix. Balans hech qayerda
+saqlanmaydi — u har doim harakatlar yig'indisi.
+
+**Sovg'a sertifikati.** Kod bazada OCHIQ SAQLANMAYDI, faqat xeshi, va u
+chiqarilganda bir marta ko'rsatiladi. Qisman ishlatish qo'llanadi.
+
+Ikkilanish bazada qo'riqlanadi, kodda emas: sodiqlik va sertifikat uchun
+qisman unikal indekslar haqiqiy Postgres'da sinaldi — ikkinchi yozuv
+o'tmaydi.
 
 ---
 
-## 4. Umuman qilinmagan
+## 4. Hali qilinmagani
 
-**Uzum to'lovi.** TZ-3 da so'ralgan edi, kodda yo'q — hozir faqat Click,
-Payme va naqd. Baza enum'iga ham qo'shilmagan.
+**Admin tomonda sodiqlik ekrani.** API bor (balans, tarix, qo'lda
+tuzatish), alohida sahifa yo'q — hozircha mijoz kartochkasidan
+foydalaniladi.
 
-**Kuryer integratsiyasi.** Yetkazish hisob-kitobi va jo'natma holati bor,
-lekin kuryer kompaniyasi bilan API ulanishi yo'q. Bazada `carrier` oddiy
-matn maydoni: `"own" | "bts" | "fargo" | "yandex" | "uzpost"`. EMU, BTS
-va pochta API lari ulanmagan.
+**Sayt va admin uchun testlar** hali kam: API da 465 ta, adminkada 2 ta,
+saytda 0. Bugun yozilgan sof mantiq (namuna qoidalari, sharh fasetlari,
+sodiqlik, sertifikat) API tomonida test bilan qoplangan, React
+komponentlari esa brauzerda qo'lda tekshirilgan.
 
-**TZ-3 dagi beauty imkoniyatlari:** soya va teri turi tanlagichi,
-savatda namuna tanlash, sharh mualliflari bo'yicha filtr («menga
-o'xshaganlar»), natija bo'yicha fasetlar, filtr uchun SEO sahifalari
-(`/f/...`), sodiqlik dasturi, sovg'a sertifikati. Hech biri boshlanmagan.
-
-**Sayt va admin uchun testlar** deyarli yo'q (admin: 2 ta, sayt: 0 ta).
+**Ball va sertifikatning muddati o'tganini avtomatik kuydirish** —
+qoida va hisob yozilgan, lekin uni davriy ishga tushiradigan vazifa
+qo'yilmagan.
 
 ---
 
@@ -195,12 +230,10 @@ parallel ketadi.
 **To'rtinchi — kontent:** suratlar va mahsulot matnlari. Bu dasturchi
 ishi emas, shuning uchun boshqa ishlar bilan parallel bajariladi.
 
-**Beshinchi — buyurtma oqimi uchun E2E test.** Haqiqiy to'lov kalitlari
-ulanishidan oldin bo'lgani ma'qul.
+**Beshinchi** — kuydirish vazifasi va admin sodiqlik ekrani.
 
-**Oltinchi** — rasm yuklash, kategoriya tahrirlash, hisobot filtrlari.
-
-**Yettinchi** — TZ-3 dagi beauty imkoniyatlari va Uzum to'lovi.
+Dasturiy tomonda kritik yo'lda hech narsa qolmadi: TZ-3 dagi barcha
+imkoniyatlar, E2E test va to'lov qatlami bajarildi.
 
 Do'konni ishga tushirish uchun birinchi to'rttasi yetarli. Qolgani
 ishlab turgan do'kon ustiga qo'shiladi.
