@@ -66,6 +66,15 @@ jobs:
           exit 1
       - name: E2E smoke
         run: npm run test:e2e
+      # Buyurtma oqimi — savatdan chekgacha. Bu yerda haqiqiy baza va
+      # haqiqiy API ishlatiladi: tekshirilayotgan narsa aynan modullar
+      # orasidagi bog'lanish, shuning uchun mock foydasiz.
+      - name: E2E buyurtma oqimi
+        run: npm run test:e2e:order
+      # Testning o'zi ishonchlimi: bilarak buzilgan shartnomaga qarshi
+      # yiqilishi shart. Yiqilmaydigan test testdan ham yomon.
+      - name: E2E testining o'z-o'zini tekshiruvi
+        run: npm run test:e2e:selfcheck
       - name: Qisqa yuklama testi
         env:
           LOAD_DURATION_SECONDS: 10

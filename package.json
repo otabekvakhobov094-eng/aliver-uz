@@ -12,6 +12,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:e2e": "node scripts/e2e-smoke.mjs",
+    "test:e2e:order": "node scripts/e2e-order-flow.mjs",
+    "test:e2e:selfcheck": "node scripts/e2e-selfcheck.mjs",
     "test:load": "node scripts/load-test.mjs",
     "migrate:legacy": "node scripts/migrate-legacy.mjs",
     "migrate:aliver-catalog": "node scripts/import-aliver-shopify.mjs",
