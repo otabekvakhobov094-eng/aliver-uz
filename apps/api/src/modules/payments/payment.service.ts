@@ -14,6 +14,7 @@ import { ProductService } from '../catalog/product.service';
 import { MetaCapiService } from '../marketing/meta-capi.service';
 import { amountVar, type Lang } from '../notifications/templates';
 import {
+  type OrderStatus,
   type PaymentStatus,
   assertPaymentTransition,
 } from '../../common/state-machine/order-state-machine';
@@ -76,7 +77,7 @@ export class OrderNotPayableError extends Error {
  * `DELIVERED` ham bor: naqd to'lov aynan yetkazib berilganda yopiladi.
  * Bekor qilingan, qaytarilgan va puli qaytarilgan buyurtmalar yo'q.
  */
-const PAYABLE_ORDER_STATUSES = new Set([
+const PAYABLE_ORDER_STATUSES = new Set<OrderStatus>([
   'NEW',
   'CONFIRMED',
   'PROCESSING',
